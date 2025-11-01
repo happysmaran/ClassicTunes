@@ -14,7 +14,8 @@ struct TopToolbarView: View {
     var onSeek: (Double) -> Void
     @Binding var isSeeking: Bool
     @Binding var isShuffleEnabled: Bool
-    @Binding var isRepeatEnabled: Bool
+    @Binding var isRepeatEnabled: Bool  // This represents repeat all
+    @Binding var isRepeatOne: Bool      // Added this parameter
     @Binding var isStopped: Bool
 
     var body: some View {
@@ -132,7 +133,7 @@ struct TopToolbarView: View {
             toggleButton(icon: "list.bullet", isActive: !isAlbumView) { isAlbumView = false }
             toggleButton(icon: "square.grid.2x2", isActive: isAlbumView) { isAlbumView = true }
             toggleButton(icon: "shuffle", isActive: isShuffleEnabled) { isShuffleEnabled.toggle() }
-            toggleButton(icon: "repeat", isActive: isRepeatEnabled) { isRepeatEnabled.toggle() }
+            RepeatButton(isRepeatAll: $isRepeatEnabled, isRepeatOne: $isRepeatOne)  // Updated repeat button
         }
     }
     
@@ -188,5 +189,58 @@ struct TopToolbarView: View {
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color.white.opacity(0.5))
         )
+    }
+}
+
+// New RepeatButton view to handle the cycling behavior
+struct RepeatButton: View {
+    @Binding var isRepeatAll: Bool
+    @Binding var isRepeatOne: Bool
+
+    var body: some View {
+        Button(action: cycleRepeatMode) {
+            Group {
+                if isRepeatOne {
+                    // Show repeat one icon with small '1' badge
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(systemName: "repeat")
+                            .foregroundColor(.accentColor)
+                        Text("1")
+                            .font(.caption2)
+                            .foregroundColor(.accentColor)
+                            .offset(x: 2, y: 2)
+                    }
+                } else if isRepeatAll {
+                    // Show regular repeat icon
+                    Image(systemName: "repeat")
+                        .foregroundColor(.accentColor)
+                } else {
+                    // Show disabled repeat icon
+                    Image(systemName: "repeat")
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .buttonStyle(.borderless)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.white.opacity(0.5))
+        )
+    }
+    
+    private func cycleRepeatMode() {
+        if !isRepeatAll && !isRepeatOne {
+            // Currently off -> Enable repeat all
+            isRepeatAll = true
+            isRepeatOne = false
+        } else if isRepeatAll && !isRepeatOne {
+            // Currently repeat all -> Enable repeat one
+            isRepeatAll = false
+            isRepeatOne = true
+        } else {
+            // Currently repeat one -> Disable repeat
+            isRepeatAll = false
+            isRepeatOne = false
+        }
     }
 }

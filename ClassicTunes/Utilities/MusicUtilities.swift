@@ -160,5 +160,3 @@ func saveUserPlaylists(_ playlists: [Playlist]) {
     // Only save custom playlists
     savePlaylistsToUserDefaults(playlists.filter { !$0.isSystem })
 }
-
-// You may update ContentView to use these helpers for better separation!

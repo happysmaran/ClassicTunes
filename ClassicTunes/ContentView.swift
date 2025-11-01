@@ -15,19 +15,24 @@ struct ContentView: View {
     @State private var playbackDuration: Double = 1.0
     @State private var timeObserverToken: Any?
     @State private var isSeeking = false
-    @State private var currentAlbumSongs: [Song] = []
+    @State private var currentPlaybackSongs: [Song] = []  // Changed from currentAlbumSongs
     @State private var isShuffleEnabled = false
     @State private var isRepeatEnabled = false
+    @State private var isRepeatOne = false  // This is managed internally by TopToolbarView's RepeatButton
     @State private var isStopped = false
-    @State private var userPlaylists: [Playlist] = []
     @State private var systemPlaylists: [Playlist] = []
     @State private var selectedPlaylistID: UUID?
     @State private var libraryActive: Bool = true
 
     @State private var showNewPlaylistSheet = false
+    @StateObject private var playlistManager = PlaylistManager()
+    
+    // New states for playlist selection
+    @State private var showPlaylistSelectionSheet = false
+    @State private var songToAddToPlaylist: Song?
 
     private var playlists: [Playlist] {
-        userPlaylists + systemPlaylists
+        playlistManager.userPlaylists + systemPlaylists
     }
 
     private var displayedSongs: [Song] {
@@ -63,7 +68,8 @@ struct ContentView: View {
                 onSeek: handleSeek,
                 isSeeking: $isSeeking,
                 isShuffleEnabled: $isShuffleEnabled,
-                isRepeatEnabled: $isRepeatEnabled,
+                isRepeatEnabled: $isRepeatEnabled,  // This now represents repeat all
+                isRepeatOne: $isRepeatOne,  // Added missing binding
                 isStopped: $isStopped
             )
 
@@ -72,12 +78,12 @@ struct ContentView: View {
             NavigationView {
                 SidebarView(
                     playlists: playlists,
-                    userPlaylists: $userPlaylists,
+                    userPlaylists: $playlistManager.userPlaylists, // Fixed: Correct binding syntax
                     selectedPlaylistID: $selectedPlaylistID,
                     showNewPlaylistSheet: $showNewPlaylistSheet,
                     libraryActive: $libraryActive
                 )
-                
+                 
                 SongListView(
                     isAlbumView: isAlbumView,
                     songs: songs,
@@ -86,12 +92,17 @@ struct ContentView: View {
                     onAlbumSelect: { album in
                         let albumSongs = songs.filter { $0.album == album }
                         if let firstSong = albumSongs.first {
-                            currentAlbumSongs = albumSongs
+                            currentPlaybackSongs = albumSongs
                             playSong(firstSong)
                         }
                     },
-                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil
+                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                    onAddToPlaylist: { song in
+                        songToAddToPlaylist = song
+                        showPlaylistSelectionSheet = true
+                    }
                 )
+                .environmentObject(playlistManager)
             }
         }
         .background(Color(NSColor.windowBackgroundColor).opacity(0.95))
@@ -102,11 +113,19 @@ struct ContentView: View {
         .onAppear {
             print("Running loadSongsOnce at launch")
             loadSongsOnce()
-            userPlaylists = loadUserPlaylists().filter { !$0.isSystem }
             generateSystemPlaylists()
         }
         .sheet(isPresented: $showNewPlaylistSheet) {
-            NewPlaylistSheet(playlists: $userPlaylists)
+            NewPlaylistSheet(playlists: $playlistManager.userPlaylists) // Fixed: Also corrected here
+        }
+        .sheet(isPresented: $showPlaylistSelectionSheet) {
+            if let song = songToAddToPlaylist {
+                PlaylistSelectionView(song: song) { playlist in
+                    playlistManager.addSong(song, to: playlist)
+                    showPlaylistSelectionSheet = false
+                }
+                .environmentObject(playlistManager)
+            }
         }
         .onChange(of: selectedSong) { newSong in
             guard let song = newSong else { return }
@@ -166,8 +185,19 @@ struct ContentView: View {
             return
         }
 
-        // Increment play counts and system playlists are handled by onChange(of: selectedSong)
-        currentAlbumSongs = isAlbumView ? songs.filter { $0.album == song.album } : songs
+        // Set the correct playback context based on what we're playing from
+        if let playlistID = selectedPlaylistID,
+           let playlist = playlists.first(where: { $0.id == playlistID }) {
+            // Playing from a playlist
+            currentPlaybackSongs = playlist.songs
+        } else if isAlbumView {
+            // Playing from album view
+            currentPlaybackSongs = songs.filter { $0.album == song.album }
+        } else {
+            // Playing from main library
+            currentPlaybackSongs = songs
+        }
+        
         setupNewPlayback(for: song)
     }
     
@@ -217,7 +247,14 @@ struct ContentView: View {
     
     private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [self] _ in
-            self.playNext()
+            if isRepeatOne {
+                // Repeat the same song
+                if let currentSong = selectedSong {
+                    playSong(currentSong)
+                }
+            } else {
+                self.playNext()
+            }
         }
     }
     
@@ -233,20 +270,21 @@ struct ContentView: View {
     }
     
     private func playRandomSong(excluding current: Song) {
-        let pool = currentAlbumSongs.filter { $0.id != current.id }
+        let pool = currentPlaybackSongs.filter { $0.id != current.id }
         if let randomSong = pool.randomElement() {
             playSong(randomSong)
         }
     }
     
     private func playNextSequentialSong(after current: Song) {
-        guard let currentIndex = currentAlbumSongs.firstIndex(where: { $0.id == current.id }) else { return }
+        guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
 
         let nextIndex = currentIndex + 1
-        if nextIndex < currentAlbumSongs.count {
-            playSong(currentAlbumSongs[nextIndex])
-        } else if isRepeatEnabled {
-            playSong(currentAlbumSongs.first!)
+        if nextIndex < currentPlaybackSongs.count {
+            playSong(currentPlaybackSongs[nextIndex])
+        } else if isRepeatEnabled || isRepeatOne {
+            // When repeat is enabled, go back to the first song
+            playSong(currentPlaybackSongs.first!)
         }
     }
 
@@ -262,13 +300,14 @@ struct ContentView: View {
     }
     
     private func playPreviousSequentialSong(before current: Song) {
-        guard let currentIndex = currentAlbumSongs.firstIndex(where: { $0.id == current.id }) else { return }
+        guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
 
         let previousIndex = currentIndex - 1
         if previousIndex >= 0 {
-            playSong(currentAlbumSongs[previousIndex])
-        } else if isRepeatEnabled {
-            playSong(currentAlbumSongs.last!)
+            playSong(currentPlaybackSongs[previousIndex])
+        } else if isRepeatEnabled || isRepeatOne {
+            // When repeat is enabled, go to the last song
+            playSong(currentPlaybackSongs.last!)
         }
     }
     
@@ -294,76 +333,41 @@ struct ContentView: View {
         let topPlayedSongs = songs.sorted(by: { $0.playCount > $1.playCount }).prefix(25)
         return Playlist(name: "Top 25 Most Played", songs: Array(topPlayedSongs), isSystem: true)
     }
-
-    private func loadUserPlaylists() -> [Playlist] {
-        loadPlaylistsFromUserDefaults()
-    }
-
-    private func saveUserPlaylists(_ playlists: [Playlist]) {
-        savePlaylistsToUserDefaults(playlists)
-    }
-}
-
-struct SidebarView: View {
-    let playlists: [Playlist]
-    @Binding var userPlaylists: [Playlist]
-    @Binding var selectedPlaylistID: UUID?
-    @Binding var showNewPlaylistSheet: Bool
-    @Binding var libraryActive: Bool
-
-    var body: some View {
-        List {
-            Section("LIBRARY") {
-                Label("Music", systemImage: "music.note")
-                    .onTapGesture {
-                        selectedPlaylistID = nil
-                        libraryActive = true
-                    }
-                Label("Movies", systemImage: "film")
-                Label("TV Shows", systemImage: "tv")
-                Label("Podcasts", systemImage: "mic")
-                Label("Radio", systemImage: "radio")
-            }
-            
-            Section("STORE") {
-                Label("iTunes Store", systemImage: "bag")
-            }
-            
-            Section("PLAYLISTS") {
-                ForEach(playlists) { playlist in
-                    HStack {
-                        Text(playlist.name)
-                        Spacer()
-                        if !playlist.isSystem {
-                            Button(action: {
-                                // Action to delete the playlist
-                                if let index = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
-                                    userPlaylists.remove(at: index)
-                                    savePlaylistsToUserDefaults(userPlaylists)
-                                }
-                            }) {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.red)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        selectedPlaylistID = playlist.id
-                        libraryActive = false
-                    }
-                }
-                
-                Button(action: {
-                    showNewPlaylistSheet = true
-                }) {
-                    Label("New Playlist", systemImage: "plus")
-                }
+    
+    private func generateRecentlyPlayedPlaylist(from songs: [Song]) -> Playlist {
+        let history = getPlayHistory()
+        var seen = Set<String>()
+        var recentSongs: [Song] = []
+        for songID in history {
+            if seen.contains(songID) { continue }
+            if let song = songs.first(where: { $0.id.uuidString == songID }) {
+                recentSongs.append(song)
+                seen.insert(songID)
+                if recentSongs.count == 25 { break }
             }
         }
-        .listStyle(SidebarListStyle())
-        .background(Color.itunesSidebar)
-        .foregroundColor(.primary)
+        return Playlist(name: "Recently Played", songs: recentSongs, isSystem: true)
+    }
+    
+    private func incrementPlayCount(for song: Song) {
+        var playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
+        let songID = song.id.uuidString
+        playCounts[songID, default: 0] += 1
+        UserDefaults.standard.set(playCounts, forKey: "playCounts")
+
+        // Track play history
+        var history = UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
+        history.insert(songID, at: 0)
+        if history.count > 1000 { history = Array(history.prefix(1000)) }
+        UserDefaults.standard.set(history, forKey: "playHistory")
+    }
+    
+    private func getPlayCount(for song: Song) -> Int {
+        let playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
+        return playCounts[song.id.uuidString] ?? 0
+    }
+    
+    private func getPlayHistory() -> [String] {
+        UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
     }
 }

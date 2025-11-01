@@ -7,7 +7,9 @@ struct SongListView: View {
     @Binding var selectedSong: Song?
     var onAlbumSelect: (String) -> Void = { _ in }
     var playlistSongs: [Song]?
+    var onAddToPlaylist: (Song) -> Void  // New parameter
     @State private var sortBy = "title"
+    @EnvironmentObject var playlistManager: PlaylistManager // Access to user playlists
 
     private var sortedSongs: [Song] {
         let songsToSort = playlistSongs ?? songs
@@ -96,5 +98,11 @@ struct SongListView: View {
             selectedSong = song
             onSongSelect(song)
         }
+        .contextMenu {
+            Button("Add to Playlist") {
+                onAddToPlaylist(song)
+            }
+        }
     }
 }
+
