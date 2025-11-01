@@ -1,5 +1,6 @@
 import SwiftUI
 import AVKit
+import Combine
 
 struct ContentView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
@@ -15,10 +16,10 @@ struct ContentView: View {
     @State private var playbackDuration: Double = 1.0
     @State private var timeObserverToken: Any?
     @State private var isSeeking = false
-    @State private var currentPlaybackSongs: [Song] = []  // Changed from currentAlbumSongs
+    @State private var currentPlaybackSongs: [Song] = []
     @State private var isShuffleEnabled = false
     @State private var isRepeatEnabled = false
-    @State private var isRepeatOne = false  // This is managed internally by TopToolbarView's RepeatButton
+    @State private var isRepeatOne = false
     @State private var isStopped = false
     @State private var systemPlaylists: [Playlist] = []
     @State private var selectedPlaylistID: UUID?
@@ -30,6 +31,11 @@ struct ContentView: View {
     // New states for playlist selection
     @State private var showPlaylistSelectionSheet = false
     @State private var songToAddToPlaylist: Song?
+    
+    // MiniPlayer states
+    @State private var isMiniPlayerActive = false
+    @State private var miniPlayerWindow: NSWindow?
+    @State private var isPlayingFlag: Bool = false
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
@@ -45,93 +51,101 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            TopToolbarView(
-                isAlbumView: $isAlbumView,
-                showFileImporter: $showFileImporter,
-                selectedSong: $selectedSong,
-                isPlaying: Binding(
-                    get: { player?.rate != 0 },
-                    set: { shouldPlay in
-                        if shouldPlay {
-                            player?.play()
-                        } else {
-                            player?.pause()
-                        }
-                    }
-                ),
-                playPrevious: playPrevious,
-                playNext: playNext,
-                volume: $volume,
-                playbackPosition: $playbackPosition,
-                playbackDuration: $playbackDuration,
-                onSeek: handleSeek,
-                isSeeking: $isSeeking,
-                isShuffleEnabled: $isShuffleEnabled,
-                isRepeatEnabled: $isRepeatEnabled,  // This now represents repeat all
-                isRepeatOne: $isRepeatOne,  // Added missing binding
-                isStopped: $isStopped
-            )
+        Group {
+            if isMiniPlayerActive {
+                // Empty view when mini player is active
+                EmptyView()
+            } else {
+                VStack(spacing: 0) {
+                    TopToolbarView(
+                        isAlbumView: $isAlbumView,
+                        showFileImporter: $showFileImporter,
+                        selectedSong: $selectedSong,
+                        isPlaying: Binding(
+                            get: { player?.rate != 0 },
+                            set: { shouldPlay in
+                                if shouldPlay {
+                                    player?.play()
+                                } else {
+                                    player?.pause()
+                                }
+                            }
+                        ),
+                        playPrevious: playPrevious,
+                        playNext: playNext,
+                        volume: $volume,
+                        playbackPosition: $playbackPosition,
+                        playbackDuration: $playbackDuration,
+                        onSeek: handleSeek,
+                        isSeeking: $isSeeking,
+                        isShuffleEnabled: $isShuffleEnabled,
+                        isRepeatEnabled: $isRepeatEnabled,
+                        isRepeatOne: $isRepeatOne,
+                        isStopped: $isStopped,
+                        onMiniPlayerToggle: toggleMiniPlayer
+                    )
 
-            Divider()
+                    Divider()
 
-            NavigationView {
-                SidebarView(
-                    playlists: playlists,
-                    userPlaylists: $playlistManager.userPlaylists, // Fixed: Correct binding syntax
-                    selectedPlaylistID: $selectedPlaylistID,
-                    showNewPlaylistSheet: $showNewPlaylistSheet,
-                    libraryActive: $libraryActive
-                )
-                 
-                SongListView(
-                    isAlbumView: isAlbumView,
-                    songs: songs,
-                    onSongSelect: playSong,
-                    selectedSong: $selectedSong,
-                    onAlbumSelect: { album in
-                        let albumSongs = songs.filter { $0.album == album }
-                        if let firstSong = albumSongs.first {
-                            currentPlaybackSongs = albumSongs
-                            playSong(firstSong)
-                        }
-                    },
-                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                    onAddToPlaylist: { song in
-                        songToAddToPlaylist = song
-                        showPlaylistSelectionSheet = true
+                    NavigationView {
+                        SidebarView(
+                            playlists: playlists,
+                            userPlaylists: $playlistManager.userPlaylists,
+                            selectedPlaylistID: $selectedPlaylistID,
+                            showNewPlaylistSheet: $showNewPlaylistSheet,
+                            libraryActive: $libraryActive
+                        )
+                         
+                        SongListView(
+                            isAlbumView: isAlbumView,
+                            songs: songs,
+                            onSongSelect: playSong,
+                            selectedSong: $selectedSong,
+                            onAlbumSelect: { album in
+                                let albumSongs = songs.filter { $0.album == album }
+                                if let firstSong = albumSongs.first {
+                                    currentPlaybackSongs = albumSongs
+                                    playSong(firstSong)
+                                }
+                            },
+                            playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                            onAddToPlaylist: { song in
+                                songToAddToPlaylist = song
+                                showPlaylistSelectionSheet = true
+                            }
+                        )
+                        .environmentObject(playlistManager)
                     }
-                )
-                .environmentObject(playlistManager)
-            }
-        }
-        .background(Color(NSColor.windowBackgroundColor).opacity(0.95))
-        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
-            handleFileImport(result)
-        }
-        .frame(minWidth: 900, minHeight: 600)
-        .onAppear {
-            print("Running loadSongsOnce at launch")
-            loadSongsOnce()
-            generateSystemPlaylists()
-        }
-        .sheet(isPresented: $showNewPlaylistSheet) {
-            NewPlaylistSheet(playlists: $playlistManager.userPlaylists) // Fixed: Also corrected here
-        }
-        .sheet(isPresented: $showPlaylistSelectionSheet) {
-            if let song = songToAddToPlaylist {
-                PlaylistSelectionView(song: song) { playlist in
-                    playlistManager.addSong(song, to: playlist)
-                    showPlaylistSelectionSheet = false
                 }
-                .environmentObject(playlistManager)
+                .background(Color(NSColor.windowBackgroundColor).opacity(0.95))
+                .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
+                    handleFileImport(result)
+                }
+                .frame(minWidth: 900, minHeight: 600)
+                .onAppear {
+                    print("Running loadSongsOnce at launch")
+                    loadSongsOnce()
+                    generateSystemPlaylists()
+                }
+                .sheet(isPresented: $showNewPlaylistSheet) {
+                    NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
+                }
+                .sheet(isPresented: $showPlaylistSelectionSheet) {
+                    if let song = songToAddToPlaylist {
+                        PlaylistSelectionView(song: song) { playlist in
+                            playlistManager.addSong(song, to: playlist)
+                            showPlaylistSelectionSheet = false
+                        }
+                        .environmentObject(playlistManager)
+                    }
+                }
+                .onChange(of: selectedSong) { newSong in
+                    guard let song = newSong else { return }
+                    incrementPlayCount(for: song)
+                    generateSystemPlaylists()
+                    refreshSongPlayCounts()
+                }
             }
-        }
-        .onChange(of: selectedSong) { newSong in
-            guard let song = newSong else { return }
-            incrementPlayCount(for: song)
-            generateSystemPlaylists()
-            refreshSongPlayCounts()
         }
     }
 
@@ -214,6 +228,7 @@ struct ContentView: View {
         let newPlayer = AVPlayer(playerItem: item)
         newPlayer.volume = Float(volume)
         newPlayer.play()
+        isPlayingFlag = true
         
         player = newPlayer
         playerItem = item
@@ -233,6 +248,7 @@ struct ContentView: View {
         }
         playerItem = nil
         player = nil
+        isPlayingFlag = false
     }
     
     private func setupTimeObserver(for player: AVPlayer) {
@@ -370,4 +386,100 @@ struct ContentView: View {
     private func getPlayHistory() -> [String] {
         UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
     }
+    
+    // MiniPlayer functionality
+    private func toggleMiniPlayer() {
+        if isMiniPlayerActive {
+            closeMiniPlayer()
+        } else {
+            openMiniPlayer()
+        }
+    }
+    
+    private func openMiniPlayer() {
+        guard let selectedSong = selectedSong else { return }
+        
+        isMiniPlayerActive = true
+        isPlayingFlag = (player?.rate != 0)
+        
+        // Hide main window
+        if let mainWindow = NSApp.mainWindow {
+            mainWindow.orderOut(nil)
+        }
+        
+        // Create and show mini player window
+        let miniPlayerView = MiniPlayerView(
+            player: player,
+            selectedSong: $selectedSong,
+            isPlaying: $isPlayingFlag,
+            volume: $volume,
+            playbackPosition: $playbackPosition,
+            playbackDuration: $playbackDuration,
+            onPlayPause: { 
+                if player?.rate != 0 {
+                    player?.pause()
+                    isPlayingFlag = false
+                } else {
+                    player?.play()
+                    isPlayingFlag = true
+                }
+            },
+            onPrevious: playPrevious,
+            onNext: playNext,
+            onSeek: handleSeek,
+            onClose: closeMiniPlayer
+        )
+        
+        let hostingController = NSHostingController(rootView: miniPlayerView)
+        
+        let window = NSWindow(
+            contentRect: NSRect(x: 100, y: 100, width: 300, height: 100),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        window.contentViewController = hostingController
+        window.title = "MiniPlayer"
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        
+        miniPlayerWindow = window
+        
+        // Set up notification to detect when mini player is closed
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { _ in
+            self.handleMiniPlayerClose()
+        }
+    }
+    
+    private func handleMiniPlayerClose() {
+        if isMiniPlayerActive {
+            closeMiniPlayer()
+        }
+    }
+    
+    private func closeMiniPlayer() {
+        isMiniPlayerActive = false
+        
+        // Close mini player window
+        miniPlayerWindow?.close()
+        miniPlayerWindow = nil
+        
+        // Show main window
+        if let mainWindow = NSApp.mainWindow {
+            mainWindow.makeKeyAndOrderFront(nil)
+        } else {
+            // If main window reference is lost, we need to recreate the app window
+            NSApp.windows.first?.makeKeyAndOrderFront(nil)
+        }
+        
+        // Remove observer
+        NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
+    }
 }
+

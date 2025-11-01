@@ -55,6 +55,7 @@ struct SongListView: View {
             columnHeaders
             songRows
         }
+        .listStyle(.plain)
     }
     
     private var columnHeaders: some View {
@@ -62,14 +63,16 @@ struct SongListView: View {
             headerButton("Title", sort: "title")
             headerButton("Artist", sort: "artist")
             headerButton("Album", sort: "album")
-            headerButton("Year", sort: "year", width: 50)
             headerButton("Genre", sort: "genre", width: 100)
         }
+        .padding(.vertical, 4)
+        .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
     }
     
     private func headerButton(_ title: String, sort: String, width: CGFloat? = nil) -> some View {
         Text(title)
             .fontWeight(.bold)
+            .frame(width: width, alignment: .leading)
             .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
             .onTapGesture { sortBy = sort }
     }
@@ -103,5 +106,6 @@ struct SongListView: View {
                 onAddToPlaylist(song)
             }
         }
+        .listRowInsets(EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
     }
 }

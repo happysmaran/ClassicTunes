@@ -30,6 +30,7 @@ func loadSongs(from folderURL: URL) -> [Song] {
         var album = "Unknown Album"
         var year = "-"
         var genre = "Unknown Genre"
+        var artworkData: Data? = nil
         
         // print(asset.commonMetadata)
 
@@ -43,12 +44,14 @@ func loadSongs(from folderURL: URL) -> [Song] {
                 album = item.value as? String ?? album
             case "type":
                 genre = item.value as? String ?? genre
+            case "artwork":
+                artworkData = item.value as? Data
             default:
                 break
             }
         }
 
-        let song = Song(url: fileURL, title: title, artist: artist, album: album, year: year, genre: genre)
+        let song = Song(url: fileURL, title: title, artist: artist, album: album, year: year, genre: genre, artworkData: artworkData)
         loadedSongs.append(song)
     }
 
@@ -160,3 +163,4 @@ func saveUserPlaylists(_ playlists: [Playlist]) {
     // Only save custom playlists
     savePlaylistsToUserDefaults(playlists.filter { !$0.isSystem })
 }
+

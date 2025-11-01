@@ -17,6 +17,7 @@ struct TopToolbarView: View {
     @Binding var isRepeatEnabled: Bool  // This represents repeat all
     @Binding var isRepeatOne: Bool      // Added this parameter
     @Binding var isStopped: Bool
+    var onMiniPlayerToggle: (() -> Void)? = nil  // Add this new parameter
 
     var body: some View {
         HStack(spacing: 12) {
@@ -90,6 +91,11 @@ struct TopToolbarView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal)
         .padding(.vertical, 4)
+        .contextMenu {  // Add context menu to the playback bar
+            Button("Open in MiniPlayer") {
+                onMiniPlayerToggle?()
+            }
+        }
     }
     
     private func songInfoView(_ song: Song) -> some View {
