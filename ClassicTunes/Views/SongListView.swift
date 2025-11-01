@@ -105,4 +105,3 @@ struct SongListView: View {
         }
     }
 }
-

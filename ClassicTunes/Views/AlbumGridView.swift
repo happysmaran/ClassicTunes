@@ -7,16 +7,12 @@ struct AlbumGridView: View {
     var onAlbumSelect: (String) -> Void
     @State private var coverSize: CGFloat = 120
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 140), spacing: 20)
-    ]
-
     var body: some View {
         VStack {
             sizeSlider
             albumGrid
         }
-        .background(Color.black)
+        .background(Color.white)
     }
     
     private var sizeSlider: some View {
@@ -51,7 +47,10 @@ struct AlbumGridView: View {
         let groupedAlbums = Dictionary(grouping: songs) { $0.album }
         
         return ScrollView {
-            LazyVGrid(columns: columns, spacing: 20) {
+            // Dynamic columns based on current cover size
+            LazyVGrid(columns: [
+                GridItem(.adaptive(minimum: max(100, coverSize + 20)), spacing: max(10, coverSize / 6))
+            ], spacing: max(10, coverSize / 6)) {
                 ForEach(groupedAlbums.keys.sorted(), id: \.self) { album in
                     albumCell(album: album)
                 }
@@ -77,8 +76,9 @@ struct AlbumGridView: View {
                 .font(.caption)
                 .frame(maxWidth: coverSize)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.white)
+                .foregroundColor(colorScheme == .light ? .black : .primary)
         }
+        .frame(width: coverSize)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(selectedAlbum == album ? Color.accentColor : Color.clear, lineWidth: 2)
