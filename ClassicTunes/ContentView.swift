@@ -1,6 +1,7 @@
 import SwiftUI
 import AVKit
 import Combine
+import MediaPlayer
 
 struct ContentView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
@@ -66,6 +67,7 @@ struct ContentView: View {
                             set: { shouldPlay in
                                 if shouldPlay {
                                     player?.play()
+                                    updateNowPlayingInfo()
                                 } else {
                                     player?.pause()
                                 }
@@ -126,6 +128,7 @@ struct ContentView: View {
                     print("Running loadSongsOnce at launch")
                     loadSongsOnce()
                     generateSystemPlaylists()
+                    setupRemoteCommands()
                 }
                 .sheet(isPresented: $showNewPlaylistSheet) {
                     NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
@@ -144,6 +147,11 @@ struct ContentView: View {
                     incrementPlayCount(for: song)
                     generateSystemPlaylists()
                     refreshSongPlayCounts()
+                    updateNowPlayingInfo()
+                }
+                .onChange(of: volume) { _ in
+                    player?.volume = Float(volume)
+                    updateNowPlayingInfo()
                 }
             }
         }
@@ -238,6 +246,7 @@ struct ContentView: View {
 
         setupTimeObserver(for: newPlayer)
         setupPlaybackCompletionHandler(for: item)
+        updateNowPlayingInfo()
     }
     
     private func stopCurrentPlayback() {
@@ -253,20 +262,21 @@ struct ContentView: View {
     
     private func setupTimeObserver(for player: AVPlayer) {
         let interval = CMTime(seconds: 1.0, preferredTimescale: 1)
-        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [self] time in
+        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
             let seconds = time.seconds
             if !self.isSeeking {
                 self.playbackPosition = seconds / max(self.playbackDuration, 0.1)
+                self.updateNowPlayingPlaybackInfo()
             }
         }
     }
     
     private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [self] _ in
-            if isRepeatOne {
+        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
+            if self.isRepeatOne {
                 // Repeat the same song
-                if let currentSong = selectedSong {
-                    playSong(currentSong)
+                if let currentSong = self.selectedSong {
+                    self.playSong(currentSong)
                 }
             } else {
                 self.playNext()
@@ -334,6 +344,7 @@ struct ContentView: View {
             let seconds = value * playbackDuration
             let time = CMTime(seconds: seconds, preferredTimescale: 600)
             player?.seek(to: time)
+            updateNowPlayingPlaybackInfo()
         }
     }
 
@@ -387,6 +398,118 @@ struct ContentView: View {
         UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
     }
     
+    // System audio controls implementation
+    private func setupRemoteCommands() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        
+        // Play command
+        commandCenter.playCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            if player.rate == 0 {
+                player.play()
+                self.isPlayingFlag = true
+                self.updateNowPlayingInfo()
+                return .success
+            }
+            return .commandFailed
+        }
+        
+        // Pause command
+        commandCenter.pauseCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            if player.rate != 0 {
+                player.pause()
+                self.isPlayingFlag = false
+                self.updateNowPlayingInfo()
+                return .success
+            }
+            return .commandFailed
+        }
+        
+        // Toggle play/pause command
+        commandCenter.togglePlayPauseCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            if player.rate == 0 {
+                player.play()
+                self.isPlayingFlag = true
+            } else {
+                player.pause()
+                self.isPlayingFlag = false
+            }
+            self.updateNowPlayingInfo()
+            return .success
+        }
+        
+        // Next track command
+        commandCenter.nextTrackCommand.addTarget { _ in
+            self.playNext()
+            return .success
+        }
+        
+        // Previous track command
+        commandCenter.previousTrackCommand.addTarget { _ in
+            self.playPrevious()
+            return .success
+        }
+        
+        // Change playback position command
+        commandCenter.changePlaybackPositionCommand.addTarget { event in
+            guard let player = self.player else { return .commandFailed }
+            guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            
+            let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
+            player.seek(to: time)
+            self.updateNowPlayingPlaybackInfo()
+            return .success
+        }
+    }
+    
+    private func updateNowPlayingInfo() {
+        guard let song = selectedSong else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
+        
+        var nowPlayingInfo = [String: Any]()
+        
+        // Basic track information
+        nowPlayingInfo[MPMediaItemPropertyTitle] = song.title
+        nowPlayingInfo[MPMediaItemPropertyArtist] = song.artist
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = song.album
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = playbackDuration
+        
+        // Artwork if available
+        if let artworkData = song.artworkData,
+           let artworkImage = NSImage(data: artworkData) {
+            let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { _ in artworkImage }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+        }
+        
+        // Playback position
+        if let player = player {
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
+        }
+        
+        // Playback rate
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
+    private func updateNowPlayingPlaybackInfo() {
+        guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+        
+        // Update playback position
+        if let player = player {
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
+        }
+        
+        // Update playback rate
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
     // MiniPlayer functionality
     private func toggleMiniPlayer() {
         if isMiniPlayerActive {
@@ -416,12 +539,14 @@ struct ContentView: View {
             playbackPosition: $playbackPosition,
             playbackDuration: $playbackDuration,
             onPlayPause: { 
-                if player?.rate != 0 {
-                    player?.pause()
-                    isPlayingFlag = false
+                if self.player?.rate != 0 {
+                    self.player?.pause()
+                    self.isPlayingFlag = false
+                    self.updateNowPlayingInfo()
                 } else {
-                    player?.play()
-                    isPlayingFlag = true
+                    self.player?.play()
+                    self.isPlayingFlag = true
+                    self.updateNowPlayingInfo()
                 }
             },
             onPrevious: playPrevious,
@@ -434,7 +559,7 @@ struct ContentView: View {
         
         let window = NSWindow(
             contentRect: NSRect(x: 100, y: 100, width: 300, height: 100),
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -444,6 +569,10 @@ struct ContentView: View {
         window.isReleasedWhenClosed = false
         window.center()
         window.makeKeyAndOrderFront(nil)
+        
+        // Make the window stay on top
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         miniPlayerWindow = window
         
@@ -482,4 +611,3 @@ struct ContentView: View {
         NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
     }
 }
-
