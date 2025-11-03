@@ -37,6 +37,11 @@ struct ContentView: View {
     @State private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
     @State private var isPlayingFlag: Bool = false
+    
+    // Up Next states
+    @State private var showUpNext = false
+    @State private var upcomingSongs: [Song] = []
+    @State private var shuffleQueue: [Song] = []
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
@@ -45,10 +50,67 @@ struct ContentView: View {
     private var displayedSongs: [Song] {
         if let playlistID = selectedPlaylistID,
            let playlist = playlists.first(where: { $0.id == playlistID }) {
-            let unique = Array(Dictionary(uniqueKeysWithValues: playlist.songs.map { ($0.id, $0) }).values)
-            return unique
+            // Preserve the playlist's visible order while removing duplicates
+            var seen = Set<UUID>()
+            var result: [Song] = []
+            for s in playlist.songs {
+                if !seen.contains(s.id) {
+                    seen.insert(s.id)
+                    result.append(s)
+                }
+            }
+            return result
         }
-        return Array(Dictionary(uniqueKeysWithValues: songs.map { ($0.id, $0) }).values)
+        // Preserve the library's visible order while removing duplicates
+        var seen = Set<UUID>()
+        var result: [Song] = []
+        for s in songs {
+            if !seen.contains(s.id) {
+                seen.insert(s.id)
+                result.append(s)
+            }
+        }
+        return result
+    }
+
+    // Build the playback context based on current selection, sorted alphabetically
+    private func playbackContext(for seedSong: Song?) -> [Song] {
+        // Determine base list according to current UI context
+        let base: [Song]
+        if let _ = selectedPlaylistID {
+            base = displayedSongs
+        } else if isAlbumView, let seed = seedSong {
+            base = songs.filter { $0.album == seed.album }
+        } else {
+            base = displayedSongs
+        }
+        // Deduplicate while preserving order
+        var seen = Set<UUID>()
+        var deduped: [Song] = []
+        for s in base {
+            if !seen.contains(s.id) {
+                seen.insert(s.id)
+                deduped.append(s)
+            }
+        }
+        // Sort alphabetically by title, then artist
+        return deduped.sorted { a, b in
+            let t = a.title.localizedCaseInsensitiveCompare(b.title)
+            if t == .orderedSame {
+                return a.artist.localizedCaseInsensitiveCompare(b.artist) == .orderedAscending
+            }
+            return t == .orderedAscending
+        }
+    }
+
+    private func alphabeticalIndex(of song: Song, in list: [Song]) -> Int? {
+        return list.firstIndex { $0.id == song.id }
+    }
+    
+    private func rebuildShuffleQueue(startingFrom current: Song) {
+        let context = playbackContext(for: current)
+        let pool = context.filter { $0.id != current.id }
+        shuffleQueue = pool.shuffled()
     }
 
     var body: some View {
@@ -89,35 +151,71 @@ struct ContentView: View {
 
                     Divider()
 
-                    NavigationView {
-                        SidebarView(
-                            playlists: playlists,
-                            userPlaylists: $playlistManager.userPlaylists,
-                            selectedPlaylistID: $selectedPlaylistID,
-                            showNewPlaylistSheet: $showNewPlaylistSheet,
-                            libraryActive: $libraryActive
-                        )
-                         
-                        SongListView(
-                            isAlbumView: isAlbumView,
-                            songs: songs,
-                            onSongSelect: playSong,
-                            selectedSong: $selectedSong,
-                            onAlbumSelect: { album in
-                                let albumSongs = songs.filter { $0.album == album }
-                                if let firstSong = albumSongs.first {
-                                    currentPlaybackSongs = albumSongs
-                                    playSong(firstSong)
+                    HStack(spacing: 0) {
+                        NavigationView {
+                            SidebarView(
+                                playlists: playlists,
+                                userPlaylists: $playlistManager.userPlaylists,
+                                selectedPlaylistID: $selectedPlaylistID,
+                                showNewPlaylistSheet: $showNewPlaylistSheet,
+                                libraryActive: $libraryActive
+                            )
+                             
+                            SongListView(
+                                isAlbumView: isAlbumView,
+                                songs: songs,
+                                onSongSelect: playSong,
+                                selectedSong: $selectedSong,
+                                onAlbumSelect: { album in
+                                    let albumSongs = songs.filter { $0.album == album }
+                                    if let firstSong = albumSongs.first {
+                                        currentPlaybackSongs = albumSongs
+                                        playSong(firstSong)
+                                    }
+                                },
+                                playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                                onAddToPlaylist: { song in
+                                    songToAddToPlaylist = song
+                                    showPlaylistSelectionSheet = true
                                 }
-                            },
-                            playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                            onAddToPlaylist: { song in
-                                songToAddToPlaylist = song
-                                showPlaylistSelectionSheet = true
-                            }
-                        )
-                        .environmentObject(playlistManager)
+                            )
+                            .environmentObject(playlistManager)
+                        }
+                        
+                        if showUpNext {
+                            Divider()
+                            UpNextView(
+                                currentSong: selectedSong,
+                                upcomingSongs: upcomingSongs,
+                                isPlaying: (player?.rate ?? 0) > 0
+                            )
+                            .frame(width: 300)
+                        }
                     }
+                    
+                    // Bottom bar
+                    Divider()
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            withAnimation {
+                                showUpNext.toggle()
+                                if showUpNext {
+                                    updateUpcomingSongs()
+                                }
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "list.bullet")
+                                Text("Up Next")
+                            }
+                        }
+                        .padding(.horizontal)
+                        .foregroundColor(.primary)
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .frame(height: 40)
+                    .background(Color(NSColor.controlBackgroundColor))
                 }
                 .background(Color(NSColor.windowBackgroundColor).opacity(0.95))
                 .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
@@ -148,10 +246,21 @@ struct ContentView: View {
                     generateSystemPlaylists()
                     refreshSongPlayCounts()
                     updateNowPlayingInfo()
+                    updateUpcomingSongs()
                 }
                 .onChange(of: volume) { _ in
                     player?.volume = Float(volume)
                     updateNowPlayingInfo()
+                }
+                .onChange(of: isShuffleEnabled) { enabled in
+                    if enabled {
+                        if let song = selectedSong {
+                            rebuildShuffleQueue(startingFrom: song)
+                        }
+                    } else {
+                        shuffleQueue.removeAll()
+                    }
+                    updateUpcomingSongs()
                 }
             }
         }
@@ -208,19 +317,13 @@ struct ContentView: View {
         }
 
         // Set the correct playback context based on what we're playing from
-        if let playlistID = selectedPlaylistID,
-           let playlist = playlists.first(where: { $0.id == playlistID }) {
-            // Playing from a playlist
-            currentPlaybackSongs = playlist.songs
-        } else if isAlbumView {
-            // Playing from album view
-            currentPlaybackSongs = songs.filter { $0.album == song.album }
-        } else {
-            // Playing from main library
-            currentPlaybackSongs = songs
+        currentPlaybackSongs = playbackContext(for: song)
+        if isShuffleEnabled {
+            rebuildShuffleQueue(startingFrom: song)
         }
         
         setupNewPlayback(for: song)
+        updateUpcomingSongs()
     }
     
     private func refreshSongPlayCounts() {
@@ -274,10 +377,12 @@ struct ContentView: View {
     private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
             if self.isRepeatOne {
-                // Repeat the same song
-                if let currentSong = self.selectedSong {
-                    self.playSong(currentSong)
-                }
+                // Loop the same item by seeking to start and resuming playback
+                self.player?.seek(to: .zero)
+                self.player?.play()
+                self.isPlayingFlag = true
+                self.playbackPosition = 0.0
+                self.updateNowPlayingInfo()
             } else {
                 self.playNext()
             }
@@ -288,8 +393,19 @@ struct ContentView: View {
         guard let current = selectedSong else { return }
 
         if isShuffleEnabled {
-            playRandomSong(excluding: current)
-            return
+            // Use the persistent shuffle queue
+            if shuffleQueue.isEmpty {
+                if isRepeatEnabled || isRepeatOne {
+                    rebuildShuffleQueue(startingFrom: current)
+                }
+            }
+            if let next = shuffleQueue.first {
+                shuffleQueue.removeFirst()
+                playSong(next)
+                return
+            } else {
+                return
+            }
         }
 
         playNextSequentialSong(after: current)
@@ -303,6 +419,7 @@ struct ContentView: View {
     }
     
     private func playNextSequentialSong(after current: Song) {
+        currentPlaybackSongs = playbackContext(for: current)
         guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
 
         let nextIndex = currentIndex + 1
@@ -326,6 +443,7 @@ struct ContentView: View {
     }
     
     private func playPreviousSequentialSong(before current: Song) {
+        currentPlaybackSongs = playbackContext(for: current)
         guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
 
         let previousIndex = currentIndex - 1
@@ -510,6 +628,42 @@ struct ContentView: View {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
     
+    // Up Next functionality
+    private func updateUpcomingSongs() {
+        guard let current = selectedSong else {
+            upcomingSongs = []
+            return
+        }
+
+        currentPlaybackSongs = playbackContext(for: current)
+
+        var upcoming: [Song] = []
+        
+        if isShuffleEnabled {
+            // Show the next items from the persistent shuffle queue
+            upcoming = Array(shuffleQueue.prefix(15))
+        } else {
+            // Get next sequential songs
+            if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
+                let startIndex = currentIndex + 1
+                let endIndex = min(startIndex + 15, currentPlaybackSongs.count) // Show up to 5 songs
+                
+                if startIndex < endIndex {
+                    upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
+                }
+                
+                // If we're near the end and repeat is enabled, add songs from the beginning
+                if (isRepeatEnabled || isRepeatOne) && upcoming.count < 15 {
+                    let additionalNeeded = 15 - upcoming.count
+                    let additionalSongs = currentPlaybackSongs.prefix(additionalNeeded)
+                    upcoming.append(contentsOf: additionalSongs)
+                }
+            }
+        }
+        
+        upcomingSongs = upcoming
+    }
+    
     // MiniPlayer functionality
     private func toggleMiniPlayer() {
         if isMiniPlayerActive {
@@ -611,3 +765,113 @@ struct ContentView: View {
         NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
     }
 }
+
+struct UpNextView: View {
+    let currentSong: Song?
+    let upcomingSongs: [Song]
+    let isPlaying: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Up Next")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            if let current = currentSong {
+                // Current playing song
+                HStack(spacing: 12) {
+                    if let artworkData = current.artworkData,
+                       let image = NSImage(data: artworkData) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    } else {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 50, height: 50)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(current.title)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text(current.artist)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "speaker.wave.2.fill")
+                        .foregroundColor(.blue)
+                }
+                .padding(.horizontal)
+                
+                Divider()
+            }
+            
+            if !upcomingSongs.isEmpty {
+                Text("Next Up")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                
+                // List of upcoming songs
+                List(upcomingSongs.indices, id: \.self) { index in
+                    let song = upcomingSongs[index]
+                    HStack(spacing: 12) {
+                        Text("\(index + 1)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .frame(width: 20)
+                        
+                        if let artworkData = song.artworkData,
+                           let image = NSImage(data: artworkData) {
+                            Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                        } else {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 40, height: 40)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(song.title)
+                                .font(.subheadline)
+                                .lineLimit(1)
+                            Text(song.artist)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                }
+                .listStyle(PlainListStyle())
+            } else if isPlaying {
+                Text("No upcoming songs")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Text("No song playing")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(NSColor.controlBackgroundColor))
+    }
+}
+
