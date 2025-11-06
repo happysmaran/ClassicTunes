@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AlbumGridView: View {
-    @Environment(\.colorScheme) var colorScheme
+    // Removed @Environment(\.colorScheme) var colorScheme - this was causing adaptation to system changes
     var songs: [Song]
     var selectedAlbum: String?
     var onAlbumSelect: (String) -> Void
@@ -13,6 +13,7 @@ struct AlbumGridView: View {
             albumGrid
         }
         .background(Color.white)
+        .colorScheme(.light) // Force light mode
     }
     
     private var sizeSlider: some View {
@@ -25,7 +26,7 @@ struct AlbumGridView: View {
                         .frame(height: 4)
 
                     Capsule()
-                        .fill(Color(NSColor(calibratedWhite: 0.15, alpha: 1.0)))
+                        .fill(Color.black.opacity(0.85)) // Changed from system-adaptive color to fixed black
                         .frame(width: CGFloat((coverSize - 60) / 140) * geometry.size.width, height: 4)
                 }
                 .frame(height: 10)
@@ -76,12 +77,12 @@ struct AlbumGridView: View {
                 .font(.caption)
                 .frame(maxWidth: coverSize)
                 .multilineTextAlignment(.center)
-                .foregroundColor(colorScheme == .light ? .black : .primary)
+                .foregroundColor(.black) // Fixed black instead of system color
         }
         .frame(width: coverSize)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(selectedAlbum == album ? Color.accentColor : Color.clear, lineWidth: 2)
+                .stroke(Color.blue, lineWidth: 2) // Fixed blue instead of system color
         )
         .onTapGesture {
             onAlbumSelect(album)

@@ -33,6 +33,7 @@ struct TopToolbarView: View {
         .background(toolbarBackground)
         .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
         .foregroundColor(.black)
+        .colorScheme(.light) // Force light mode on this view
     }
     
     private var playbackControlsGroup: some View {
@@ -75,7 +76,7 @@ struct TopToolbarView: View {
                 ))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(NSColor(calibratedWhite: 0.6, alpha: 1.0)), lineWidth: 1)
+                        .stroke(Color.gray, lineWidth: 1) // Changed from system color
                 )
                 .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 1)
                 .frame(height: 56)
@@ -159,7 +160,7 @@ struct TopToolbarView: View {
         LinearGradient(
             gradient: Gradient(colors: [
                 Color.white,
-                Color(NSColor(calibratedWhite: 0.85, alpha: 1.0))
+                Color(red: 0.85, green: 0.85, blue: 0.85) // Fixed color instead of system color
             ]),
             startPoint: .top,
             endPoint: .bottom
@@ -174,7 +175,7 @@ struct TopToolbarView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                gradient: Gradient(colors: [.white.opacity(0.7), .gray.opacity(0.4)]),
+                                gradient: Gradient(colors: [.white.opacity(0.7), Color.gray.opacity(0.4)]),
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -188,7 +189,7 @@ struct TopToolbarView: View {
     private func toggleButton(icon: String, isActive: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .foregroundColor(isActive ? .accentColor : .gray)
+                .foregroundColor(isActive ? .blue : .gray) // Fixed color instead of accentColor
         }
         .buttonStyle(.borderless)
         .background(
@@ -210,16 +211,16 @@ struct RepeatButton: View {
                     // Show repeat one icon with small '1' badge
                     ZStack(alignment: .bottomTrailing) {
                         Image(systemName: "repeat")
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.blue) // Fixed color instead of accentColor
                         Text("1")
                             .font(.caption2)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.blue) // Fixed color instead of accentColor
                             .offset(x: 2, y: 2)
                     }
                 } else if isRepeatAll {
                     // Show regular repeat icon
                     Image(systemName: "repeat")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.blue) // Fixed color instead of accentColor
                 } else {
                     // Show disabled repeat icon
                     Image(systemName: "repeat")

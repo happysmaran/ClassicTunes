@@ -102,7 +102,7 @@ struct ContentView: View {
             return t == .orderedAscending
         }
     }
-
+    
     private func alphabeticalIndex(of song: Song, in list: [Song]) -> Int? {
         return list.firstIndex { $0.id == song.id }
     }
@@ -215,9 +215,9 @@ struct ContentView: View {
                         .buttonStyle(PlainButtonStyle())
                     }
                     .frame(height: 40)
-                    .background(Color(NSColor.controlBackgroundColor))
+                    .background(Color.white) // Changed from system color to fixed white
                 }
-                .background(Color(NSColor.windowBackgroundColor).opacity(0.95))
+                .background(Color.white.opacity(0.95)) // Changed from system color to fixed white
                 .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
                     handleFileImport(result)
                 }
@@ -262,6 +262,7 @@ struct ContentView: View {
                     }
                     updateUpcomingSongs()
                 }
+                .colorScheme(.light) // Force light mode on this view hierarchy
             }
         }
     }
@@ -871,7 +872,6 @@ struct UpNextView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(Color.white) // Changed from system color to fixed white
     }
 }
-

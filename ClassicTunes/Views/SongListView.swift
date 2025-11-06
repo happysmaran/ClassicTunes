@@ -42,12 +42,13 @@ struct SongListView: View {
         }
         .background(
             LinearGradient(
-                gradient: Gradient(colors: [Color(NSColor(calibratedWhite: 0.96, alpha: 1.0)), Color.white]),
+                gradient: Gradient(colors: [Color(red: 0.96, green: 0.96, blue: 0.96), Color.white]), // Fixed colors
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
         .foregroundColor(.black)
+        .colorScheme(.light) // Force light mode
     }
     
     private var listView: some View {
@@ -93,7 +94,7 @@ struct SongListView: View {
         .padding(.vertical, 4)
         .background(
             selectedSong?.id == song.id
-            ? Color.accentColor.opacity(0.3)
+            ? Color.blue.opacity(0.3) // Fixed blue instead of system color
             : Color.clear
         )
         .contentShape(Rectangle())
