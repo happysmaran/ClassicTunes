@@ -17,6 +17,7 @@ struct TopToolbarView: View {
     @Binding var isRepeatEnabled: Bool  // This represents repeat all
     @Binding var isRepeatOne: Bool      // Added this parameter
     @Binding var isStopped: Bool
+    @Binding var isCoverFlowActive: Bool  // Add Cover Flow state binding
     var onMiniPlayerToggle: (() -> Void)? = nil  // Add this new parameter
 
     var body: some View {
@@ -137,8 +138,18 @@ struct TopToolbarView: View {
     
     private var viewToggleButtons: some View {
         HStack(spacing: 6) {
-            toggleButton(icon: "list.bullet", isActive: !isAlbumView) { isAlbumView = false }
-            toggleButton(icon: "square.grid.2x2", isActive: isAlbumView) { isAlbumView = true }
+            toggleButton(icon: "list.bullet", isActive: !isAlbumView && !isCoverFlowActive) { 
+                isAlbumView = false
+                isCoverFlowActive = false
+            }
+            toggleButton(icon: "square.grid.2x2", isActive: isAlbumView) { 
+                isAlbumView = true
+                isCoverFlowActive = false
+            }
+            toggleButton(icon: "square.stack.3d.down.forward", isActive: isCoverFlowActive) { 
+                isCoverFlowActive = true
+                isAlbumView = false
+            }
             toggleButton(icon: "shuffle", isActive: isShuffleEnabled) { isShuffleEnabled.toggle() }
             RepeatButton(isRepeatAll: $isRepeatEnabled, isRepeatOne: $isRepeatOne)  // Updated repeat button
         }
@@ -251,3 +262,4 @@ struct RepeatButton: View {
         }
     }
 }
+

@@ -80,10 +80,7 @@ struct AlbumGridView: View {
                 .foregroundColor(.black) // Fixed black instead of system color
         }
         .frame(width: coverSize)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.blue, lineWidth: 2) // Fixed blue instead of system color
-        )
+        // Removed the stroke that was creating a visible grid line. What the fuck Smaran.
         .onTapGesture {
             onAlbumSelect(album)
         }

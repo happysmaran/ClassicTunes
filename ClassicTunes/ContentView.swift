@@ -7,6 +7,7 @@ struct ContentView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
     @State private var musicFolderAccess: URL?
     @State private var isAlbumView = false
+    @State private var isCoverFlowActive = false  // New state for Cover Flow
     @State private var showFileImporter = false
     @State private var songs: [Song] = []
     @State private var selectedSong: Song?
@@ -71,6 +72,27 @@ struct ContentView: View {
             }
         }
         return result
+    }
+    
+    // Get unique albums for Cover Flow
+    private var albumsForCoverFlow: [AlbumInfo] {
+        let groupedSongs = Dictionary(grouping: displayedSongs) { $0.album }
+        var albumInfos: [AlbumInfo] = []
+        
+        // Sort albums by name to ensure consistent ordering
+        let sortedAlbums = groupedSongs.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+        
+        for (albumName, songs) in sortedAlbums {
+            if let firstSong = songs.first {
+                albumInfos.append(AlbumInfo(
+                    name: albumName,
+                    artist: firstSong.artist,
+                    artworkData: firstSong.artworkData
+                ))
+            }
+        }
+        
+        return albumInfos
     }
 
     // Build the playback context based on current selection, sorted alphabetically
@@ -146,6 +168,7 @@ struct ContentView: View {
                         isRepeatEnabled: $isRepeatEnabled,
                         isRepeatOne: $isRepeatOne,
                         isStopped: $isStopped,
+                        isCoverFlowActive: $isCoverFlowActive,  // Pass Cover Flow state
                         onMiniPlayerToggle: toggleMiniPlayer
                     )
 
@@ -160,26 +183,42 @@ struct ContentView: View {
                                 showNewPlaylistSheet: $showNewPlaylistSheet,
                                 libraryActive: $libraryActive
                             )
-                             
-                            SongListView(
-                                isAlbumView: isAlbumView,
-                                songs: songs,
-                                onSongSelect: playSong,
-                                selectedSong: $selectedSong,
-                                onAlbumSelect: { album in
-                                    let albumSongs = songs.filter { $0.album == album }
-                                    if let firstSong = albumSongs.first {
-                                        currentPlaybackSongs = albumSongs
-                                        playSong(firstSong)
+                            
+                            // Main content area with Cover Flow option
+                            if isCoverFlowActive {
+                                CoverFlowView(
+                                    albums: albumsForCoverFlow,
+                                    selectedAlbum: .constant(selectedSong?.album ?? ""),
+                                    isCoverFlowActive: $isCoverFlowActive,
+                                    onAlbumSelect: { albumName in
+                                        let albumSongs = songs.filter { $0.album == albumName }
+                                        if let firstSong = albumSongs.first {
+                                            currentPlaybackSongs = albumSongs
+                                            playSong(firstSong)
+                                        }
                                     }
-                                },
-                                playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                                onAddToPlaylist: { song in
-                                    songToAddToPlaylist = song
-                                    showPlaylistSelectionSheet = true
-                                }
-                            )
-                            .environmentObject(playlistManager)
+                                )
+                            } else {
+                                SongListView(
+                                    isAlbumView: isAlbumView,
+                                    songs: songs,
+                                    onSongSelect: playSong,
+                                    selectedSong: $selectedSong,
+                                    onAlbumSelect: { album in
+                                        let albumSongs = songs.filter { $0.album == album }
+                                        if let firstSong = albumSongs.first {
+                                            currentPlaybackSongs = albumSongs
+                                            playSong(firstSong)
+                                        }
+                                    },
+                                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                                    onAddToPlaylist: { song in
+                                        songToAddToPlaylist = song
+                                        showPlaylistSelectionSheet = true
+                                    }
+                                )
+                                .environmentObject(playlistManager)
+                            }
                         }
                         
                         if showUpNext {
@@ -193,7 +232,7 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Bottom bar
+                    // Bottom bar - removed the view mode picker
                     Divider()
                     HStack {
                         Spacer()
@@ -875,3 +914,4 @@ struct UpNextView: View {
         .background(Color.white) // Changed from system color to fixed white
     }
 }
+
