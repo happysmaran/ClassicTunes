@@ -191,12 +191,13 @@ struct ContentView: View {
                                     selectedAlbum: .constant(selectedSong?.album ?? ""),
                                     isCoverFlowActive: $isCoverFlowActive,
                                     onAlbumSelect: { albumName in
-                                        let albumSongs = songs.filter { $0.album == albumName }
+                                        let albumSongs = displayedSongs.filter { $0.album == albumName }
                                         if let firstSong = albumSongs.first {
                                             currentPlaybackSongs = albumSongs
                                             playSong(firstSong)
                                         }
-                                    }
+                                    },
+                                    songs: displayedSongs
                                 )
                             } else {
                                 SongListView(
@@ -914,4 +915,3 @@ struct UpNextView: View {
         .background(Color.white) // Changed from system color to fixed white
     }
 }
-

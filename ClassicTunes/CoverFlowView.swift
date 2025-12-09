@@ -1,4 +1,5 @@
 import SwiftUI
+import ImageIO
 
 struct CoverFlowView: View {
     let albums: [AlbumInfo]
@@ -8,15 +9,17 @@ struct CoverFlowView: View {
     var songs: [Song] = [] // Added to display songs for the selected album
 
     @State private var currentIndex: Int = 0
+    @State private var committedIndex: Int = 0 // Index committed after interaction ends
     @State private var sliderValue: Double = 0.0
     @State private var sortBy = "title"
     @State private var selectedSong: Song? = nil
     @State private var showAllSongs = true // New state to toggle between all songs and album songs
+    @State private var isInteracting = false // Track interaction to defer playback and commit index
 
-    // Get songs for the currently selected album
+    // Get songs for the committed album (prevents list churn while sliding)
     private var albumSongs: [Song] {
-        guard !albums.isEmpty && currentIndex < albums.count else { return [] }
-        let currentAlbum = albums[currentIndex]
+        guard !albums.isEmpty && committedIndex < albums.count else { return [] }
+        let currentAlbum = albums[committedIndex]
         return songs.filter { $0.album == currentAlbum.name }
     }
     
@@ -98,17 +101,26 @@ struct CoverFlowView: View {
                                 album: album,
                                 index: index,
                                 currentIndex: currentIndex,
-                                geometry: geometry
+                                geometry: geometry,
+                                isInteracting: isInteracting
                             )
                             .frame(width: frameWidth, height: frameWidth)
                             .aspectRatio(1, contentMode: .fit)
                             .position(x: x, y: size.height / 2)
                             .zIndex(Double(albums.count) - abs(Double(index - currentIndex)))
                             .onTapGesture {
+                                isInteracting = true
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     currentIndex = index
                                     sliderValue = Double(index)
+                                }
+                                // Commit the index and play slightly after the animation
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    committedIndex = index
                                     selectAndPlay(album: album)
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                    isInteracting = false
                                 }
                             }
                             .focusable(false)
@@ -157,8 +169,17 @@ struct CoverFlowView: View {
                         in: 0...Double(albums.count - 1),
                         step: 1,
                         onEditingChanged: { isEditing in
+                            isInteracting = isEditing
                             if !isEditing {
-                                playCurrentAlbum()
+                                // Commit the index after the drag ends
+                                committedIndex = currentIndex
+                                // Defer playback slightly to allow the animation to finish
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    playCurrentAlbum()
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                    isInteracting = false
+                                }
                             }
                         }
                     )
@@ -234,25 +255,27 @@ struct CoverFlowView: View {
                 }
                 .listStyle(.plain)
             }
-            .frame(maxHeight: .infinity)
+            .frame(maxHeight: 300) // Fixed height for the list section
             
             Spacer()
         }
         .background(Color.white)
         .clipShape(Rectangle())
-        .onChange(of: currentIndex) { newValue in
+        .onChange(of: committedIndex) { newValue in
             if newValue < albums.count {
                 selectedAlbum = albums[newValue].name
-                sliderValue = Double(newValue)
+                // sliderValue follows currentIndex during interaction; no need to set here
             }
         }
         .onAppear {
             if let selected = selectedAlbum,
                let index = albums.firstIndex(where: { $0.name == selected }) {
                 currentIndex = index
+                committedIndex = index
                 sliderValue = Double(index)
             } else if !albums.isEmpty {
                 currentIndex = 0
+                committedIndex = 0
                 sliderValue = 0.0
             }
         }
@@ -276,8 +299,8 @@ struct CoverFlowView: View {
     }
 
     private func playCurrentAlbum() {
-        guard currentIndex < albums.count else { return }
-        let album = albums[currentIndex]
+        guard committedIndex < albums.count else { return }
+        let album = albums[committedIndex]
         selectAndPlay(album: album)
     }
 }
@@ -291,7 +314,29 @@ struct AlbumInfo: Identifiable {
     init(name: String, artist: String, artworkData: Data?) {
         self.name = name
         self.artist = artist
-        self.artwork = artworkData.flatMap { NSImage(data: $0) }
+        // Downsample artwork once to avoid large decode hitches during animation
+        if let data = artworkData {
+            self.artwork = AlbumInfo.downsampleImage(data: data, maxDimension: 600)
+        } else {
+            self.artwork = nil
+        }
+    }
+    
+    private static func downsampleImage(data: Data, maxDimension: CGFloat, scale: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0) -> NSImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: false
+        ]
+        guard let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else { return nil }
+        let pixelSize = Int(maxDimension * scale)
+        let thumbOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: pixelSize,
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else { return nil }
+        let size = NSSize(width: cgImage.width, height: cgImage.height)
+        let image = NSImage(cgImage: cgImage, size: size)
+        return image
     }
 }
 
@@ -300,6 +345,7 @@ struct CoverFlowItemView: View {
     let index: Int
     let currentIndex: Int
     let geometry: GeometryProxy
+    let isInteracting: Bool
 
     private var isCenterItem: Bool {
         index == currentIndex
@@ -347,6 +393,7 @@ struct CoverFlowItemView: View {
             anchor: rotationAnchor,
             perspective: 0.3
         )
+        .compositingGroup()
         .animation(.easeInOut(duration: 0.3), value: currentIndex)
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
