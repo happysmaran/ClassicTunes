@@ -6,13 +6,20 @@ struct CoverFlowView: View {
     @Binding var selectedAlbum: String?
     @Binding var isCoverFlowActive: Bool
     var onAlbumSelect: (String) -> Void
-    var songs: [Song] = [] // Added to display songs for the selected album
+    var songs: [Song] = []
+    
+    // Added bindings for playback management because uhh thing is garabage
+    @Binding var selectedSong: Song?
+    @Binding var currentPlaybackSongs: [Song]
+    @Binding var shuffleQueue: [Song]
+    @Binding var isShuffleEnabled: Bool
+    @Binding var isRepeatOne: Bool
+    @Binding var isRepeatEnabled: Bool
 
     @State private var currentIndex: Int = 0
     @State private var committedIndex: Int = 0 // Index committed after interaction ends
     @State private var sliderValue: Double = 0.0
     @State private var sortBy = "title"
-    @State private var selectedSong: Song? = nil
     @State private var showAllSongs = true // New state to toggle between all songs and album songs
     @State private var isInteracting = false // Track interaction to defer playback and commit index
 
@@ -247,8 +254,8 @@ struct CoverFlowView: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            selectedSong = song
-                            // You might want to trigger playback here
+                            // Play the selected song
+                            playSong(song)
                         }
                         .padding(.horizontal, 12)
                     }
@@ -278,6 +285,12 @@ struct CoverFlowView: View {
                 committedIndex = 0
                 sliderValue = 0.0
             }
+            
+            // Update CoverFlow when selected song changes
+            updateCoverFlowIndexIfNeeded()
+        }
+        .onChange(of: selectedSong) { _ in
+            updateCoverFlowIndexIfNeeded()
         }
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
@@ -302,6 +315,80 @@ struct CoverFlowView: View {
         guard committedIndex < albums.count else { return }
         let album = albums[committedIndex]
         selectAndPlay(album: album)
+    }
+    
+    // Function to play a specific song
+    private func playSong(_ song: Song) {
+        selectedSong = song
+        // Set the correct playback context
+        currentPlaybackSongs = songs.filter { $0.album == song.album }
+        
+        if isShuffleEnabled {
+            // Only rebuild shuffle queue if it's empty or we're starting a new shuffle session
+            if shuffleQueue.isEmpty {
+                rebuildShuffleQueue(startingFrom: song)
+            }
+        }
+        
+        updateUpcomingSongs()
+    }
+    
+    // Rebuild shuffle queue preserving current state
+    private func rebuildShuffleQueue(startingFrom current: Song) {
+        let context = currentPlaybackSongs
+        let pool = context.filter { $0.id != current.id }
+        shuffleQueue = pool.shuffled()
+    }
+    
+    // Update upcoming songs based on shuffle and repeat modes
+    private func updateUpcomingSongs() {
+        guard let current = selectedSong else { return }
+        
+        // Clear upcoming songs if repeat one is enabled
+        if isRepeatOne {
+            // Don't update upcoming songs list - it should only show current song
+            return
+        }
+        
+        var upcoming: [Song] = []
+        
+        if isShuffleEnabled {
+            // Show the next items from the persistent shuffle queue
+            upcoming = Array(shuffleQueue.prefix(15))
+        } else {
+            // Get next sequential songs
+            if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
+                let startIndex = currentIndex + 1
+                let endIndex = min(startIndex + 15, currentPlaybackSongs.count)
+                
+                if startIndex < endIndex {
+                    upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
+                }
+                
+                // If we're near the end and repeat is enabled, add songs from the beginning
+                if isRepeatEnabled && upcoming.count < 15 {
+                    let additionalNeeded = 15 - upcoming.count
+                    let additionalSongs = currentPlaybackSongs.prefix(additionalNeeded)
+                    upcoming.append(contentsOf: additionalSongs)
+                }
+            }
+        }
+    }
+    
+    // Update CoverFlow index when selected song changes
+    private func updateCoverFlowIndexIfNeeded() {
+        guard let song = selectedSong,
+              let albumIndex = albums.firstIndex(where: { $0.name == song.album }) else {
+            return
+        }
+        
+        if albumIndex != currentIndex {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                currentIndex = albumIndex
+                sliderValue = Double(albumIndex)
+                committedIndex = albumIndex
+            }
+        }
     }
 }
 

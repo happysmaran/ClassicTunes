@@ -43,6 +43,8 @@ struct ContentView: View {
     @State private var showUpNext = false
     @State private var upcomingSongs: [Song] = []
     @State private var shuffleQueue: [Song] = []
+    @State private var playedShuffleSongs: [Song] = [] // Track songs we've already played in shuffle
+    @State private var isNavigatingBackward = false // Track if we're navigating backward
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
@@ -133,6 +135,12 @@ struct ContentView: View {
         let context = playbackContext(for: current)
         let pool = context.filter { $0.id != current.id }
         shuffleQueue = pool.shuffled()
+        
+        // Clear the played songs history when rebuilding the queue
+        playedShuffleSongs.removeAll()
+        
+        // Add the current song to the played history
+        playedShuffleSongs.append(current)
     }
 
     var body: some View {
@@ -197,7 +205,13 @@ struct ContentView: View {
                                             playSong(firstSong)
                                         }
                                     },
-                                    songs: displayedSongs
+                                    songs: displayedSongs,
+                                    selectedSong: $selectedSong,
+                                    currentPlaybackSongs: $currentPlaybackSongs,
+                                    shuffleQueue: $shuffleQueue,
+                                    isShuffleEnabled: $isShuffleEnabled,
+                                    isRepeatOne: $isRepeatOne,
+                                    isRepeatEnabled: $isRepeatEnabled
                                 )
                             } else {
                                 SongListView(
@@ -227,7 +241,8 @@ struct ContentView: View {
                             UpNextView(
                                 currentSong: selectedSong,
                                 upcomingSongs: upcomingSongs,
-                                isPlaying: (player?.rate ?? 0) > 0
+                                isPlaying: (player?.rate ?? 0) > 0,
+                                onSongSelect: playSongFromUpNext  // Added this parameter
                             )
                             .frame(width: 300)
                         }
@@ -299,7 +314,11 @@ struct ContentView: View {
                         }
                     } else {
                         shuffleQueue.removeAll()
+                        playedShuffleSongs.removeAll()
                     }
+                    updateUpcomingSongs()
+                }
+                .onChange(of: isRepeatOne) { _ in
                     updateUpcomingSongs()
                 }
                 .colorScheme(.light) // Force light mode on this view hierarchy
@@ -359,12 +378,29 @@ struct ContentView: View {
 
         // Set the correct playback context based on what we're playing from
         currentPlaybackSongs = playbackContext(for: song)
+        
+        // Handle shuffle mode
         if isShuffleEnabled {
-            rebuildShuffleQueue(startingFrom: song)
+            // Only rebuild shuffle queue if we're not navigating backward or if it's the first song
+            if !isNavigatingBackward {
+                if playedShuffleSongs.isEmpty || playedShuffleSongs.last?.id != song.id {
+                    rebuildShuffleQueue(startingFrom: song)
+                }
+            }
+        } else {
+            playedShuffleSongs.removeAll()
         }
+        
+        // Reset the backward navigation flag
+        isNavigatingBackward = false
         
         setupNewPlayback(for: song)
         updateUpcomingSongs()
+    }
+    
+    // New function to play a song from Up Next view
+    private func playSongFromUpNext(_ song: Song) {
+        playSong(song)
     }
     
     private func refreshSongPlayCounts() {
@@ -436,20 +472,68 @@ struct ContentView: View {
         if isShuffleEnabled {
             // Use the persistent shuffle queue
             if shuffleQueue.isEmpty {
+                // If queue is empty but we have played songs, we can reshuffle
                 if isRepeatEnabled || isRepeatOne {
-                    rebuildShuffleQueue(startingFrom: current)
+                    // Rebuild the queue from the original playback context
+                    let context = playbackContext(for: current)
+                    let pool = context.filter { song in
+                        // Check if song is not the current song and not in playedShuffleSongs
+                        if song.id == current.id { return false }
+                        return !playedShuffleSongs.contains { $0.id == song.id }
+                    }
+                    if !pool.isEmpty {
+                        shuffleQueue = pool.shuffled()
+                    } else {
+                        // If all songs have been played, start fresh
+                        rebuildShuffleQueue(startingFrom: current)
+                    }
+                } else {
+                    // No more songs in queue and repeat is off
+                    return
                 }
             }
+            
             if let next = shuffleQueue.first {
                 shuffleQueue.removeFirst()
+                playedShuffleSongs.append(next)
                 playSong(next)
-                return
-            } else {
                 return
             }
         }
 
         playNextSequentialSong(after: current)
+    }
+    
+    private func playPrevious() {
+        guard let current = selectedSong else { return }
+
+        // Set the backward navigation flag
+        isNavigatingBackward = true
+
+        if isShuffleEnabled {
+            if playedShuffleSongs.count > 1 {
+                // Remove the current song from the end
+                let justLeftSong = playedShuffleSongs.removeLast()
+                // Get the previous song
+                if let previousSong = playedShuffleSongs.last {
+                    // Insert the song we just left at the front of the shuffleQueue
+                    shuffleQueue.insert(justLeftSong, at: 0)
+                    playSong(previousSong)
+                    return
+                }
+            } else if playedShuffleSongs.count == 1 {
+                // At the start of shuffle history: restart current song
+                player?.seek(to: .zero)
+                playbackPosition = 0.0
+                updateNowPlayingPlaybackInfo()
+                return
+            }
+            // If no history or only one song in history, play a random song
+            playRandomSong(excluding: current)
+            return
+        }
+
+        playPreviousSequentialSong(before: current)
     }
     
     private func playRandomSong(excluding current: Song) {
@@ -470,17 +554,6 @@ struct ContentView: View {
             // When repeat is enabled, go back to the first song
             playSong(currentPlaybackSongs.first!)
         }
-    }
-
-    private func playPrevious() {
-        guard let current = selectedSong else { return }
-
-        if isShuffleEnabled {
-            playRandomSong(excluding: current)
-            return
-        }
-
-        playPreviousSequentialSong(before: current)
     }
     
     private func playPreviousSequentialSong(before current: Song) {
@@ -680,6 +753,12 @@ struct ContentView: View {
 
         var upcoming: [Song] = []
         
+        // Special case: if repeat one is enabled, don't show upcoming songs
+        if isRepeatOne {
+            upcomingSongs = []
+            return
+        }
+        
         if isShuffleEnabled {
             // Show the next items from the persistent shuffle queue
             upcoming = Array(shuffleQueue.prefix(15))
@@ -687,14 +766,14 @@ struct ContentView: View {
             // Get next sequential songs
             if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
                 let startIndex = currentIndex + 1
-                let endIndex = min(startIndex + 15, currentPlaybackSongs.count) // Show up to 5 songs
+                let endIndex = min(startIndex + 15, currentPlaybackSongs.count) // Show up to 15 songs
                 
                 if startIndex < endIndex {
                     upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
                 }
                 
                 // If we're near the end and repeat is enabled, add songs from the beginning
-                if (isRepeatEnabled || isRepeatOne) && upcoming.count < 15 {
+                if (isRepeatEnabled) && upcoming.count < 15 {
                     let additionalNeeded = 15 - upcoming.count
                     let additionalSongs = currentPlaybackSongs.prefix(additionalNeeded)
                     upcoming.append(contentsOf: additionalSongs)
@@ -811,6 +890,7 @@ struct UpNextView: View {
     let currentSong: Song?
     let upcomingSongs: [Song]
     let isPlaying: Bool
+    var onSongSelect: (Song) -> Void = { _ in } // Added this parameter
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -895,6 +975,10 @@ struct UpNextView: View {
                         Spacer()
                     }
                     .padding(.vertical, 4)
+                    .onTapGesture {
+                        // Added tap gesture to play song from Up Next
+                        onSongSelect(song)
+                    }
                 }
                 .listStyle(PlainListStyle())
             } else if isPlaying {
