@@ -183,7 +183,9 @@ struct ContentView: View {
                     Divider()
 
                     HStack(spacing: 0) {
-                        NavigationView {
+                        // Manual sidebar implementation to avoid macOS Tahoe styling
+                        HStack(spacing: 0) {
+                            // Fixed sidebar
                             SidebarView(
                                 playlists: playlists,
                                 userPlaylists: $playlistManager.userPlaylists,
@@ -191,49 +193,57 @@ struct ContentView: View {
                                 showNewPlaylistSheet: $showNewPlaylistSheet,
                                 libraryActive: $libraryActive
                             )
+                            .frame(width: 220) // Fixed width
+                            .background(Color.white) // Force white background
+                            .border(Color.gray.opacity(0.3), width: 0.5) // Subtle border
                             
-                            // Main content area with Cover Flow option
-                            if isCoverFlowActive {
-                                CoverFlowView(
-                                    albums: albumsForCoverFlow,
-                                    selectedAlbum: .constant(selectedSong?.album ?? ""),
-                                    isCoverFlowActive: $isCoverFlowActive,
-                                    onAlbumSelect: { albumName in
-                                        let albumSongs = displayedSongs.filter { $0.album == albumName }
-                                        if let firstSong = albumSongs.first {
-                                            currentPlaybackSongs = albumSongs
-                                            playSong(firstSong)
+                            Divider()
+                            
+                            // Main content area
+                            Group {
+                                if isCoverFlowActive {
+                                    CoverFlowView(
+                                        albums: albumsForCoverFlow,
+                                        selectedAlbum: .constant(selectedSong?.album ?? ""),
+                                        isCoverFlowActive: $isCoverFlowActive,
+                                        onAlbumSelect: { albumName in
+                                            let albumSongs = displayedSongs.filter { $0.album == albumName }
+                                            if let firstSong = albumSongs.first {
+                                                currentPlaybackSongs = albumSongs
+                                                playSong(firstSong)
+                                            }
+                                        },
+                                        songs: displayedSongs,
+                                        selectedSong: $selectedSong,
+                                        currentPlaybackSongs: $currentPlaybackSongs,
+                                        shuffleQueue: $shuffleQueue,
+                                        isShuffleEnabled: $isShuffleEnabled,
+                                        isRepeatOne: $isRepeatOne,
+                                        isRepeatEnabled: $isRepeatEnabled
+                                    )
+                                } else {
+                                    SongListView(
+                                        isAlbumView: isAlbumView,
+                                        songs: songs,
+                                        onSongSelect: playSong,
+                                        selectedSong: $selectedSong,
+                                        onAlbumSelect: { album in
+                                            let albumSongs = songs.filter { $0.album == album }
+                                            if let firstSong = albumSongs.first {
+                                                currentPlaybackSongs = albumSongs
+                                                playSong(firstSong)
+                                            }
+                                        },
+                                        playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                                        onAddToPlaylist: { song in
+                                            songToAddToPlaylist = song
+                                            showPlaylistSelectionSheet = true
                                         }
-                                    },
-                                    songs: displayedSongs,
-                                    selectedSong: $selectedSong,
-                                    currentPlaybackSongs: $currentPlaybackSongs,
-                                    shuffleQueue: $shuffleQueue,
-                                    isShuffleEnabled: $isShuffleEnabled,
-                                    isRepeatOne: $isRepeatOne,
-                                    isRepeatEnabled: $isRepeatEnabled
-                                )
-                            } else {
-                                SongListView(
-                                    isAlbumView: isAlbumView,
-                                    songs: songs,
-                                    onSongSelect: playSong,
-                                    selectedSong: $selectedSong,
-                                    onAlbumSelect: { album in
-                                        let albumSongs = songs.filter { $0.album == album }
-                                        if let firstSong = albumSongs.first {
-                                            currentPlaybackSongs = albumSongs
-                                            playSong(firstSong)
-                                        }
-                                    },
-                                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                                    onAddToPlaylist: { song in
-                                        songToAddToPlaylist = song
-                                        showPlaylistSelectionSheet = true
-                                    }
-                                )
-                                .environmentObject(playlistManager)
+                                    )
+                                    .environmentObject(playlistManager)
+                                }
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                         
                         if showUpNext {
