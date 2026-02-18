@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AlbumGridView: View {
-    // Removed @Environment(\.colorScheme) var colorScheme - this was causing adaptation to system changes
     var songs: [Song]
     var selectedAlbum: String?
     var onAlbumSelect: (String) -> Void
