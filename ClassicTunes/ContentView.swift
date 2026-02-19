@@ -46,6 +46,10 @@ struct ContentView: View {
     @State private var playedShuffleSongs: [Song] = [] // Track songs we've already played in shuffle
     @State private var isNavigatingBackward = false // Track if we're navigating backward
 
+    // Lyrics states
+    @State private var showLyrics = false
+    @State private var lyricsText: String = ""
+
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
     }
@@ -256,12 +260,38 @@ struct ContentView: View {
                             )
                             .frame(width: 300)
                         }
+                        
+                        if showLyrics {
+                            Divider()
+                            LyricsView(
+                                currentSong: selectedSong,
+                                lyrics: lyricsText
+                            )
+                            .frame(width: 300)
+                        }
                     }
                     
-                    // Bottom bar - removed the view mode picker
+                    // Bottom bar - added lyrics button
                     Divider()
                     HStack {
                         Spacer()
+                        Button(action: {
+                            withAnimation {
+                                showLyrics.toggle()
+                                if showLyrics, let song = selectedSong {
+                                    loadLyrics(for: song)
+                                }
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "text.alignleft")
+                                Text("Lyrics")
+                            }
+                        }
+                        .padding(.horizontal)
+                        .foregroundColor(.primary)
+                        .buttonStyle(PlainButtonStyle())
+                        
                         Button(action: {
                             withAnimation {
                                 showUpNext.toggle()
@@ -312,6 +342,11 @@ struct ContentView: View {
                     refreshSongPlayCounts()
                     updateNowPlayingInfo()
                     updateUpcomingSongs()
+                    
+                    // Load lyrics when song changes
+                    if showLyrics {
+                        loadLyrics(for: song)
+                    }
                 }
                 .onChange(of: volume) { _ in
                     player?.volume = Float(volume)
@@ -406,6 +441,11 @@ struct ContentView: View {
         
         setupNewPlayback(for: song)
         updateUpcomingSongs()
+        
+        // Load lyrics when playing a new song
+        if showLyrics {
+            loadLyrics(for: song)
+        }
     }
     
     // New function to play a song from Up Next view
@@ -794,6 +834,73 @@ struct ContentView: View {
         upcomingSongs = upcoming
     }
     
+    private func loadLyrics(for song: Song) {
+        let asset = AVURLAsset(url: song.url)
+        
+        Task {
+            do {
+                let formats = try await asset.load(.availableMetadataFormats)
+                var allItems: [AVMetadataItem] = []
+                
+                for format in formats {
+                    let items = try await asset.loadMetadata(for: format)
+                    allItems.append(contentsOf: items)
+                }
+                
+                var foundLyrics: String? = nil
+                
+                for item in allItems {
+                    // 1. Check the identifier (e.g., "id3/USLT")
+                    let id = item.identifier?.rawValue ?? ""
+                    
+                    // 2. Check the raw key (can be String or Number)
+                    let keyAttribute = item.key as? String ?? ""
+                    
+                    // 3. Common Key
+                    let commonKey = item.commonKey?.rawValue ?? ""
+                    
+                    if id.contains("USLT") || id.contains("©lyr") ||
+                       keyAttribute.contains("USLT") ||
+                       commonKey.lowercased().contains("lyrics") {
+                        
+                        if let value = try await item.load(.value) as? String {
+                            foundLyrics = value
+                            break
+                        }
+                    }
+                }
+                
+                await MainActor.run {
+                    if let lyrics = foundLyrics {
+                        self.lyricsText = lyrics.trimmingCharacters(in: .controlCharacters)
+                    } else {
+                        checkForExternalLRC(for: song)
+                    }
+                }
+            } catch {
+                print("Extraction failed: \(error)")
+                await MainActor.run { self.lyricsText = "Error loading metadata." }
+            }
+        }
+    }
+
+    private func checkForExternalLRC(for song: Song) {
+        let lrcURL = song.url.deletingPathExtension().appendingPathExtension("lrc")
+        
+        let access = lrcURL.startAccessingSecurityScopedResource()
+        defer { if access { lrcURL.stopAccessingSecurityScopedResource() } }
+        
+        if FileManager.default.fileExists(atPath: lrcURL.path) {
+            do {
+                self.lyricsText = try String(contentsOf: lrcURL, encoding: .utf8)
+            } catch {
+                self.lyricsText = "Found .lrc file but could not read it."
+            }
+        } else {
+            self.lyricsText = "No lyrics found."
+        }
+    }
+    
     // MiniPlayer functionality
     private func toggleMiniPlayer() {
         if isMiniPlayerActive {
@@ -1009,3 +1116,69 @@ struct UpNextView: View {
         .background(Color.white) // Changed from system color to fixed white
     }
 }
+// Lyrics view implementation
+struct LyricsView: View {
+    let currentSong: Song?
+    let lyrics: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Lyrics")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            if let song = currentSong {
+                HStack(spacing: 12) {
+                    if let artworkData = song.artworkData,
+                       let image = NSImage(data: artworkData) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    } else {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 50, height: 50)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(song.title)
+                            .font(.headline)
+                            .lineLimit(1)
+                        Text(song.artist)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                        if !song.album.isEmpty {
+                            Text(song.album)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal)
+                
+                Divider()
+            }
+            
+            ScrollView {
+                Text(lyrics)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .padding(.horizontal)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+            }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+    }
+}
+

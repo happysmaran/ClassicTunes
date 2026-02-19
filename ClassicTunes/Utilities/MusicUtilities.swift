@@ -95,7 +95,6 @@ func savePlaylistsToUserDefaults(_ playlists: [Playlist]) {
         print("Error encoding playlists: \(error)")
     }
 }
-
 // MARK: - Play Count & Play History Utilities
 
 let playHistoryKey = "playHistory"
@@ -163,4 +162,5 @@ func saveUserPlaylists(_ playlists: [Playlist]) {
     // Only save custom playlists
     savePlaylistsToUserDefaults(playlists.filter { !$0.isSystem })
 }
+
 
