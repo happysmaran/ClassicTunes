@@ -8,7 +8,7 @@ struct MiniPlayerView: View {
     @Binding var volume: Double
     @Binding var playbackPosition: Double
     @Binding var playbackDuration: Double
-    
+
     let onPlayPause: () -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
@@ -40,9 +40,10 @@ struct MiniPlayerView: View {
         self.onSeek = onSeek
         self.onClose = onClose
     }
-    
+
     @State private var isSeeking = false
-    
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(spacing: 8) {
             HStack {
@@ -59,7 +60,7 @@ struct MiniPlayerView: View {
                         ))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.gray, lineWidth: 1) // Changed from system color to fixed gray
+                                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
                         )
                         .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 1)
                         .frame(height: 60)
@@ -78,24 +79,27 @@ struct MiniPlayerView: View {
                                     .fill(Color.gray)
                                     .frame(width: 50, height: 50)
                             }
-                            
-                            // Song info
+
+                            // Song info with truncation
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(song.title)
                                     .font(.subheadline)
-                                    .foregroundColor(.black) // Ensure black text
+                                    .foregroundColor(Color.black.opacity(0.9))
                                     .shadow(color: .white.opacity(0.8), radius: 0.5, x: 0, y: 1)
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
 
                                 Text(song.artist)
                                     .font(.caption2)
-                                    .foregroundColor(.black) // Ensure black text
+                                    .foregroundColor(Color.black.opacity(0.9))
                                     .shadow(color: .white.opacity(0.8), radius: 0.5, x: 0, y: 1)
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
                             }
-                            
+                            .frame(maxWidth: 180) // Limit width for proper truncation
+
                             Spacer()
-                            
+
                             // Controls
                             HStack(spacing: 8) {
                                 Button(action: onPrevious) {
@@ -103,16 +107,25 @@ struct MiniPlayerView: View {
                                         .padding(6)
                                         .background(
                                             Circle()
-                                                .fill(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [.white.opacity(0.7), Color.gray.opacity(0.4)]),
+                                                .fill(colorScheme == .dark ?
+                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
+                                                    AnyShapeStyle(LinearGradient(
+                                                        gradient: Gradient(colors: [
+                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
+                                                            Color(nsColor: .separatorColor).opacity(0.25)
+                                                        ]),
                                                         startPoint: .top,
                                                         endPoint: .bottom
-                                                    )
+                                                    ))
                                                 )
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
+                                                )
+                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
+                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
                                         )
-                                        .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
-                                        .foregroundColor(.black) // Ensure black icons
+                                        .foregroundColor(.primary)
                                 }
                                 .buttonStyle(PlainButtonStyle())
 
@@ -121,16 +134,25 @@ struct MiniPlayerView: View {
                                         .padding(6)
                                         .background(
                                             Circle()
-                                                .fill(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [.white.opacity(0.7), Color.gray.opacity(0.4)]),
+                                                .fill(colorScheme == .dark ?
+                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
+                                                    AnyShapeStyle(LinearGradient(
+                                                        gradient: Gradient(colors: [
+                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
+                                                            Color(nsColor: .separatorColor).opacity(0.25)
+                                                        ]),
                                                         startPoint: .top,
                                                         endPoint: .bottom
                                                     )
+                                                ))
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
                                                 )
+                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
+                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
                                         )
-                                        .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
-                                        .foregroundColor(.black) // Ensure black icons
+                                        .foregroundColor(.primary)
                                 }
                                 .buttonStyle(PlainButtonStyle())
 
@@ -139,25 +161,34 @@ struct MiniPlayerView: View {
                                         .padding(6)
                                         .background(
                                             Circle()
-                                                .fill(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [.white.opacity(0.7), Color.gray.opacity(0.4)]),
+                                                .fill(colorScheme == .dark ?
+                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
+                                                    AnyShapeStyle(LinearGradient(
+                                                        gradient: Gradient(colors: [
+                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
+                                                            Color(nsColor: .separatorColor).opacity(0.25)
+                                                        ]),
                                                         startPoint: .top,
                                                         endPoint: .bottom
                                                     )
+                                                ))
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
                                                 )
+                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
+                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
                                         )
-                                        .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
-                                        .foregroundColor(.black) // Ensure black icons
+                                        .foregroundColor(.primary)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
-                            
-                            // Close button
+
+                            // Close button - consistent color regardless of mode
                             Button(action: onClose) {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.title2)
-                                    .foregroundColor(.gray) // Fixed gray instead of system secondary
+                                    .foregroundColor(.gray)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -174,7 +205,7 @@ struct MiniPlayerView: View {
                 }
             }
             .padding(.horizontal)
-            
+
             // Progress bar
             if selectedSong != nil {
                 VStack(spacing: 4) {
@@ -195,40 +226,34 @@ struct MiniPlayerView: View {
                         }
                     )
                     .disabled(playbackDuration <= 0)
-                    .tint(Color.gray) // Fixed gray instead of system tint
+                    .tint(Color.accentColor)
+                    .background(
+                        Capsule()
+                            .fill(Color.accentColor.opacity(0.3))
+                            .frame(height: 4)
+                    )
                     .frame(height: 4)
-                    
+
                     // Time labels
                     HStack {
                         Text(timeString(from: playbackPosition * playbackDuration))
                             .font(.caption2)
-                            .foregroundColor(.gray) // Fixed gray instead of system secondary
+                            .foregroundColor(.secondary)
                         Spacer()
                         Text(timeString(from: playbackDuration))
                             .font(.caption2)
-                            .foregroundColor(.gray) // Fixed gray instead of system secondary
+                            .foregroundColor(.secondary)
                     }
                 }
                 .padding(.horizontal)
             }
         }
         .frame(width: 400, height: 120)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.white, // Fixed white instead of system color
-                    Color(red: 0.85, green: 0.85, blue: 0.85) // Fixed gray instead of system color
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background(Color(nsColor: .windowBackgroundColor))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
-        .colorScheme(.light) // Force light mode in the mini player
-        .preferredColorScheme(.light) // Additional enforcement
     }
-    
+
     private func timeString(from seconds: Double) -> String {
         let totalSeconds = Int(seconds)
         let minutes = totalSeconds / 60

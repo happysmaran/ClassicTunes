@@ -7,7 +7,7 @@ struct CoverFlowView: View {
     @Binding var isCoverFlowActive: Bool
     var onAlbumSelect: (String) -> Void
     var songs: [Song] = []
-    
+
     // Added bindings for playback management because uhh thing is garabge
     @Binding var selectedSong: Song?
     @Binding var currentPlaybackSongs: [Song]
@@ -29,16 +29,18 @@ struct CoverFlowView: View {
         let currentAlbum = albums[committedIndex]
         return songs.filter { $0.album == currentAlbum.name }
     }
-    
+
     // All songs or album songs based on toggle
     private var displayedSongs: [Song] {
         showAllSongs ? songs : albumSongs
     }
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                backgroundGradient
+                backgroundColor
                 
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
@@ -77,10 +79,10 @@ struct CoverFlowView: View {
             )
             .environmentObject(playlistManager)
             .frame(maxHeight: 300) // Fixed height for the list section
-            
+
             Spacer()
         }
-        .background(Color.white)
+        .background(backgroundColor)
         .clipShape(Rectangle())
         .onChange(of: committedIndex) { newValue in
             if newValue < albums.count {
@@ -99,7 +101,7 @@ struct CoverFlowView: View {
                 committedIndex = 0
                 sliderValue = 0.0
             }
-            
+
             // Update CoverFlow when selected song changes
             updateCoverFlowIndexIfNeeded()
         }
@@ -108,24 +110,16 @@ struct CoverFlowView: View {
         }
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
-        .accentColor(.clear)
-        .border(Color.clear, width: 0)
+    }
+
+    // MARK: - Computed Properties
+
+    private var backgroundColor: some View {
+        colorScheme == .light ? Color.white : Color(nsColor: .windowBackgroundColor)
     }
 
     // MARK: - Computed Properties for Body Sections
-    
-    private var backgroundGradient: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [
-                Color.white,
-                Color(red: 0.9, green: 0.9, blue: 0.9),
-                Color.white
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-    
+
     private var albumInfoSection: some View {
         Group {
             if !albums.isEmpty && currentIndex < albums.count {
@@ -133,18 +127,20 @@ struct CoverFlowView: View {
                     Text(albums[currentIndex].name)
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.black)
+                        .foregroundColor(colorScheme == .light ? .black : .primary)
                     Text(albums[currentIndex].artist)
                         .font(.title3)
-                        .foregroundColor(.gray)
+                        .foregroundColor(colorScheme == .light ? .black.opacity(0.7) : .secondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color.white.opacity(0.7))
+                .background(colorScheme == .light ?
+                    Color.white.opacity(0.7) :
+                    Color(nsColor: .underPageBackgroundColor).opacity(0.7))
             }
         }
     }
-    
+
     private var sliderSection: some View {
         Group {
             if albums.count > 1 {
@@ -153,7 +149,7 @@ struct CoverFlowView: View {
                         .font(.caption)
                         .foregroundColor(.gray)
                         .frame(width: 24, alignment: .leading)
-                    
+
                     Slider(
                         value: Binding(
                             get: { sliderValue },
@@ -182,11 +178,11 @@ struct CoverFlowView: View {
                             }
                         }
                     )
-                    .accentColor(Color(NSColor.systemBlue))
+                    .tint(.accentColor)
                     .frame(height: 4)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 0)
-                    
+
                     Text("\(albums.count)")
                         .font(.caption)
                         .foregroundColor(.gray)
@@ -197,11 +193,11 @@ struct CoverFlowView: View {
             }
         }
     }
-    
+
     private var controlsSection: some View {
         HStack {
             Spacer()
-            
+
             // Toggle button to switch between all songs and album songs
             Button(action: {
                 showAllSongs.toggle()
@@ -215,18 +211,18 @@ struct CoverFlowView: View {
                 .padding(.vertical, 4)
                 .background(
                     Capsule()
-                        .fill(Color.blue.opacity(0.1))
+                        .fill(Color.accentColor.opacity(0.15))
                 )
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             }
             .buttonStyle(PlainButtonStyle())
             .padding(.trailing, 12)
             .padding(.top, 4)
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func coverFlowContent(geometry: GeometryProxy) -> some View {
         let size = geometry.size
         let coverWidth = size.width * 0.18
@@ -242,7 +238,7 @@ struct CoverFlowView: View {
             ForEach(Array(albums.enumerated()), id: \.offset) { index, album in
                 let isCenter = index == currentIndex
                 let frameWidth = isCenter ? coverWidth * 1.2 : coverWidth
-                
+
                 let xPosition = calculateXPosition(
                     for: index,
                     currentIndex: currentIndex,
@@ -282,8 +278,6 @@ struct CoverFlowView: View {
                 }
                 .focusable(false)
                 .buttonStyle(PlainButtonStyle())
-                .accentColor(.clear)
-                .border(Color.clear, width: 0)
             }
         }
     }
@@ -330,40 +324,40 @@ struct CoverFlowView: View {
         let album = albums[committedIndex]
         selectAndPlay(album: album)
     }
-    
+
     // Function to play a specific song
     private func playSong(_ song: Song) {
         selectedSong = song
         // Set the correct playback context
         currentPlaybackSongs = songs.filter { $0.album == song.album }
-        
+
         if isShuffleEnabled {
             // Only rebuild shuffle queue if it's empty or we're starting a new shuffle session
             if shuffleQueue.isEmpty {
                 rebuildShuffleQueue(startingFrom: song)
             }
         }
-        
+
         updateUpcomingSongs()
     }
-    
+
     // Rebuild shuffle queue preserving current state
     private func rebuildShuffleQueue(startingFrom current: Song) {
         let context = currentPlaybackSongs
         let pool = context.filter { $0.id != current.id }
         shuffleQueue = pool.shuffled()
     }
-    
+
     // Update upcoming songs based on shuffle and repeat modes
     private func updateUpcomingSongs() {
         guard let current = selectedSong else { return }
-        
+
         if isRepeatOne {
             return
         }
-        
+
         var upcoming: [Song] = []
-        
+
         if isShuffleEnabled {
             // Show the next items from the persistent shuffle queue
             upcoming = Array(shuffleQueue.prefix(15))
@@ -372,11 +366,11 @@ struct CoverFlowView: View {
             if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
                 let startIndex = currentIndex + 1
                 let endIndex = min(startIndex + 15, currentPlaybackSongs.count)
-                
+
                 if startIndex < endIndex {
                     upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
                 }
-                
+
                 // If we're near the end and repeat is enabled, add songs from the beginning
                 if isRepeatEnabled && upcoming.count < 15 {
                     let additionalNeeded = 15 - upcoming.count
@@ -386,14 +380,14 @@ struct CoverFlowView: View {
             }
         }
     }
-    
+
     // Update CoverFlow index when selected song changes
     private func updateCoverFlowIndexIfNeeded() {
         guard let song = selectedSong,
               let albumIndex = albums.firstIndex(where: { $0.name == song.album }) else {
             return
         }
-        
+
         if albumIndex != currentIndex {
             withAnimation(.easeInOut(duration: 0.3)) {
                 currentIndex = albumIndex
@@ -420,7 +414,7 @@ struct AlbumInfo: Identifiable {
             self.artwork = nil
         }
     }
-    
+
     private static func downsampleImage(data: Data, maxDimension: CGFloat, scale: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0) -> NSImage? {
         let options: [CFString: Any] = [
             kCGImageSourceShouldCache: false
@@ -454,6 +448,8 @@ struct CoverFlowItemView: View {
         abs(index - currentIndex)
     }
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         ZStack {
             if let image = album.artwork {
@@ -465,7 +461,14 @@ struct CoverFlowItemView: View {
             } else {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(LinearGradient(
-                        gradient: Gradient(colors: [.gray, .white]),
+                        gradient: Gradient(colors: [
+                            colorScheme == .light ?
+                                Color(nsColor: .separatorColor) :
+                                Color(nsColor: .separatorColor),
+                            colorScheme == .light ?
+                                Color(nsColor: .underPageBackgroundColor) :
+                                Color(nsColor: .underPageBackgroundColor)
+                        ]),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))
@@ -473,11 +476,11 @@ struct CoverFlowItemView: View {
                         VStack {
                             Text(album.name)
                                 .font(.caption)
-                                .foregroundColor(.black)
+                                .foregroundColor(colorScheme == .light ? .black : .primary)
                                 .multilineTextAlignment(.center)
                             Text(album.artist)
                                 .font(.caption2)
-                                .foregroundColor(.gray)
+                                .foregroundColor(colorScheme == .light ? .black.opacity(0.7) : .secondary)
                         }
                         .padding(4)
                     )
@@ -496,8 +499,6 @@ struct CoverFlowItemView: View {
         .animation(.easeInOut(duration: 0.3), value: currentIndex)
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
-        .accentColor(.clear)
-        .border(Color.clear, width: 0)
     }
 
     private var scaleEffect: CGFloat {

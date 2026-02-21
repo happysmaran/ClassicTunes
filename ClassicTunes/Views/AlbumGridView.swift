@@ -11,8 +11,7 @@ struct AlbumGridView: View {
             sizeSlider
             albumGrid
         }
-        .background(Color.white)
-        .colorScheme(.light) // Force light mode
+        .background(Color(nsColor: .windowBackgroundColor))
     }
     
     private var sizeSlider: some View {
@@ -21,11 +20,11 @@ struct AlbumGridView: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color(nsColor: .separatorColor).opacity(0.3))
                         .frame(height: 4)
 
                     Capsule()
-                        .fill(Color.black.opacity(0.85)) // Changed from system-adaptive color to fixed black
+                        .fill(Color.accentColor)
                         .frame(width: CGFloat((coverSize - 60) / 140) * geometry.size.width, height: 4)
                 }
                 .frame(height: 10)
@@ -76,7 +75,7 @@ struct AlbumGridView: View {
                 .font(.caption)
                 .frame(maxWidth: coverSize)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.black) // Fixed black instead of system color
+                .foregroundColor(.primary)
         }
         .frame(width: coverSize)
         // Removed the stroke that was creating a visible grid line. What the fuck Smaran.
@@ -87,10 +86,9 @@ struct AlbumGridView: View {
     
     private var fallbackArtwork: some View {
         ZStack {
-            Rectangle()
-                .fill(Color.white.opacity(0.05))
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(nsColor: .underPageBackgroundColor))
                 .frame(width: coverSize, height: coverSize)
-                .cornerRadius(8)
             Image(systemName: "music.note")
                 .resizable()
                 .scaledToFit()

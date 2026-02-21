@@ -55,7 +55,7 @@ struct SongListView: View {
         let availArtist = max(0, artistFraction - minF)
         let availAlbum = max(0, albumFraction - minF)
         let availGenre = max(0, genreFraction - minF)
-        let totalAvail = availTitle + availArtist + availAlbum + availGenre
+        let totalAvail = availTitle + availArtist + availAlbum + genreFraction
 
         if sum > 1, totalAvail > 0 {
             let excess = sum - 1
@@ -163,15 +163,7 @@ struct SongListView: View {
             }
             Divider()
         }
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color(red: 0.96, green: 0.96, blue: 0.96), Color.white]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-        .foregroundColor(.black)
-        .colorScheme(.light)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private var listView: some View {
@@ -261,7 +253,7 @@ struct SongListView: View {
                 )
             }
             .padding(.vertical, 4)
-            .background(Color.white)
+            .background(Color(nsColor: .controlBackgroundColor))
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 24 + 8) // header height + vertical padding
@@ -307,7 +299,7 @@ struct SongListView: View {
             .font(.system(size: 11))
             .background(
                 selectedSong?.id == song.id
-                ? Color.blue.opacity(0.3)
+                ? Color.accentColor.opacity(0.25)
                 : Color.clear
             )
             .contentShape(Rectangle())
@@ -361,7 +353,7 @@ struct ResizableHeader: View {
 
             if showsHandle {
                 Rectangle()
-                    .fill(Color.gray.opacity(isResizing ? 0.5 : 0.3))
+                    .fill(Color(nsColor: .separatorColor).opacity(isResizing ? 0.6 : 0.35))
                     .frame(width: handleWidth)
                     .contentShape(Rectangle())
                     .gesture(
@@ -384,6 +376,7 @@ struct ResizableHeader: View {
             }
         }
         .frame(width: width, height: 24, alignment: .leading)
+        .background(Color.clear)
     }
 }
 

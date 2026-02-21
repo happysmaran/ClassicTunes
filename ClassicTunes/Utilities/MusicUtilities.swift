@@ -28,12 +28,13 @@ func loadSongs(from folderURL: URL) -> [Song] {
         var title = fileURL.deletingPathExtension().lastPathComponent
         var artist = "Unknown Artist"
         var album = "Unknown Album"
-        var year = "-"
+        let year = "-"
         var genre = "Unknown Genre"
         var artworkData: Data? = nil
         
         // print(asset.commonMetadata)
-
+        
+        // why so many warning T-T
         for item in asset.commonMetadata {
             switch item.commonKey?.rawValue {
             case "title":

@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var player: AVPlayer?
     @State private var playerItem: AVPlayerItem?
     @AppStorage("playerVolume") private var volume: Double = 0.5
+    @AppStorage("appAppearance") private var appAppearance: String = "system" // "system", "light", or "dark"
     @State private var playbackPosition: Double = 0.0
     @State private var playbackDuration: Double = 1.0
     @State private var timeObserverToken: Any?
@@ -29,16 +30,16 @@ struct ContentView: View {
 
     @State private var showNewPlaylistSheet = false
     @StateObject private var playlistManager = PlaylistManager()
-    
+
     // New states for playlist selection
     @State private var showPlaylistSelectionSheet = false
     @State private var songToAddToPlaylist: Song?
-    
+
     // MiniPlayer states
     @State private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
     @State private var isPlayingFlag: Bool = false
-    
+
     // Up Next states
     @State private var showUpNext = false
     @State private var upcomingSongs: [Song] = []
@@ -79,15 +80,15 @@ struct ContentView: View {
         }
         return result
     }
-    
+
     // Get unique albums for Cover Flow
     private var albumsForCoverFlow: [AlbumInfo] {
         let groupedSongs = Dictionary(grouping: displayedSongs) { $0.album }
         var albumInfos: [AlbumInfo] = []
-        
+
         // Sort albums by name to ensure consistent ordering
         let sortedAlbums = groupedSongs.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
-        
+
         for (albumName, songs) in sortedAlbums {
             if let firstSong = songs.first {
                 albumInfos.append(AlbumInfo(
@@ -97,7 +98,7 @@ struct ContentView: View {
                 ))
             }
         }
-        
+
         return albumInfos
     }
 
@@ -130,19 +131,19 @@ struct ContentView: View {
             return t == .orderedAscending
         }
     }
-    
+
     private func alphabeticalIndex(of song: Song, in list: [Song]) -> Int? {
         return list.firstIndex { $0.id == song.id }
     }
-    
+
     private func rebuildShuffleQueue(startingFrom current: Song) {
         let context = playbackContext(for: current)
         let pool = context.filter { $0.id != current.id }
         shuffleQueue = pool.shuffled()
-        
+
         // Clear the played songs history when rebuilding the queue
         playedShuffleSongs.removeAll()
-        
+
         // Add the current song to the played history
         playedShuffleSongs.append(current)
     }
@@ -198,11 +199,11 @@ struct ContentView: View {
                                 libraryActive: $libraryActive
                             )
                             .frame(width: 220) // Fixed width
-                            .background(Color.white) // Force white background
-                            .border(Color.gray.opacity(0.3), width: 0.5) // Subtle border
-                            
+                            .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
+                            .border(Color(nsColor: .separatorColor).opacity(0.5), width: 0.5) // Subtle border
+
                             Divider()
-                            
+
                             // Main content area
                             Group {
                                 if isCoverFlowActive {
@@ -249,7 +250,7 @@ struct ContentView: View {
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
-                        
+
                         if showUpNext {
                             Divider()
                             UpNextView(
@@ -260,7 +261,7 @@ struct ContentView: View {
                             )
                             .frame(width: 300)
                         }
-                        
+
                         if showLyrics {
                             Divider()
                             LyricsView(
@@ -270,7 +271,7 @@ struct ContentView: View {
                             .frame(width: 300)
                         }
                     }
-                    
+
                     // Bottom bar - added lyrics button
                     Divider()
                     HStack {
@@ -291,7 +292,7 @@ struct ContentView: View {
                         .padding(.horizontal)
                         .foregroundColor(.primary)
                         .buttonStyle(PlainButtonStyle())
-                        
+
                         Button(action: {
                             withAnimation {
                                 showUpNext.toggle()
@@ -310,9 +311,9 @@ struct ContentView: View {
                         .buttonStyle(PlainButtonStyle())
                     }
                     .frame(height: 40)
-                    .background(Color.white) // Changed from system color to fixed white
+                    .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
                 }
-                .background(Color.white.opacity(0.95)) // Changed from system color to fixed white
+                .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
                 .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
                     handleFileImport(result)
                 }
@@ -342,7 +343,7 @@ struct ContentView: View {
                     refreshSongPlayCounts()
                     updateNowPlayingInfo()
                     updateUpcomingSongs()
-                    
+
                     // Load lyrics when song changes
                     if showLyrics {
                         loadLyrics(for: song)
@@ -366,7 +367,11 @@ struct ContentView: View {
                 .onChange(of: isRepeatOne) { _ in
                     updateUpcomingSongs()
                 }
-                .colorScheme(.light) // Force light mode on this view hierarchy
+                .onChange(of: appAppearance) { _ in
+                    // Update mini player appearance when app appearance changes
+                    updateMiniPlayerAppearance()
+                }
+                .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
             }
         }
     }
@@ -423,7 +428,7 @@ struct ContentView: View {
 
         // Set the correct playback context based on what we're playing from
         currentPlaybackSongs = playbackContext(for: song)
-        
+
         // Handle shuffle mode
         if isShuffleEnabled {
             // Only rebuild shuffle queue if we're not navigating backward or if it's the first song
@@ -435,24 +440,24 @@ struct ContentView: View {
         } else {
             playedShuffleSongs.removeAll()
         }
-        
+
         // Reset the backward navigation flag
         isNavigatingBackward = false
-        
+
         setupNewPlayback(for: song)
         updateUpcomingSongs()
-        
+
         // Load lyrics when playing a new song
         if showLyrics {
             loadLyrics(for: song)
         }
     }
-    
+
     // New function to play a song from Up Next view
     private func playSongFromUpNext(_ song: Song) {
         playSong(song)
     }
-    
+
     private func refreshSongPlayCounts() {
         for i in songs.indices {
             songs[i].playCount = getPlayCount(for: songs[i])
@@ -461,13 +466,13 @@ struct ContentView: View {
 
     private func setupNewPlayback(for song: Song) {
         stopCurrentPlayback()
-        
+
         let item = AVPlayerItem(url: song.url)
         let newPlayer = AVPlayer(playerItem: item)
         newPlayer.volume = Float(volume)
         newPlayer.play()
         isPlayingFlag = true
-        
+
         player = newPlayer
         playerItem = item
         selectedSong = song
@@ -478,7 +483,7 @@ struct ContentView: View {
         setupPlaybackCompletionHandler(for: item)
         updateNowPlayingInfo()
     }
-    
+
     private func stopCurrentPlayback() {
         player?.pause()
         if let token = timeObserverToken {
@@ -489,7 +494,7 @@ struct ContentView: View {
         player = nil
         isPlayingFlag = false
     }
-    
+
     private func setupTimeObserver(for player: AVPlayer) {
         let interval = CMTime(seconds: 1.0, preferredTimescale: 1)
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
@@ -500,7 +505,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
         NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
             if self.isRepeatOne {
@@ -515,7 +520,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     private func playNext() {
         guard let current = selectedSong else { return }
 
@@ -542,7 +547,7 @@ struct ContentView: View {
                     return
                 }
             }
-            
+
             if let next = shuffleQueue.first {
                 shuffleQueue.removeFirst()
                 playedShuffleSongs.append(next)
@@ -553,7 +558,7 @@ struct ContentView: View {
 
         playNextSequentialSong(after: current)
     }
-    
+
     private func playPrevious() {
         guard let current = selectedSong else { return }
 
@@ -585,14 +590,14 @@ struct ContentView: View {
 
         playPreviousSequentialSong(before: current)
     }
-    
+
     private func playRandomSong(excluding current: Song) {
         let pool = currentPlaybackSongs.filter { $0.id != current.id }
         if let randomSong = pool.randomElement() {
             playSong(randomSong)
         }
     }
-    
+
     private func playNextSequentialSong(after current: Song) {
         currentPlaybackSongs = playbackContext(for: current)
         guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
@@ -605,7 +610,7 @@ struct ContentView: View {
             playSong(currentPlaybackSongs.first!)
         }
     }
-    
+
     private func playPreviousSequentialSong(before current: Song) {
         currentPlaybackSongs = playbackContext(for: current)
         guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
@@ -618,7 +623,7 @@ struct ContentView: View {
             playSong(currentPlaybackSongs.last!)
         }
     }
-    
+
     private func handleSeek(_ value: Double) {
         if value == -1 {
             player?.volume = Float(volume)
@@ -642,7 +647,7 @@ struct ContentView: View {
         let topPlayedSongs = songs.sorted(by: { $0.playCount > $1.playCount }).prefix(25)
         return Playlist(name: "Top 25 Most Played", songs: Array(topPlayedSongs), isSystem: true)
     }
-    
+
     private func generateRecentlyPlayedPlaylist(from songs: [Song]) -> Playlist {
         let history = getPlayHistory()
         var seen = Set<String>()
@@ -657,7 +662,7 @@ struct ContentView: View {
         }
         return Playlist(name: "Recently Played", songs: recentSongs, isSystem: true)
     }
-    
+
     private func incrementPlayCount(for song: Song) {
         var playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
         let songID = song.id.uuidString
@@ -670,20 +675,20 @@ struct ContentView: View {
         if history.count > 1000 { history = Array(history.prefix(1000)) }
         UserDefaults.standard.set(history, forKey: "playHistory")
     }
-    
+
     private func getPlayCount(for song: Song) -> Int {
         let playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
         return playCounts[song.id.uuidString] ?? 0
     }
-    
+
     private func getPlayHistory() -> [String] {
         UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
     }
-    
+
     // System audio controls implementation
     private func setupRemoteCommands() {
         let commandCenter = MPRemoteCommandCenter.shared()
-        
+
         // Play command
         commandCenter.playCommand.addTarget { _ in
             guard let player = self.player else { return .commandFailed }
@@ -695,7 +700,7 @@ struct ContentView: View {
             }
             return .commandFailed
         }
-        
+
         // Pause command
         commandCenter.pauseCommand.addTarget { _ in
             guard let player = self.player else { return .commandFailed }
@@ -707,7 +712,7 @@ struct ContentView: View {
             }
             return .commandFailed
         }
-        
+
         // Toggle play/pause command
         commandCenter.togglePlayPauseCommand.addTarget { _ in
             guard let player = self.player else { return .commandFailed }
@@ -721,77 +726,77 @@ struct ContentView: View {
             self.updateNowPlayingInfo()
             return .success
         }
-        
+
         // Next track command
         commandCenter.nextTrackCommand.addTarget { _ in
             self.playNext()
             return .success
         }
-        
+
         // Previous track command
         commandCenter.previousTrackCommand.addTarget { _ in
             self.playPrevious()
             return .success
         }
-        
+
         // Change playback position command
         commandCenter.changePlaybackPositionCommand.addTarget { event in
             guard let player = self.player else { return .commandFailed }
             guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-            
+
             let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
             player.seek(to: time)
             self.updateNowPlayingPlaybackInfo()
             return .success
         }
     }
-    
+
     private func updateNowPlayingInfo() {
         guard let song = selectedSong else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
             return
         }
-        
+
         var nowPlayingInfo = [String: Any]()
-        
+
         // Basic track information
         nowPlayingInfo[MPMediaItemPropertyTitle] = song.title
         nowPlayingInfo[MPMediaItemPropertyArtist] = song.artist
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = song.album
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = playbackDuration
-        
+
         // Artwork if available
         if let artworkData = song.artworkData,
            let artworkImage = NSImage(data: artworkData) {
             let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { _ in artworkImage }
             nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
         }
-        
+
         // Playback position
         if let player = player {
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
         }
-        
+
         // Playback rate
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
-        
+
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
-    
+
     private func updateNowPlayingPlaybackInfo() {
         guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
-        
+
         // Update playback position
         if let player = player {
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
         }
-        
+
         // Update playback rate
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
-        
+
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
-    
+
     // Up Next functionality
     private func updateUpcomingSongs() {
         guard let current = selectedSong else {
@@ -802,13 +807,13 @@ struct ContentView: View {
         currentPlaybackSongs = playbackContext(for: current)
 
         var upcoming: [Song] = []
-        
+
         // Special case: if repeat one is enabled, don't show upcoming songs
         if isRepeatOne {
             upcomingSongs = []
             return
         }
-        
+
         if isShuffleEnabled {
             // Show the next items from the persistent shuffle queue
             upcoming = Array(shuffleQueue.prefix(15))
@@ -817,11 +822,11 @@ struct ContentView: View {
             if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
                 let startIndex = currentIndex + 1
                 let endIndex = min(startIndex + 15, currentPlaybackSongs.count) // Show up to 15 songs
-                
+
                 if startIndex < endIndex {
                     upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
                 }
-                
+
                 // If we're near the end and repeat is enabled, add songs from the beginning
                 if (isRepeatEnabled) && upcoming.count < 15 {
                     let additionalNeeded = 15 - upcoming.count
@@ -830,46 +835,46 @@ struct ContentView: View {
                 }
             }
         }
-        
+
         upcomingSongs = upcoming
     }
-    
+
     private func loadLyrics(for song: Song) {
         let asset = AVURLAsset(url: song.url)
-        
+
         Task {
             do {
                 let formats = try await asset.load(.availableMetadataFormats)
                 var allItems: [AVMetadataItem] = []
-                
+
                 for format in formats {
                     let items = try await asset.loadMetadata(for: format)
                     allItems.append(contentsOf: items)
                 }
-                
+
                 var foundLyrics: String? = nil
-                
+
                 for item in allItems {
                     // 1. Check the identifier (e.g., "id3/USLT")
                     let id = item.identifier?.rawValue ?? ""
-                    
+
                     // 2. Check the raw key (can be String or Number)
                     let keyAttribute = item.key as? String ?? ""
-                    
+
                     // 3. Common Key
                     let commonKey = item.commonKey?.rawValue ?? ""
-                    
+
                     if id.contains("USLT") || id.contains("©lyr") ||
                        keyAttribute.contains("USLT") ||
                        commonKey.lowercased().contains("lyrics") {
-                        
+
                         if let value = try await item.load(.value) as? String {
                             foundLyrics = value
                             break
                         }
                     }
                 }
-                
+
                 await MainActor.run {
                     if let lyrics = foundLyrics {
                         self.lyricsText = lyrics.trimmingCharacters(in: .controlCharacters)
@@ -886,10 +891,10 @@ struct ContentView: View {
 
     private func checkForExternalLRC(for song: Song) {
         let lrcURL = song.url.deletingPathExtension().appendingPathExtension("lrc")
-        
+
         let access = lrcURL.startAccessingSecurityScopedResource()
         defer { if access { lrcURL.stopAccessingSecurityScopedResource() } }
-        
+
         if FileManager.default.fileExists(atPath: lrcURL.path) {
             do {
                 self.lyricsText = try String(contentsOf: lrcURL, encoding: .utf8)
@@ -900,7 +905,7 @@ struct ContentView: View {
             self.lyricsText = "No lyrics found."
         }
     }
-    
+
     // MiniPlayer functionality
     private func toggleMiniPlayer() {
         if isMiniPlayerActive {
@@ -909,18 +914,18 @@ struct ContentView: View {
             openMiniPlayer()
         }
     }
-    
+
     private func openMiniPlayer() {
         guard let selectedSong = selectedSong else { return }
-        
+
         isMiniPlayerActive = true
         isPlayingFlag = (player?.rate != 0)
-        
+
         // Hide main window
         if let mainWindow = NSApp.mainWindow {
             mainWindow.orderOut(nil)
         }
-        
+
         // Create and show mini player window
         let miniPlayerView = MiniPlayerView(
             player: player,
@@ -929,7 +934,7 @@ struct ContentView: View {
             volume: $volume,
             playbackPosition: $playbackPosition,
             playbackDuration: $playbackDuration,
-            onPlayPause: { 
+            onPlayPause: {
                 if self.player?.rate != 0 {
                     self.player?.pause()
                     self.isPlayingFlag = false
@@ -945,28 +950,31 @@ struct ContentView: View {
             onSeek: handleSeek,
             onClose: closeMiniPlayer
         )
-        
+
         let hostingController = NSHostingController(rootView: miniPlayerView)
-        
+
         let window = NSWindow(
             contentRect: NSRect(x: 100, y: 100, width: 300, height: 100),
             styleMask: [.titled, .closable, .miniaturizable, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-        
+
         window.contentViewController = hostingController
         window.title = "MiniPlayer"
         window.isReleasedWhenClosed = false
         window.center()
         window.makeKeyAndOrderFront(nil)
-        
+
         // Make the window stay on top
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
+
+        // Set the appearance based on appAppearance
+        updateWindowAppearance(window)
+
         miniPlayerWindow = window
-        
+
         // Set up notification to detect when mini player is closed
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
@@ -976,20 +984,38 @@ struct ContentView: View {
             self.handleMiniPlayerClose()
         }
     }
-    
+
+    private func updateWindowAppearance(_ window: NSWindow) {
+        switch appAppearance {
+        case "light":
+            window.appearance = NSAppearance(named: .aqua)
+        case "dark":
+            window.appearance = NSAppearance(named: .darkAqua)
+        default:
+            // System default
+            window.appearance = nil
+        }
+    }
+
+    private func updateMiniPlayerAppearance() {
+        if let window = miniPlayerWindow {
+            updateWindowAppearance(window)
+        }
+    }
+
     private func handleMiniPlayerClose() {
         if isMiniPlayerActive {
             closeMiniPlayer()
         }
     }
-    
+
     private func closeMiniPlayer() {
         isMiniPlayerActive = false
-        
+
         // Close mini player window
         miniPlayerWindow?.close()
         miniPlayerWindow = nil
-        
+
         // Show main window
         if let mainWindow = NSApp.mainWindow {
             mainWindow.makeKeyAndOrderFront(nil)
@@ -997,7 +1023,7 @@ struct ContentView: View {
             // If main window reference is lost, we need to recreate the app window
             NSApp.windows.first?.makeKeyAndOrderFront(nil)
         }
-        
+
         // Remove observer
         NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
     }
@@ -1008,13 +1034,13 @@ struct UpNextView: View {
     let upcomingSongs: [Song]
     let isPlaying: Bool
     var onSongSelect: (Song) -> Void = { _ in } // Added this parameter
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Up Next")
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             if let current = currentSong {
                 // Current playing song
                 HStack(spacing: 12) {
@@ -1030,7 +1056,7 @@ struct UpNextView: View {
                             .fill(Color.gray.opacity(0.3))
                             .frame(width: 50, height: 50)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(current.title)
                             .font(.headline)
@@ -1040,23 +1066,23 @@ struct UpNextView: View {
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "speaker.wave.2.fill")
                         .foregroundColor(.blue)
                 }
                 .padding(.horizontal)
-                
+
                 Divider()
             }
-            
+
             if !upcomingSongs.isEmpty {
                 Text("Next Up")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
-                
+
                 // List of upcoming songs
                 List(upcomingSongs.indices, id: \.self) { index in
                     let song = upcomingSongs[index]
@@ -1065,7 +1091,7 @@ struct UpNextView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .frame(width: 20)
-                        
+
                         if let artworkData = song.artworkData,
                            let image = NSImage(data: artworkData) {
                             Image(nsImage: image)
@@ -1078,7 +1104,7 @@ struct UpNextView: View {
                                 .fill(Color.gray.opacity(0.3))
                                 .frame(width: 40, height: 40)
                         }
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text(song.title)
                                 .font(.subheadline)
@@ -1088,7 +1114,7 @@ struct UpNextView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
-                        
+
                         Spacer()
                     }
                     .padding(.vertical, 4)
@@ -1109,24 +1135,24 @@ struct UpNextView: View {
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white) // Changed from system color to fixed white
+        .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
     }
 }
 // Lyrics view implementation
 struct LyricsView: View {
     let currentSong: Song?
     let lyrics: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Lyrics")
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             if let song = currentSong {
                 HStack(spacing: 12) {
                     if let artworkData = song.artworkData,
@@ -1141,7 +1167,7 @@ struct LyricsView: View {
                             .fill(Color.gray.opacity(0.3))
                             .frame(width: 50, height: 50)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(song.title)
                             .font(.headline)
@@ -1157,14 +1183,14 @@ struct LyricsView: View {
                                 .lineLimit(1)
                         }
                     }
-                    
+
                     Spacer()
                 }
                 .padding(.horizontal)
-                
+
                 Divider()
             }
-            
+
             ScrollView {
                 Text(lyrics)
                     .font(.body)
@@ -1174,11 +1200,11 @@ struct LyricsView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
             }
-            
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 }
 
