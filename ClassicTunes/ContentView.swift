@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var systemPlaylists: [Playlist] = []
     @State private var selectedPlaylistID: UUID?
     @State private var libraryActive: Bool = true
+    @State private var searchText: String = ""
 
     @State private var showNewPlaylistSheet = false
     @StateObject private var playlistManager = PlaylistManager()
@@ -56,29 +57,38 @@ struct ContentView: View {
     }
 
     private var displayedSongs: [Song] {
+        // Build base list depending on selected playlist or full library
+        let baseUnfiltered: [Song]
         if let playlistID = selectedPlaylistID,
            let playlist = playlists.first(where: { $0.id == playlistID }) {
-            // Preserve the playlist's visible order while removing duplicates
-            var seen = Set<UUID>()
-            var result: [Song] = []
-            for s in playlist.songs {
-                if !seen.contains(s.id) {
-                    seen.insert(s.id)
-                    result.append(s)
-                }
-            }
-            return result
+            baseUnfiltered = playlist.songs
+        } else {
+            baseUnfiltered = songs
         }
-        // Preserve the library's visible order while removing duplicates
+
+        // Deduplicate while preserving the visible order
         var seen = Set<UUID>()
-        var result: [Song] = []
-        for s in songs {
+        var orderedUnique: [Song] = []
+        for s in baseUnfiltered {
             if !seen.contains(s.id) {
                 seen.insert(s.id)
-                result.append(s)
+                orderedUnique.append(s)
             }
         }
-        return result
+
+        // If there's no search text, return as-is
+        let trimmedQuery = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else {
+            return orderedUnique
+        }
+
+        // Case-insensitive filtering by title, artist, or album
+        let q = trimmedQuery.lowercased()
+        return orderedUnique.filter { song in
+            song.title.lowercased().contains(q) ||
+            song.artist.lowercased().contains(q) ||
+            song.album.lowercased().contains(q)
+        }
     }
 
     // Get unique albums for Cover Flow
@@ -181,16 +191,15 @@ struct ContentView: View {
                         isRepeatEnabled: $isRepeatEnabled,
                         isRepeatOne: $isRepeatOne,
                         isStopped: $isStopped,
-                        isCoverFlowActive: $isCoverFlowActive,  // Pass Cover Flow state
-                        onMiniPlayerToggle: toggleMiniPlayer
+                        isCoverFlowActive: $isCoverFlowActive,
+                        onMiniPlayerToggle: toggleMiniPlayer,
+                        searchText: $searchText
                     )
 
                     Divider()
 
                     HStack(spacing: 0) {
-                        // Manual sidebar implementation to avoid macOS Tahoe styling
                         HStack(spacing: 0) {
-                            // Fixed sidebar
                             SidebarView(
                                 playlists: playlists,
                                 userPlaylists: $playlistManager.userPlaylists,
@@ -229,7 +238,7 @@ struct ContentView: View {
                                 } else {
                                     SongListView(
                                         isAlbumView: isAlbumView,
-                                        songs: songs,
+                                        songs: displayedSongs,
                                         onSongSelect: playSong,
                                         selectedSong: $selectedSong,
                                         onAlbumSelect: { album in

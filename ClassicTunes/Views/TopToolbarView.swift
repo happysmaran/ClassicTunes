@@ -19,6 +19,7 @@ struct TopToolbarView: View {
     @Binding var isStopped: Bool
     @Binding var isCoverFlowActive: Bool  // Add Cover Flow state binding
     var onMiniPlayerToggle: (() -> Void)? = nil  // Add this new parameter
+    @Binding var searchText: String
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -168,7 +169,7 @@ struct TopToolbarView: View {
 
     private var searchAndImportGroup: some View {
         HStack {
-            TextField("Search", text: .constant(""))
+            TextField("Search", text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 160)
 
