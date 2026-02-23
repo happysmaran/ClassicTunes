@@ -52,6 +52,10 @@ struct ContentView: View {
     @State private var showLyrics = false
     @State private var lyricsText: String = ""
 
+    @State private var showM3UExporter = false
+    @State private var showM3UImporter = false
+    @State private var m3UExportURL: URL?
+
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
     }
@@ -251,7 +255,6 @@ struct ContentView: View {
                                         playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
                                         onAddToPlaylist: { song in
                                             songToAddToPlaylist = song
-                                            showPlaylistSelectionSheet = true
                                         }
                                     )
                                     .environmentObject(playlistManager)
@@ -318,6 +321,31 @@ struct ContentView: View {
                         .padding(.horizontal)
                         .foregroundColor(.primary)
                         .buttonStyle(PlainButtonStyle())
+
+                        Button(action: {
+                            withAnimation { showM3UImporter = true }
+                        }) {
+                            HStack {
+                                Image(systemName: "tray.and.arrow.down")
+                                Text("Import M3U")
+                            }
+                        }
+                        .padding(.horizontal)
+                        .foregroundColor(.primary)
+                        .buttonStyle(PlainButtonStyle())
+
+                        Button(action: {
+                            exportSelectedPlaylist()
+                        }) {
+                            HStack {
+                                Image(systemName: "tray.and.arrow.up")
+                                Text("Export M3U")
+                            }
+                        }
+                        .padding(.horizontal)
+                        .foregroundColor(selectedPlaylistID == nil ? .secondary : .primary)
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(selectedPlaylistID == nil)
                     }
                     .frame(height: 40)
                     .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
@@ -325,6 +353,14 @@ struct ContentView: View {
                 .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
                 .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
                     handleFileImport(result)
+                }
+                .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
+                    switch result {
+                    case .success(let urls):
+                        if let url = urls.first { importPlaylistFromM3U(url: url) }
+                    case .failure(let error):
+                        print("M3U import failed: \(error.localizedDescription)")
+                    }
                 }
                 .frame(minWidth: 900, minHeight: 600)
                 .onAppear {
@@ -336,14 +372,12 @@ struct ContentView: View {
                 .sheet(isPresented: $showNewPlaylistSheet) {
                     NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
                 }
-                .sheet(isPresented: $showPlaylistSelectionSheet) {
-                    if let song = songToAddToPlaylist {
-                        PlaylistSelectionView(song: song) { playlist in
-                            playlistManager.addSong(song, to: playlist)
-                            showPlaylistSelectionSheet = false
-                        }
-                        .environmentObject(playlistManager)
+                .sheet(item: $songToAddToPlaylist) { song in
+                    PlaylistSelectionView(song: song) { playlist in
+                        playlistManager.addSong(song, to: playlist)
+                        songToAddToPlaylist = nil
                     }
+                    .environmentObject(playlistManager)
                 }
                 .onChange(of: selectedSong) { newSong in
                     guard let song = newSong else { return }
@@ -1010,6 +1044,118 @@ struct ContentView: View {
         if let window = miniPlayerWindow {
             updateWindowAppearance(window)
         }
+    }
+
+    private func exportSelectedPlaylist() {
+        guard let playlistID = selectedPlaylistID,
+              let playlist = playlists.first(where: { $0.id == playlistID }) else {
+            return
+        }
+        // Build M3U content
+        let lines = buildM3UContent(for: playlist)
+        let content = lines.joined(separator: "\n")
+
+        // Ask user for save location using NSSavePanel
+        let panel = NSSavePanel()
+        panel.allowedFileTypes = ["m3u", "m3u8"]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = sanitizeFileName("\(playlist.name).m3u")
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                do {
+                    try content.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    print("Failed to write M3U: \(error)")
+                }
+            }
+        }
+    }
+
+    private func buildM3UContent(for playlist: Playlist) -> [String] {
+        var lines: [String] = ["#EXTM3U"]
+        for song in playlist.songs {
+            let duration = -1 // Cant get the info, so uhh well ignore it
+            let title = song.title
+            let artist = song.artist
+            let display = artist.isEmpty ? title : "\(artist) - \(title)"
+            lines.append("#EXTINF:\(duration),\(display)")
+            // Prefer relative path if within the selected music folder access
+            if let base = musicFolderAccess {
+                let path = song.url.path
+                let basePath = base.path
+                if path.hasPrefix(basePath) {
+                    let rel = String(path.dropFirst(basePath.count + (basePath.hasSuffix("/") ? 0 : 1)))
+                    lines.append(rel)
+                    continue
+                }
+            }
+            lines.append(song.url.path)
+        }
+        return lines
+    }
+
+    private func sanitizeFileName(_ name: String) -> String {
+        let invalid = CharacterSet(charactersIn: "/\\?%*|\"<>:")
+        return name.components(separatedBy: invalid).joined(separator: "_")
+    }
+
+    private func importPlaylistFromM3U(url: URL) {
+        do {
+            let text = try String(contentsOf: url, encoding: .utf8)
+            let baseDir = url.deletingLastPathComponent()
+            let paths = parseM3U(text: text, baseDirectory: baseDir)
+
+            // Map paths to existing songs in library by resolving to absolute URLs
+            var importedSongs: [Song] = []
+            for path in paths {
+                let resolvedURL: URL
+                if path.hasPrefix("/") || path.hasPrefix("~") || path.hasPrefix("file://") {
+                    resolvedURL = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+                } else if let base = musicFolderAccess {
+                    resolvedURL = base.appendingPathComponent(path)
+                } else {
+                    resolvedURL = baseDir.appendingPathComponent(path)
+                }
+                if let match = songs.first(where: { $0.url.standardizedFileURL == resolvedURL.standardizedFileURL }) {
+                    importedSongs.append(match)
+                }
+            }
+
+            if importedSongs.isEmpty {
+                print("No matching songs found for imported M3U.")
+                return
+            }
+
+            // Ask user to create a new playlist name
+            let defaultName = url.deletingPathExtension().lastPathComponent
+            let newName = suggestUniquePlaylistName(basedOn: defaultName)
+            let newPlaylist = Playlist(name: newName, songs: importedSongs, isSystem: false)
+            playlistManager.userPlaylists.append(newPlaylist)
+            selectedPlaylistID = newPlaylist.id
+        } catch {
+            print("Failed to read M3U: \(error)")
+        }
+    }
+
+    private func parseM3U(text: String, baseDirectory: URL) -> [String] {
+        var result: [String] = []
+        for rawLine in text.components(separatedBy: .newlines) {
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            if line.isEmpty { continue }
+            if line.hasPrefix("#") { continue } // skip comments and #EXTINF
+            result.append(line)
+        }
+        return result
+    }
+
+    private func suggestUniquePlaylistName(basedOn base: String) -> String {
+        var name = base
+        var suffix = 1
+        while playlists.contains(where: { $0.name == name }) {
+            suffix += 1
+            name = "\(base) \(suffix)"
+        }
+        return name
     }
 
     private func handleMiniPlayerClose() {
