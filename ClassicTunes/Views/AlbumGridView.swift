@@ -50,7 +50,9 @@ struct AlbumGridView: View {
             LazyVGrid(columns: [
                 GridItem(.adaptive(minimum: max(100, coverSize + 20)), spacing: max(10, coverSize / 6))
             ], spacing: max(10, coverSize / 6)) {
-                ForEach(groupedAlbums.keys.sorted(), id: \.self) { album in
+                ForEach(groupedAlbums.keys.sorted { lhs, rhs in
+                    normalizedSortKey(lhs).localizedCaseInsensitiveCompare(normalizedSortKey(rhs)) == .orderedAscending
+                }, id: \.self) { album in
                     albumCell(album: album)
                 }
             }

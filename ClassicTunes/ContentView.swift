@@ -7,7 +7,7 @@ struct ContentView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
     @State private var musicFolderAccess: URL?
     @State private var isAlbumView = false
-    @State private var isCoverFlowActive = false  // New state for Cover Flow
+    @State private var isCoverFlowActive = false
     @State private var showFileImporter = false
     @State private var songs: [Song] = []
     @State private var selectedSong: Song?
@@ -45,8 +45,8 @@ struct ContentView: View {
     @State private var showUpNext = false
     @State private var upcomingSongs: [Song] = []
     @State private var shuffleQueue: [Song] = []
-    @State private var playedShuffleSongs: [Song] = [] // Track songs we've already played in shuffle
-    @State private var isNavigatingBackward = false // Track if we're navigating backward
+    @State private var playedShuffleSongs: [Song] = []
+    @State private var isNavigatingBackward = false
 
     // Lyrics states
     @State private var showLyrics = false
@@ -100,8 +100,19 @@ struct ContentView: View {
         let groupedSongs = Dictionary(grouping: displayedSongs) { $0.album }
         var albumInfos: [AlbumInfo] = []
 
-        // Sort albums by name to ensure consistent ordering
-        let sortedAlbums = groupedSongs.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+        // Shared normalized key function
+        func normalizedSortKey(_ key: String) -> String {
+            key.lowercased()
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "the ", with: "")
+                .replacingOccurrences(of: "a ", with: "")
+                .replacingOccurrences(of: "an ", with: "")
+        }
+
+        // Sort albums by normalized name to ensure consistent ordering
+        let sortedAlbums = groupedSongs.sorted { lhs, rhs in
+            normalizedSortKey(lhs.key).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.key)) == .orderedAscending
+        }
 
         for (albumName, songs) in sortedAlbums {
             if let firstSong = songs.first {

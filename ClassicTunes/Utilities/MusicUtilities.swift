@@ -96,7 +96,6 @@ func savePlaylistsToUserDefaults(_ playlists: [Playlist]) {
         print("Error encoding playlists: \(error)")
     }
 }
-// MARK: - Play Count & Play History Utilities
 
 let playHistoryKey = "playHistory"
 let playCountKey = "playCounts"
@@ -122,8 +121,6 @@ func getPlayCount(for song: Song) -> Int {
 func getPlayHistory() -> [String] {
     UserDefaults.standard.stringArray(forKey: playHistoryKey) ?? []
 }
-
-// MARK: - System Playlist Generators
 
 func generateRecentlyPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -> Playlist {
     let history = getPlayHistory()
@@ -152,8 +149,6 @@ func generateTopPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -> Pla
     return Playlist(name: "Top 25 Most Played", songs: topSongs, isSystem: true)
 }
 
-// MARK: - Playlist loading & saving utilities
-
 func loadUserPlaylists() -> [Playlist] {
     // Only custom playlists, not system ones
     return loadPlaylistsFromUserDefaults().filter { !$0.isSystem }
@@ -164,4 +159,25 @@ func saveUserPlaylists(_ playlists: [Playlist]) {
     savePlaylistsToUserDefaults(playlists.filter { !$0.isSystem })
 }
 
+// Returns a version of the string suitable for sorting by ignoring leading articles, whitespace, and non-alphanumerics
+public func normalizedSortKey(_ value: String) -> String {
+    var working = value.trimmingCharacters(in: .whitespacesAndNewlines)
 
+    if let firstAlnumIndex = working.firstIndex(where: { $0.isLetter || $0.isNumber }) {
+        working = String(working[firstAlnumIndex...])
+    } else {
+        return working
+    }
+
+    let lower = working.lowercased()
+    let articles = ["the ", "a ", "an "]
+    for article in articles {
+        if lower.hasPrefix(article) {
+            let dropCount = article.count
+            working = String(working.dropFirst(dropCount)).trimmingCharacters(in: .whitespacesAndNewlines)
+            break
+        }
+    }
+
+    return working
+}

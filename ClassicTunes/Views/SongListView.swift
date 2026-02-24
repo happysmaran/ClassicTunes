@@ -9,6 +9,7 @@ struct SongListView: View {
     var playlistSongs: [Song]?
     var onAddToPlaylist: (Song) -> Void
     @State private var sortBy = "title"
+    @State private var isAscending = true
     @EnvironmentObject var playlistManager: PlaylistManager
 
     @State private var titleFraction: CGFloat = 0.33
@@ -21,18 +22,23 @@ struct SongListView: View {
 
     private var sortedSongs: [Song] {
         let songsToSort = playlistSongs ?? songs
-        switch sortBy {
-        case "title":
-            return songsToSort.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-        case "artist":
-            return songsToSort.sorted { $0.artist.localizedCaseInsensitiveCompare($1.artist) == .orderedAscending }
-        case "album":
-            return songsToSort.sorted { $0.album.localizedCaseInsensitiveCompare($1.album) == .orderedAscending }
-        case "genre":
-            return songsToSort.sorted { $0.genre.localizedCaseInsensitiveCompare($1.genre) == .orderedAscending }
-        default:
-            return songsToSort
+        let sorted = songsToSort.sorted { lhs, rhs in
+            let comparison: ComparisonResult
+            switch sortBy {
+            case "title":
+                comparison = normalizedSortKey(lhs.title).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.title))
+            case "artist":
+                comparison = normalizedSortKey(lhs.artist).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.artist))
+            case "album":
+                comparison = normalizedSortKey(lhs.album).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.album))
+            case "genre":
+                comparison = normalizedSortKey(lhs.genre).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.genre))
+            default:
+                comparison = .orderedSame
+            }
+            return isAscending ? (comparison == .orderedAscending) : (comparison == .orderedDescending)
         }
+        return sorted
     }
 
     // Ensures all fractions are >= minF and sum to 1.0 by redistributing excess/deficit
@@ -192,7 +198,10 @@ struct SongListView: View {
                     sort: "title",
                     width: .constant(titleWidth),
                     currentSort: sortBy,
-                    onSort: { sortBy = $0 },
+                    isAscending: isAscending,
+                    onSort: { key in
+                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
+                    },
                     showsHandle: true,
                     onDrag: { delta in
                         var a = titleFraction
@@ -208,7 +217,10 @@ struct SongListView: View {
                     sort: "artist",
                     width: .constant(artistWidth),
                     currentSort: sortBy,
-                    onSort: { sortBy = $0 },
+                    isAscending: isAscending,
+                    onSort: { key in
+                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
+                    },
                     showsHandle: true,
                     onDrag: { delta in
                         var a = artistFraction
@@ -224,7 +236,10 @@ struct SongListView: View {
                     sort: "album",
                     width: .constant(albumWidth),
                     currentSort: sortBy,
-                    onSort: { sortBy = $0 },
+                    isAscending: isAscending,
+                    onSort: { key in
+                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
+                    },
                     showsHandle: true,
                     onDrag: { delta in
                         var a = albumFraction
@@ -240,7 +255,10 @@ struct SongListView: View {
                     sort: "genre",
                     width: .constant(genreWidth),
                     currentSort: sortBy,
-                    onSort: { sortBy = $0 },
+                    isAscending: isAscending,
+                    onSort: { key in
+                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
+                    },
                     showsHandle: true,
                     onDrag: { delta in
                         var a = albumFraction
@@ -322,6 +340,7 @@ struct ResizableHeader: View {
     let sort: String
     @Binding var width: CGFloat
     let currentSort: String
+    let isAscending: Bool
     let onSort: (String) -> Void
     var showsHandle: Bool = true
     var onDrag: ((CGFloat) -> Void)? = nil
@@ -341,7 +360,7 @@ struct ResizableHeader: View {
                     .layoutPriority(1)
 
                 if currentSort == sort {
-                    Image(systemName: "chevron.down")
+                    Image(systemName: isAscending ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
                 }
             }

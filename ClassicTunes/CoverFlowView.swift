@@ -21,12 +21,17 @@ struct CoverFlowView: View {
     @State private var sliderValue: Double = 0.0
     @State private var showAllSongs = true // New state to toggle between all songs and album songs
     @State private var isInteracting = false // Track interaction to defer playback and commit index
-    @StateObject private var playlistManager = PlaylistManager() // Needed for SongListView
+    @StateObject private var playlistManager = PlaylistManager()
+    private var sortedAlbums: [AlbumInfo] {
+        albums.sorted { a, b in
+            normalizedSortKey(a.name) < normalizedSortKey(b.name)
+        }
+    }
 
     // Get songs for the committed album (prevents list churn while sliding)
     private var albumSongs: [Song] {
-        guard !albums.isEmpty && committedIndex < albums.count else { return [] }
-        let currentAlbum = albums[committedIndex]
+        guard !sortedAlbums.isEmpty && committedIndex < sortedAlbums.count else { return [] }
+        let currentAlbum = sortedAlbums[committedIndex]
         return songs.filter { $0.album == currentAlbum.name }
     }
 
@@ -85,18 +90,18 @@ struct CoverFlowView: View {
         .background(backgroundColor)
         .clipShape(Rectangle())
         .onChange(of: committedIndex) { newValue in
-            if newValue < albums.count {
-                selectedAlbum = albums[newValue].name
+            if newValue < sortedAlbums.count {
+                selectedAlbum = sortedAlbums[newValue].name
                 // sliderValue follows currentIndex during interaction; no need to set here
             }
         }
         .onAppear {
             if let selected = selectedAlbum,
-               let index = albums.firstIndex(where: { $0.name == selected }) {
+               let index = sortedAlbums.firstIndex(where: { $0.name == selected }) {
                 currentIndex = index
                 committedIndex = index
                 sliderValue = Double(index)
-            } else if !albums.isEmpty {
+            } else if !sortedAlbums.isEmpty {
                 currentIndex = 0
                 committedIndex = 0
                 sliderValue = 0.0
@@ -122,13 +127,13 @@ struct CoverFlowView: View {
 
     private var albumInfoSection: some View {
         Group {
-            if !albums.isEmpty && currentIndex < albums.count {
+            if !sortedAlbums.isEmpty && currentIndex < sortedAlbums.count {
                 VStack(alignment: .center, spacing: 8) {
-                    Text(albums[currentIndex].name)
+                    Text(sortedAlbums[currentIndex].name)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(colorScheme == .light ? .black : .primary)
-                    Text(albums[currentIndex].artist)
+                    Text(sortedAlbums[currentIndex].artist)
                         .font(.title3)
                         .foregroundColor(colorScheme == .light ? .black.opacity(0.7) : .secondary)
                 }
@@ -143,7 +148,7 @@ struct CoverFlowView: View {
 
     private var sliderSection: some View {
         Group {
-            if albums.count > 1 {
+            if sortedAlbums.count > 1 {
                 HStack {
                     Text("1")
                         .font(.caption)
@@ -161,7 +166,7 @@ struct CoverFlowView: View {
                                 }
                             }
                         ),
-                        in: 0...Double(albums.count - 1),
+                        in: 0...Double(sortedAlbums.count - 1),
                         step: 1,
                         onEditingChanged: { isEditing in
                             isInteracting = isEditing
@@ -183,7 +188,7 @@ struct CoverFlowView: View {
                     .padding(.vertical, 8)
                     .padding(.horizontal, 0)
 
-                    Text("\(albums.count)")
+                    Text("\(sortedAlbums.count)")
                         .font(.caption)
                         .foregroundColor(.gray)
                         .frame(width: 24, alignment: .trailing)
@@ -232,10 +237,10 @@ struct CoverFlowView: View {
         let rightEdge = size.width - coverMargin
 
         let leftCount = currentIndex
-        let rightCount = albums.count - currentIndex - 1
+        let rightCount = sortedAlbums.count - currentIndex - 1
 
         return ZStack {
-            ForEach(Array(albums.enumerated()), id: \.offset) { index, album in
+            ForEach(Array(sortedAlbums.enumerated()), id: \.offset) { index, album in
                 let isCenter = index == currentIndex
                 let frameWidth = isCenter ? coverWidth * 1.2 : coverWidth
 
@@ -260,7 +265,7 @@ struct CoverFlowView: View {
                 .frame(width: frameWidth, height: frameWidth)
                 .aspectRatio(1, contentMode: .fit)
                 .position(x: xPosition, y: size.height / 2)
-                .zIndex(Double(albums.count) - abs(Double(index - currentIndex)))
+                .zIndex(Double(sortedAlbums.count) - abs(Double(index - currentIndex)))
                 .onTapGesture {
                     isInteracting = true
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -320,8 +325,8 @@ struct CoverFlowView: View {
     }
 
     private func playCurrentAlbum() {
-        guard committedIndex < albums.count else { return }
-        let album = albums[committedIndex]
+        guard committedIndex < sortedAlbums.count else { return }
+        let album = sortedAlbums[committedIndex]
         selectAndPlay(album: album)
     }
 
@@ -384,7 +389,7 @@ struct CoverFlowView: View {
     // Update CoverFlow index when selected song changes
     private func updateCoverFlowIndexIfNeeded() {
         guard let song = selectedSong,
-              let albumIndex = albums.firstIndex(where: { $0.name == song.album }) else {
+              let albumIndex = sortedAlbums.firstIndex(where: { $0.name == song.album }) else {
             return
         }
 

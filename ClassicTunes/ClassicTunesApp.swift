@@ -17,13 +17,6 @@ struct ClassicTunesApp: App {
         .windowStyle(HiddenTitleBarWindowStyle())
         .commands {
             CommandGroup(replacing: .sidebar) { }
-
-            CommandMenu("File") {
-                Button("Preferences…") {
-                    NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-                }
-                .keyboardShortcut(",", modifiers: [.command])
-            }
         }
 
         Settings {
