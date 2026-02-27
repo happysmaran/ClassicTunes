@@ -61,7 +61,7 @@ struct SongListView: View {
         let availArtist = max(0, artistFraction - minF)
         let availAlbum = max(0, albumFraction - minF)
         let availGenre = max(0, genreFraction - minF)
-        let totalAvail = availTitle + availArtist + availAlbum + genreFraction
+        let totalAvail = availTitle + availArtist + availAlbum + availGenre
 
         if sum > 1, totalAvail > 0 {
             let excess = sum - 1
@@ -88,7 +88,7 @@ struct SongListView: View {
                 let newArtist = min(artistFraction + addArtist, maxF)
                 let newAlbum = min(albumFraction + addAlbum, maxF)
                 let newGenre = min(genreFraction + addGenre, maxF)
-                let newDeficit = deficit - (newTitle - titleFraction) + (newArtist - artistFraction) + (newAlbum - albumFraction) + (newGenre - genreFraction)
+                let newDeficit = deficit - (newTitle - titleFraction) - (newArtist - artistFraction) - (newAlbum - albumFraction) - (newGenre - genreFraction)
                 titleFraction = newTitle; artistFraction = newArtist; albumFraction = newAlbum; genreFraction = newGenre
                 deficit = newDeficit
                 capTitle = max(0, maxF - titleFraction)
@@ -162,7 +162,8 @@ struct SongListView: View {
                 AlbumGridView(
                     songs: playlistSongs ?? songs,
                     selectedAlbum: selectedSong?.album,
-                    onAlbumSelect: onAlbumSelect
+                    onAlbumSelect: onAlbumSelect,
+                    onSongSelect: onSongSelect
                 )
             } else {
                 listView
