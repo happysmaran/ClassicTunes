@@ -39,7 +39,11 @@ struct ContentView: View {
     // MiniPlayer states
     @State private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
-    @State private var isPlayingFlag: Bool = false
+    // Removed @State private var isPlayingFlag: Bool = false
+
+    // Added observer tokens
+    @State private var playbackEndObserver: NSObjectProtocol?
+    @State private var miniPlayerCloseObserver: NSObjectProtocol?
 
     // Up Next states
     @State private var showUpNext = false
@@ -362,8 +366,23 @@ struct ContentView: View {
                     .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
                 }
                 .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
-                .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.directory], allowsMultipleSelection: false) { result in
+                .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.folder], allowsMultipleSelection: false) { result in
                     handleFileImport(result)
+                }
+                .onChange(of: showFileImporter) { isPresented in
+                    guard isPresented else { return }
+                    let panel = NSOpenPanel()
+                    panel.canChooseFiles = false
+                    panel.canChooseDirectories = true
+                    panel.allowsMultipleSelection = false
+                    panel.canCreateDirectories = false
+                    panel.prompt = "Choose"
+                    panel.begin { response in
+                        defer { self.showFileImporter = false }
+                        if response == .OK, let url = panel.url {
+                            self.handleFileImport(.success([url]))
+                        }
+                    }
                 }
                 .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
                     switch result {
@@ -525,7 +544,7 @@ struct ContentView: View {
         let newPlayer = AVPlayer(playerItem: item)
         newPlayer.volume = Float(volume)
         newPlayer.play()
-        isPlayingFlag = true
+        // Removed isPlayingFlag = true
 
         player = newPlayer
         playerItem = item
@@ -544,9 +563,15 @@ struct ContentView: View {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
         }
+
+        if let token = playbackEndObserver {
+            NotificationCenter.default.removeObserver(token)
+            playbackEndObserver = nil
+        }
+
         playerItem = nil
         player = nil
-        isPlayingFlag = false
+        // Removed isPlayingFlag = false
     }
 
     private func setupTimeObserver(for player: AVPlayer) {
@@ -561,12 +586,15 @@ struct ContentView: View {
     }
 
     private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
-        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
+        if let token = playbackEndObserver {
+            NotificationCenter.default.removeObserver(token)
+            playbackEndObserver = nil
+        }
+        playbackEndObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
             if self.isRepeatOne {
                 // Loop the same item by seeking to start and resuming playback
                 self.player?.seek(to: .zero)
                 self.player?.play()
-                self.isPlayingFlag = true
                 self.playbackPosition = 0.0
                 self.updateNowPlayingInfo()
             } else {
@@ -748,7 +776,7 @@ struct ContentView: View {
             guard let player = self.player else { return .commandFailed }
             if player.rate == 0 {
                 player.play()
-                self.isPlayingFlag = true
+                // Removed self.isPlayingFlag = true
                 self.updateNowPlayingInfo()
                 return .success
             }
@@ -760,7 +788,7 @@ struct ContentView: View {
             guard let player = self.player else { return .commandFailed }
             if player.rate != 0 {
                 player.pause()
-                self.isPlayingFlag = false
+                // Removed self.isPlayingFlag = false
                 self.updateNowPlayingInfo()
                 return .success
             }
@@ -772,10 +800,10 @@ struct ContentView: View {
             guard let player = self.player else { return .commandFailed }
             if player.rate == 0 {
                 player.play()
-                self.isPlayingFlag = true
+                // Removed self.isPlayingFlag = true
             } else {
                 player.pause()
-                self.isPlayingFlag = false
+                // Removed self.isPlayingFlag = false
             }
             self.updateNowPlayingInfo()
             return .success
@@ -973,7 +1001,7 @@ struct ContentView: View {
         guard let selectedSong = selectedSong else { return }
 
         isMiniPlayerActive = true
-        isPlayingFlag = (player?.rate != 0)
+        // Removed: isPlayingFlag = (player?.rate != 0)
 
         // Hide main window
         if let mainWindow = NSApp.mainWindow {
@@ -984,20 +1012,20 @@ struct ContentView: View {
         let miniPlayerView = MiniPlayerView(
             player: player,
             selectedSong: $selectedSong,
-            isPlaying: $isPlayingFlag,
+            isPlaying: Binding(get: { (player?.rate ?? 0) != 0 }, set: { shouldPlay in
+                if shouldPlay { self.player?.play() } else { self.player?.pause() }
+                self.updateNowPlayingInfo()
+            }),
             volume: $volume,
             playbackPosition: $playbackPosition,
             playbackDuration: $playbackDuration,
             onPlayPause: {
                 if self.player?.rate != 0 {
                     self.player?.pause()
-                    self.isPlayingFlag = false
-                    self.updateNowPlayingInfo()
                 } else {
                     self.player?.play()
-                    self.isPlayingFlag = true
-                    self.updateNowPlayingInfo()
                 }
+                self.updateNowPlayingInfo()
             },
             onPrevious: playPrevious,
             onNext: playNext,
@@ -1030,7 +1058,7 @@ struct ContentView: View {
         miniPlayerWindow = window
 
         // Set up notification to detect when mini player is closed
-        NotificationCenter.default.addObserver(
+        miniPlayerCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
@@ -1190,8 +1218,12 @@ struct ContentView: View {
             NSApp.windows.first?.makeKeyAndOrderFront(nil)
         }
 
-        // Remove observer
-        NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
+        if let token = miniPlayerCloseObserver {
+            NotificationCenter.default.removeObserver(token)
+            miniPlayerCloseObserver = nil
+        }
+
+        // Removed: NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
     }
 }
 

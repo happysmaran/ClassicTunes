@@ -165,11 +165,13 @@ struct SongListView: View {
                     onAlbumSelect: onAlbumSelect,
                     onSongSelect: onSongSelect
                 )
+                .padding(.top, 8)
             } else {
                 listView
             }
             Divider()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
@@ -177,12 +179,24 @@ struct SongListView: View {
         VStack(spacing: 0) {
             columnHeaders
 
-            List {
-                songRows
+            GeometryReader { rowsProxy in
+                let total = rowsProxy.size.width
+                let titleW = titleFraction * total
+                let artistW = artistFraction * total
+                let albumW = albumFraction * total
+                let genreW = genreFraction * total
+
+                List {
+                    ForEach(sortedSongs) { song in
+                        songRow(song, titleW: titleW, artistW: artistW, albumW: albumW, genreW: genreW)
+                    }
+                }
+                .listStyle(.plain)
+                .listRowInsets(EdgeInsets())
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .listStyle(.plain)
-            .frame(minHeight: 0)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var columnHeaders: some View {
@@ -278,58 +292,44 @@ struct SongListView: View {
         .frame(height: 24 + 8) // header height + vertical padding
     }
 
-    private var songRows: some View {
-        ForEach(sortedSongs) { song in
-            songRow(song)
+    private func songRow(_ song: Song, titleW: CGFloat, artistW: CGFloat, albumW: CGFloat, genreW: CGFloat) -> some View {
+        HStack(spacing: 0) {
+            Text(song.title)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(width: titleW, alignment: .leading)
+                .padding(.leading, 12)
+
+            Text(song.artist)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(width: artistW, alignment: .leading)
+
+            Text(song.album)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(width: albumW, alignment: .leading)
+
+            Text(song.genre)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(width: genreW, alignment: .leading)
+                .padding(.trailing, 12)
         }
-    }
-
-    private func songRow(_ song: Song) -> some View {
-        GeometryReader { proxy in
-            let total = proxy.size.width
-            let titleW = titleFraction * total
-            let artistW = artistFraction * total
-            let albumW = albumFraction * total
-            let genreW = genreFraction * total
-
-            HStack(spacing: 0) {
-                Text(song.title)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(width: titleW, alignment: .leading)
-                    .padding(.leading, 12)
-
-                Text(song.artist)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(width: artistW, alignment: .leading)
-
-                Text(song.album)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(width: albumW, alignment: .leading)
-
-                Text(song.genre)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(width: genreW, alignment: .leading)
-                    .padding(.trailing, 12)
-            }
-            .font(.system(size: 11))
-            .background(
-                selectedSong?.id == song.id
-                ? Color.accentColor.opacity(0.25)
-                : Color.clear
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selectedSong = song
-                onSongSelect(song)
-            }
-            .contextMenu {
-                Button("Add to Playlist") {
-                    onAddToPlaylist(song)
-                }
+        .font(.system(size: 11))
+        .background(
+            selectedSong?.id == song.id
+            ? Color.accentColor.opacity(0.25)
+            : Color.clear
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedSong = song
+            onSongSelect(song)
+        }
+        .contextMenu {
+            Button("Add to Playlist") {
+                onAddToPlaylist(song)
             }
         }
         .frame(height: 16)

@@ -44,12 +44,10 @@ struct TopToolbarView: View {
             playbackButton(icon: "backward.fill", action: playPrevious)
             playbackButton(icon: isPlaying ? "pause.fill" : "play.fill") {
                 isPlaying.toggle()
-                if isPlaying { isStopped = false }
             }
             playbackButton(icon: "stop.fill") {
                 isPlaying = false
                 isStopped = true
-                selectedSong = nil
             }
             playbackButton(icon: "forward.fill", action: playNext)
         }

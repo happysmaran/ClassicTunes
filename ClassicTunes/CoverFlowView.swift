@@ -49,9 +49,10 @@ struct CoverFlowView: View {
                 
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
+                        .padding(.top, 12)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: 320)
+            .frame(maxWidth: .infinity, maxHeight: 340)
             .contentShape(Rectangle())
 
             albumInfoSection
@@ -64,15 +65,15 @@ struct CoverFlowView: View {
                 isAlbumView: false,
                 songs: songs,
                 onSongSelect: { song in
-                    // Play the selected song
-                    playSong(song)
+                    onAlbumSelect(song.album)
+                    selectedSong = song
                 },
                 selectedSong: $selectedSong,
                 onAlbumSelect: { albumName in
                     let albumSongs = songs.filter { $0.album == albumName }
                     if let firstSong = albumSongs.first {
                         currentPlaybackSongs = albumSongs
-                        playSong(firstSong)
+                        onAlbumSelect(albumName)
                     }
                 },
                 playlistSongs: displayedSongs, // This will be filtered based on showAllSongs
@@ -83,7 +84,9 @@ struct CoverFlowView: View {
                 }
             )
             .environmentObject(playlistManager)
-            .frame(maxHeight: 300) // Fixed height for the list section
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .layoutPriority(1)
+            .padding(.top, 8) // Move the song list down by adding top padding
 
             Spacer()
         }
@@ -117,13 +120,9 @@ struct CoverFlowView: View {
         .buttonStyle(PlainButtonStyle())
     }
 
-    // MARK: - Computed Properties
-
     private var backgroundColor: some View {
         colorScheme == .light ? Color.white : Color(nsColor: .windowBackgroundColor)
     }
-
-    // MARK: - Computed Properties for Body Sections
 
     private var albumInfoSection: some View {
         Group {
@@ -226,8 +225,6 @@ struct CoverFlowView: View {
         }
     }
 
-    // MARK: - Helper Methods
-
     private func coverFlowContent(geometry: GeometryProxy) -> some View {
         let size = geometry.size
         let coverWidth = size.width * 0.18
@@ -328,62 +325,6 @@ struct CoverFlowView: View {
         guard committedIndex < sortedAlbums.count else { return }
         let album = sortedAlbums[committedIndex]
         selectAndPlay(album: album)
-    }
-
-    // Function to play a specific song
-    private func playSong(_ song: Song) {
-        selectedSong = song
-        // Set the correct playback context
-        currentPlaybackSongs = songs.filter { $0.album == song.album }
-
-        if isShuffleEnabled {
-            // Only rebuild shuffle queue if it's empty or we're starting a new shuffle session
-            if shuffleQueue.isEmpty {
-                rebuildShuffleQueue(startingFrom: song)
-            }
-        }
-
-        updateUpcomingSongs()
-    }
-
-    // Rebuild shuffle queue preserving current state
-    private func rebuildShuffleQueue(startingFrom current: Song) {
-        let context = currentPlaybackSongs
-        let pool = context.filter { $0.id != current.id }
-        shuffleQueue = pool.shuffled()
-    }
-
-    // Update upcoming songs based on shuffle and repeat modes
-    private func updateUpcomingSongs() {
-        guard let current = selectedSong else { return }
-
-        if isRepeatOne {
-            return
-        }
-
-        var upcoming: [Song] = []
-
-        if isShuffleEnabled {
-            // Show the next items from the persistent shuffle queue
-            upcoming = Array(shuffleQueue.prefix(15))
-        } else {
-            // Get next sequential songs
-            if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
-                let startIndex = currentIndex + 1
-                let endIndex = min(startIndex + 15, currentPlaybackSongs.count)
-
-                if startIndex < endIndex {
-                    upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
-                }
-
-                // If we're near the end and repeat is enabled, add songs from the beginning
-                if isRepeatEnabled && upcoming.count < 15 {
-                    let additionalNeeded = 15 - upcoming.count
-                    let additionalSongs = currentPlaybackSongs.prefix(additionalNeeded)
-                    upcoming.append(contentsOf: additionalSongs)
-                }
-            }
-        }
     }
 
     // Update CoverFlow index when selected song changes

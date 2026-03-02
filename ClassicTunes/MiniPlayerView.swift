@@ -261,3 +261,4 @@ struct MiniPlayerView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 }
+
