@@ -22,6 +22,16 @@ struct CoverFlowView: View {
     @State private var showAllSongs = true // New state to toggle between all songs and album songs
     @State private var isInteracting = false // Track interaction to defer playback and commit index
     @StateObject private var playlistManager = PlaylistManager()
+
+    // Only render a window of items around the current index to improve performance
+    private let visibleRange: Int = 6 // number of items to show on each side
+    private var visibleAlbums: [(globalIndex: Int, album: AlbumInfo)] {
+        guard !sortedAlbums.isEmpty else { return [] }
+        let start = max(0, currentIndex - visibleRange)
+        let end = min(sortedAlbums.count - 1, currentIndex + visibleRange)
+        return (start...end).map { ($0, sortedAlbums[$0]) }
+    }
+
     private var sortedAlbums: [AlbumInfo] {
         albums.sorted { a, b in
             normalizedSortKey(a.name) < normalizedSortKey(b.name)
@@ -237,7 +247,9 @@ struct CoverFlowView: View {
         let rightCount = sortedAlbums.count - currentIndex - 1
 
         return ZStack {
-            ForEach(Array(sortedAlbums.enumerated()), id: \.offset) { index, album in
+            ForEach(visibleAlbums, id: \.globalIndex) { item in
+                let index = item.globalIndex
+                let album = item.album
                 let isCenter = index == currentIndex
                 let frameWidth = isCenter ? coverWidth * 1.2 : coverWidth
 
@@ -294,25 +306,27 @@ struct CoverFlowView: View {
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
-        if index < currentIndex {
-            // Left stack
-            let distanceFromCenter = currentIndex - index
-            if leftCount > 0 {
-                let t = leftCount > 1 ? CGFloat(leftCount - distanceFromCenter) / CGFloat(leftCount - 1) : 0
-                return leftEdge * (1 - t) + (centerX - coverWidth/2) * t
-            } else {
-                return centerX - coverWidth/2
-            }
-        } else if index == currentIndex {
+        // Base spacing between side items. Slightly less than cover width to create overlap/fan effect.
+        let sideSpacing = coverWidth * 0.65
+
+        if index == currentIndex {
             return centerX
+        }
+
+        if index < currentIndex {
+            // Left side: stack items to the left of center with decreasing spacing further away
+            let distance = CGFloat(currentIndex - index)
+            // Add a small easing so spacing compresses as items get farther
+            let eased = sideSpacing * (0.85 + 0.15 / max(1.0, distance))
+            let position = centerX - (coverWidth / 2) - (distance * eased)
+            // Clamp to not go past the left edge
+            return max(leftEdge, position)
         } else {
-            let distanceFromCenter = index - currentIndex
-            if rightCount > 0 {
-                let t = rightCount > 1 ? CGFloat(distanceFromCenter - 1) / CGFloat(rightCount - 1) : 0
-                return (centerX + coverWidth/2) * (1 - t) + rightEdge * t
-            } else {
-                return centerX + coverWidth/2
-            }
+            // Right side
+            let distance = CGFloat(index - currentIndex)
+            let eased = sideSpacing * (0.85 + 0.15 / max(1.0, distance))
+            let position = centerX + (coverWidth / 2) + (distance * eased)
+            return min(rightEdge, position)
         }
     }
 
@@ -393,6 +407,17 @@ struct CoverFlowItemView: View {
     private var distanceFromCenter: Int {
         abs(index - currentIndex)
     }
+    
+    private var itemOpacity: Double {
+        // Fade items slightly as they move away from center, clamped to a minimum visibility
+        let base = 1.0 - (Double(distanceFromCenter) * 0.12)
+        return max(0.35, base)
+    }
+
+    private var itemSaturation: Double {
+        // Desaturate non-center items subtly
+        return isCenterItem ? 1.0 : max(0.6, 1.0 - (Double(distanceFromCenter) * 0.15))
+    }
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -403,7 +428,7 @@ struct CoverFlowItemView: View {
                     .resizable()
                     .scaledToFit()
                     .clipShape(RoundedRectangle(cornerRadius: 4))
-                    .shadow(color: .black, radius: isCenterItem ? 8 : 3, x: 0, y: isCenterItem ? 8 : 3)
+                    .shadow(color: .black.opacity(isCenterItem ? 0.35 : 0.18), radius: isCenterItem ? 10 : 2, x: 0, y: isCenterItem ? 8 : 2)
             } else {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(LinearGradient(
@@ -430,11 +455,12 @@ struct CoverFlowItemView: View {
                         }
                         .padding(4)
                     )
-                    .shadow(color: .black, radius: isCenterItem ? 8 : 3, x: 0, y: isCenterItem ? 8 : 3)
+                    .shadow(color: .black.opacity(isCenterItem ? 0.35 : 0.18), radius: isCenterItem ? 10 : 2, x: 0, y: isCenterItem ? 8 : 2)
             }
         }
         .scaleEffect(scaleEffect)
-        .opacity(1.0)
+        .saturation(itemSaturation)
+        .opacity(itemOpacity)
         .rotation3DEffect(
             .degrees(rotationAngle),
             axis: (x: 0, y: 1, z: 0),
