@@ -2,7 +2,7 @@
 
 <img src="https://github.com/user-attachments/assets/6c0b8c77-f363-48e9-9f40-435d21a99fed" width="70%" />
 
-After the UI overhaul of the Music app in macOS 26 diverged it from the long standing iTunes design language, I tried to use older iTunes versions on a modern MacBook as I preferred its design. However, starting with Tahoe, most solutions to running older software started to break with the deprectation of certain libraries. As such, I decided to make my own completely from scratch using Swift and SwiftUI.
+After the UI overhaul of the Music app in macOS 26 diverged from the long-standing iTunes design language, I tried to use older iTunes versions on a modern MacBook because I preferred its design and feature set. However, starting with Tahoe, most solutions for running older software began to break due to the deprecation of certain libraries. As such, I decided to make my own music player completely from scratch using Swift and SwiftUI.
 
 **ClassicTunes** is an Apple Silicon–made app that emulates the classic designs of iTunes 7–10, featuring:
 
