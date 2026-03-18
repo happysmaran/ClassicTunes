@@ -962,6 +962,23 @@ struct ContentView: View {
                         self.lyricsText = lyrics.trimmingCharacters(in: .controlCharacters)
                     } else {
                         checkForExternalLRC(for: song)
+
+                        // If no lyrics found locally, attempt to fetch from LRCLib
+                        Task {
+                            // Give checkForExternalLRC a moment to update state
+                            try? await Task.sleep(nanoseconds: 50_000_000)
+                            if self.lyricsText == "No lyrics found." || self.lyricsText == "No lyrics found. Trying online..." {
+                                if let fetched = await self.fetchLyricsFromLRCLib(for: song) {
+                                    await MainActor.run { self.lyricsText = fetched }
+                                } else {
+                                    await MainActor.run {
+                                        if self.lyricsText.isEmpty || self.lyricsText.contains("Trying online") {
+                                            self.lyricsText = "No online lyrics found."
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             } catch {
@@ -984,8 +1001,95 @@ struct ContentView: View {
                 self.lyricsText = "Found .lrc file but could not read it."
             }
         } else {
-            self.lyricsText = "No lyrics found."
+            self.lyricsText = "No lyrics found. Trying online..."
         }
+    }
+
+    private func fetchLyricsFromLRCLib(for song: Song) async -> String? {
+        // Prepare a clean query (remove punctuation that can hurt matching)
+        let rawQuery = "\(song.title) \(song.artist)"
+        let cleaned = rawQuery.replacingOccurrences(of: ",", with: " ")
+                              .replacingOccurrences(of: "(", with: " ")
+                              .replacingOccurrences(of: ")", with: " ")
+                              .replacingOccurrences(of: "[", with: " ")
+                              .replacingOccurrences(of: "]", with: " ")
+                              .replacingOccurrences(of: "  ", with: " ")
+                              .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let hosts = [
+            "https://lrclib.net"
+        ]
+
+        // Common decode type
+        struct LRCLibResult: Decodable { let syncedLyrics: String?; let plainLyrics: String? }
+
+        for base in hosts {
+            var components = URLComponents(string: base + "/api/search")
+            components?.queryItems = [ URLQueryItem(name: "q", value: cleaned) ]
+            guard let url = components?.url else { continue }
+
+            var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 8)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+            do {
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { continue }
+                let results = try JSONDecoder().decode([LRCLibResult].self, from: data)
+                if let first = results.first {
+                    if let plain = first.plainLyrics, !plain.isEmpty { return plain }
+                    if let synced = first.syncedLyrics, !synced.isEmpty { return stripLRCTimestamps(from: synced) }
+                }
+            } catch {
+                print("LRCLib fetch failed at \(base): \(error)")
+                // Try next host
+                continue
+            }
+        }
+
+        // If all attempts failed
+        await MainActor.run {
+            if self.lyricsText.isEmpty || self.lyricsText.contains("Trying online") {
+                self.lyricsText = "No online lyrics found."
+            }
+        }
+        return nil
+    }
+
+    private func stripLRCTimestamps(from text: String) -> String {
+        // Remove LRC headers like [ti:], [ar:], [al:], [by:], [offset:]
+        let headerPattern = #"^\s*\[(ti|ar|al|by|offset):[^\]]*\]\s*$"#
+        // Remove time tags like [mm:ss], [mm:ss.xx], [mm:ss.xxx]
+        let timeTagPattern = #"\s*\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]\s*"#
+
+        let lines = text.components(separatedBy: .newlines)
+        let headerRegex = try? NSRegularExpression(pattern: headerPattern, options: [.anchorsMatchLines])
+        let timeRegex = try? NSRegularExpression(pattern: timeTagPattern, options: [])
+
+        let cleanedLines: [String] = lines.compactMap { line in
+            var line = line
+            // Skip pure header lines entirely
+            if let headerRegex = headerRegex, headerRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: (line as NSString).length)) != nil {
+                return nil
+            }
+            if let timeRegex = timeRegex {
+                let range = NSRange(location: 0, length: (line as NSString).length)
+                let mutable = NSMutableString(string: line)
+                var offset = 0
+                timeRegex.enumerateMatches(in: line, options: [], range: range) { match, _, _ in
+                    if let match = match {
+                        let r = NSRange(location: match.range.location - offset, length: match.range.length)
+                        mutable.replaceCharacters(in: r, with: "")
+                        offset += match.range.length
+                    }
+                }
+                line = String(mutable)
+            }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
+        return cleanedLines.joined(separator: "\n")
     }
 
     // MiniPlayer functionality
