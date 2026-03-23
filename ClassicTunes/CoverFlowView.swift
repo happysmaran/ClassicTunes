@@ -8,7 +8,7 @@ struct CoverFlowView: View {
     var onAlbumSelect: (String) -> Void
     var songs: [Song] = []
 
-    // Added bindings for playback management because uhh thing is garabge
+    // Added bindings for playback management
     @Binding var selectedSong: Song?
     @Binding var currentPlaybackSongs: [Song]
     @Binding var shuffleQueue: [Song]
@@ -23,7 +23,14 @@ struct CoverFlowView: View {
     @State private var isInteracting = false // Track interaction to defer playback and commit index
     @StateObject private var playlistManager = PlaylistManager()
 
-    // Only render a window of items around the current index to improve performance
+    @State private var containerSize: CGSize = .zero
+    private var coverSize: CGFloat {
+        // Auto-resize cover size based on the container's current size
+        let smaller = min(containerSize.width, containerSize.height)
+        return smaller * 0.5
+    }
+
+    // Only render a window of items around the current index
     private let visibleRange: Int = 6 // number of items to show on each side
     private var visibleAlbums: [(globalIndex: Int, album: AlbumInfo)] {
         guard !sortedAlbums.isEmpty else { return [] }
@@ -60,6 +67,10 @@ struct CoverFlowView: View {
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
                         .padding(.top, 12)
+                        .onAppear { containerSize = geometry.size }
+                        .onChange(of: geometry.size) { newSize in
+                            containerSize = newSize
+                        }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: 340)
@@ -81,7 +92,7 @@ struct CoverFlowView: View {
                 selectedSong: $selectedSong,
                 onAlbumSelect: { albumName in
                     let albumSongs = songs.filter { $0.album == albumName }
-                    if let firstSong = albumSongs.first {
+                    if let _ = albumSongs.first {
                         currentPlaybackSongs = albumSongs
                         onAlbumSelect(albumName)
                     }
@@ -237,7 +248,7 @@ struct CoverFlowView: View {
 
     private func coverFlowContent(geometry: GeometryProxy) -> some View {
         let size = geometry.size
-        let coverWidth = size.width * 0.18
+        let coverWidth = coverSize
         let centerX = size.width / 2
         let coverMargin = coverWidth / 2 + size.width * 0.04
         let leftEdge = coverMargin
@@ -306,7 +317,7 @@ struct CoverFlowView: View {
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
-        // Base spacing between side items. Slightly less than cover width to create overlap/fan effect.
+        // Base spacing between side items. Slightly less than cover width to create the overlap/fan effect.
         let sideSpacing = coverWidth * 0.65
 
         if index == currentIndex {
@@ -407,12 +418,6 @@ struct CoverFlowItemView: View {
     private var distanceFromCenter: Int {
         abs(index - currentIndex)
     }
-    
-    private var itemOpacity: Double {
-        // Fade items slightly as they move away from center, clamped to a minimum visibility
-        let base = 1.0 - (Double(distanceFromCenter) * 0.12)
-        return max(0.35, base)
-    }
 
     private var itemSaturation: Double {
         // Desaturate non-center items subtly
@@ -460,7 +465,7 @@ struct CoverFlowItemView: View {
         }
         .scaleEffect(scaleEffect)
         .saturation(itemSaturation)
-        .opacity(itemOpacity)
+        .opacity(1)
         .rotation3DEffect(
             .degrees(rotationAngle),
             axis: (x: 0, y: 1, z: 0),

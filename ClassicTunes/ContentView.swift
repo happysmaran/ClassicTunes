@@ -31,6 +31,9 @@ struct ContentView: View {
 
     @State private var showNewPlaylistSheet = false
     @StateObject private var playlistManager = PlaylistManager()
+    
+    // Persistence keys
+    private let userPlaylistsKey = "userPlaylists.v1"
 
     // New states for playlist selection
     @State private var showPlaylistSelectionSheet = false
@@ -62,6 +65,29 @@ struct ContentView: View {
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
+    }
+
+    // MARK: - Playlist Persistence
+    private func loadUserPlaylists() {
+        // Load from UserDefaults if available
+        guard let data = UserDefaults.standard.data(forKey: userPlaylistsKey) else { return }
+        do {
+            let decoder = JSONDecoder()
+            let loaded = try decoder.decode([Playlist].self, from: data)
+            playlistManager.userPlaylists = loaded
+        } catch {
+            print("Failed to decode user playlists: \(error)")
+        }
+    }
+
+    private func saveUserPlaylists() {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(playlistManager.userPlaylists)
+            UserDefaults.standard.set(data, forKey: userPlaylistsKey)
+        } catch {
+            print("Failed to encode user playlists: \(error)")
+        }
     }
 
     private var displayedSongs: [Song] {
@@ -397,14 +423,17 @@ struct ContentView: View {
                     print("Running loadSongsOnce at launch")
                     loadSongsOnce()
                     generateSystemPlaylists()
+                    loadUserPlaylists()
                     setupRemoteCommands()
                 }
                 .sheet(isPresented: $showNewPlaylistSheet) {
                     NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
+                        .onDisappear { saveUserPlaylists() }
                 }
                 .sheet(item: $songToAddToPlaylist) { song in
                     PlaylistSelectionView(song: song) { playlist in
                         playlistManager.addSong(song, to: playlist)
+                        saveUserPlaylists()
                         songToAddToPlaylist = nil
                     }
                     .environmentObject(playlistManager)
@@ -443,6 +472,9 @@ struct ContentView: View {
                 .onChange(of: appAppearance) { _ in
                     // Update mini player appearance when app appearance changes
                     updateMiniPlayerAppearance()
+                }
+                .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in
+                    saveUserPlaylists()
                 }
                 .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
             }
@@ -1105,7 +1137,7 @@ struct ContentView: View {
         guard let selectedSong = selectedSong else { return }
 
         isMiniPlayerActive = true
-        // Removed: isPlayingFlag = (player?.rate != 0)
+        // isPlayingFlag = (player?.rate != 0)
 
         // Hide main window
         if let mainWindow = NSApp.mainWindow {
@@ -1242,27 +1274,159 @@ struct ContentView: View {
         return name.components(separatedBy: invalid).joined(separator: "_")
     }
 
+    // Normalize strings for forgiving matching (remove punctuation, collapse spaces, lowercase)
+    private func normalizeForMatching(_ s: String) -> String {
+        let lowered = s.lowercased()
+        // Replace common separators with space
+        let replaced = lowered
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .replacingOccurrences(of: "\u{2013}", with: " ") // en dash
+            .replacingOccurrences(of: "\u{2014}", with: " ") // em dash
+        // Remove punctuation except spaces
+        let allowed = CharacterSet.alphanumerics.union(.whitespaces)
+        let filteredScalars = replaced.unicodeScalars.filter { allowed.contains($0) }
+        let filtered = String(String.UnicodeScalarView(filteredScalars))
+        // Collapse multiple spaces and trim
+        let components = filtered.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        return components.joined(separator: " ")
+    }
+
     private func importPlaylistFromM3U(url: URL) {
         do {
             let text = try String(contentsOf: url, encoding: .utf8)
             let baseDir = url.deletingLastPathComponent()
             let paths = parseM3U(text: text, baseDirectory: baseDir)
 
-            // Map paths to existing songs in library by resolving to absolute URLs
-            var importedSongs: [Song] = []
-            for path in paths {
-                let resolvedURL: URL
-                if path.hasPrefix("/") || path.hasPrefix("~") || path.hasPrefix("file://") {
-                    resolvedURL = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
-                } else if let base = musicFolderAccess {
-                    resolvedURL = base.appendingPathComponent(path)
-                } else {
-                    resolvedURL = baseDir.appendingPathComponent(path)
+            // Build fast lookup maps for name-based matching
+            // Map normalized "title artist" -> [Song]
+            var titleArtistMap: [String: [Song]] = [:]
+            var titleOnlyMap: [String: [Song]] = [:]
+            for s in songs {
+                let titleNorm = normalizeForMatching(s.title)
+                let artistNorm = normalizeForMatching(s.artist)
+                let keyTA = (titleNorm + " " + artistNorm).trimmingCharacters(in: .whitespaces)
+                if !keyTA.isEmpty {
+                    titleArtistMap[keyTA, default: []].append(s)
                 }
-                if let match = songs.first(where: { $0.url.standardizedFileURL == resolvedURL.standardizedFileURL }) {
-                    importedSongs.append(match)
+                if !titleNorm.isEmpty {
+                    titleOnlyMap[titleNorm, default: []].append(s)
                 }
             }
+
+            // Helper to resolve a path string to an absolute URL
+            func resolveURL(for path: String) -> URL {
+                // If it's a file URL string
+                if let u = URL(string: path), u.scheme == "file" {
+                    return u.standardizedFileURL
+                }
+
+                // Expand tilde and standardize
+                let expanded = (path as NSString).expandingTildeInPath
+
+                // Absolute POSIX path
+                if expanded.hasPrefix("/") {
+                    return URL(fileURLWithPath: expanded).standardizedFileURL
+                }
+
+                // Relative path: prefer selected music folder if available
+                if let base = musicFolderAccess {
+                    return base.appendingPathComponent(expanded).standardizedFileURL
+                } else {
+                    return baseDir.appendingPathComponent(expanded).standardizedFileURL
+                }
+            }
+
+            // Helper to derive best-guess title/artist from a filename
+            func parseTitleArtist(from filename: String) -> (title: String, artist: String?) {
+                let name = (filename as NSString).deletingPathExtension
+                // Split on common separators
+                let separators = [" - ", " – ", " — ", " | ", " ~ ", " by "]
+                for sep in separators {
+                    if let range = name.range(of: sep, options: [.caseInsensitive]) {
+                        let left = String(name[..<range.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        let right = String(name[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                        // Heuristic: assume "Artist - Title" first
+                        let artist = left
+                        let title = right
+                        return (title: title, artist: artist.isEmpty ? nil : artist)
+                    }
+                }
+                // If no separator, return whole name as title
+                return (title: name, artist: nil)
+            }
+
+            var importedSongs: [Song] = []
+            var seenIDs = Set<UUID>()
+
+            for raw in paths {
+                // Try direct file path match (standardized and resolving symlinks)
+                // Do not attempt to remove the try catches. It will break
+                let resolvedURL = resolveURL(for: raw).standardizedFileURL
+                let targetResolved = (try? resolvedURL.resolvingSymlinksInPath()) ?? resolvedURL
+                if let match = songs.first(where: { ($0.url.standardizedFileURL == targetResolved) || ((try? $0.url.resolvingSymlinksInPath()) == targetResolved) }) {
+                    if !seenIDs.contains(match.id) {
+                        importedSongs.append(match)
+                        seenIDs.insert(match.id)
+                    }
+                    continue
+                }
+
+                // On case-insensitive file systems, compare lowercased paths as a fallback
+                let targetPathLower = targetResolved.path.lowercased()
+                if let match = songs.first(where: { ($0.url.path.lowercased() == targetPathLower) }) {
+                    if !seenIDs.contains(match.id) {
+                        importedSongs.append(match)
+                        seenIDs.insert(match.id)
+                    }
+                    continue
+                }
+
+                // 2) Fallback to name-based matching using filename
+                let filename = (raw as NSString).lastPathComponent
+                let guess = parseTitleArtist(from: filename)
+                let titleKey = normalizeForMatching(guess.title)
+
+                var candidate: Song? = nil
+
+                if let artist = guess.artist {
+                    let artistKey = normalizeForMatching(artist)
+                    let keyTA = (titleKey + " " + artistKey).trimmingCharacters(in: .whitespaces)
+                    if let list = titleArtistMap[keyTA] {
+                        // Prefer exact artist+title match
+                        candidate = list.first
+                    }
+                }
+
+                if candidate == nil, let list = titleOnlyMap[titleKey] {
+                    if list.count == 1 {
+                        candidate = list.first
+                    } else {
+                        // Try to disambiguate using artist name present in the path
+                        let loweredPath = normalizeForMatching(raw)
+                        candidate = list.first { s in
+                            let artistKey = normalizeForMatching(s.artist)
+                            return !artistKey.isEmpty && loweredPath.contains(artistKey)
+                        }
+                        // As another fallback, try matching by exact filename against each song's URL
+                        if candidate == nil {
+                            let rawFilename = (raw as NSString).lastPathComponent
+                            candidate = songs.first { s in
+                                s.url.lastPathComponent.caseInsensitiveCompare(rawFilename) == .orderedSame
+                            }
+                        }
+                    }
+                }
+
+                if let match = candidate, !seenIDs.contains(match.id) {
+                    importedSongs.append(match)
+                    seenIDs.insert(match.id)
+                } else {
+                    // Could not match this entry; skip silently.
+                }
+            }
+
+            print("M3U import: matched \(importedSongs.count) of \(paths.count) entries")
 
             if importedSongs.isEmpty {
                 print("No matching songs found for imported M3U.")
@@ -1274,6 +1438,7 @@ struct ContentView: View {
             let newName = suggestUniquePlaylistName(basedOn: defaultName)
             let newPlaylist = Playlist(name: newName, songs: importedSongs, isSystem: false)
             playlistManager.userPlaylists.append(newPlaylist)
+            saveUserPlaylists()
             selectedPlaylistID = newPlaylist.id
         } catch {
             print("Failed to read M3U: \(error)")
@@ -1282,10 +1447,33 @@ struct ContentView: View {
 
     private func parseM3U(text: String, baseDirectory: URL) -> [String] {
         var result: [String] = []
-        for rawLine in text.components(separatedBy: .newlines) {
-            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Normalize line endings and remove potential BOM
+        var content = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        if content.hasPrefix("\u{FEFF}") { // UTF-8 BOM
+            content.removeFirst()
+        }
+
+        for rawLine in content.components(separatedBy: .newlines) {
+            var line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
             if line.isEmpty { continue }
             if line.hasPrefix("#") { continue } // skip comments and #EXTINF
+
+            // Remove optional surrounding quotes
+            if line.hasPrefix("\"") && line.hasSuffix("\"") && line.count >= 2 {
+                line = String(line.dropFirst().dropLast())
+            }
+
+            // Convert Windows backslashes to POSIX style
+            line = line.replacingOccurrences(of: "\\", with: "/")
+
+            // Decode percent-encoding if present
+            if let decoded = line.removingPercentEncoding { line = decoded }
+
+            // Collapse duplicate slashes (but keep leading double slash for network shares if any)
+            while line.contains("//") {
+                line = line.replacingOccurrences(of: "///", with: "/").replacingOccurrences(of: "//", with: "/")
+            }
+
             result.append(line)
         }
         return result
@@ -1326,8 +1514,6 @@ struct ContentView: View {
             NotificationCenter.default.removeObserver(token)
             miniPlayerCloseObserver = nil
         }
-
-        // Removed: NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: nil)
     }
 }
 
@@ -1335,7 +1521,7 @@ struct UpNextView: View {
     let currentSong: Song?
     let upcomingSongs: [Song]
     let isPlaying: Bool
-    var onSongSelect: (Song) -> Void = { _ in } // Added this parameter
+    var onSongSelect: (Song) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1344,7 +1530,6 @@ struct UpNextView: View {
                 .padding(.horizontal)
 
             if let current = currentSong {
-                // Current playing song
                 HStack(spacing: 12) {
                     if let artworkData = current.artworkData,
                        let image = NSImage(data: artworkData) {
@@ -1421,7 +1606,6 @@ struct UpNextView: View {
                     }
                     .padding(.vertical, 4)
                     .onTapGesture {
-                        // Added tap gesture to play song from Up Next
                         onSongSelect(song)
                     }
                 }
@@ -1444,6 +1628,7 @@ struct UpNextView: View {
         .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
     }
 }
+
 // Lyrics view implementation
 struct LyricsView: View {
     let currentSong: Song?
@@ -1509,4 +1694,3 @@ struct LyricsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 }
-
