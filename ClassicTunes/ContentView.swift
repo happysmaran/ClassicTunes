@@ -3,6 +3,8 @@ import AVKit
 import Combine
 import MediaPlayer
 
+// the playlist code is a mess
+
 struct ContentView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
     @State private var musicFolderAccess: URL?
@@ -67,26 +69,75 @@ struct ContentView: View {
         playlistManager.userPlaylists + systemPlaylists
     }
 
-    // MARK: - Playlist Persistence
-    private func loadUserPlaylists() {
-        // Load from UserDefaults if available
+    // Store large playlist data on disk instead of UserDefaults
+    private func playlistsFileURL() -> URL? {
+        do {
+            let fm = FileManager.default
+            let appSupport = try fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let bundleID = Bundle.main.bundleIdentifier ?? "ClassicTunes"
+            let dir = appSupport.appendingPathComponent(bundleID, isDirectory: true)
+            if !fm.fileExists(atPath: dir.path) {
+                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            }
+            return dir.appendingPathComponent("userPlaylists.v1.json")
+        } catch {
+            print("Failed to get Application Support directory: \(error)")
+            return nil
+        }
+    }
+
+    // One-time migration from UserDefaults (oversized) to file-based storage
+    private func migratePlaylistsFromUserDefaultsIfNeeded() {
+        guard let fileURL = playlistsFileURL() else { return }
+        let fm = FileManager.default
+        // If file already exists, assume migrated
+        if fm.fileExists(atPath: fileURL.path) { return }
+
         guard let data = UserDefaults.standard.data(forKey: userPlaylistsKey) else { return }
         do {
+            // Validate by decoding before writing to disk
+            let decoder = JSONDecoder()
+            let loaded = try decoder.decode([Playlist].self, from: data)
+            try data.write(to: fileURL, options: [.atomic])
+            // Clear the large value from UserDefaults after successful migration
+            UserDefaults.standard.removeObject(forKey: userPlaylistsKey)
+            playlistManager.userPlaylists = loaded
+            print("Migrated playlists from UserDefaults to \(fileURL.path)")
+        } catch {
+            print("Migration failed, will keep using in-memory data this run: \(error)")
+        }
+    }
+
+    private func loadUserPlaylists() {
+        // Migrate any legacy UserDefaults data if needed
+        migratePlaylistsFromUserDefaultsIfNeeded()
+
+        guard let fileURL = playlistsFileURL() else { return }
+        do {
+            let data = try Data(contentsOf: fileURL)
             let decoder = JSONDecoder()
             let loaded = try decoder.decode([Playlist].self, from: data)
             playlistManager.userPlaylists = loaded
         } catch {
-            print("Failed to decode user playlists: \(error)")
+            // If file missing or decode fails, leave as-is
+            if (error as NSError).domain != NSCocoaErrorDomain || (error as NSError).code != NSFileReadNoSuchFileError {
+                print("Failed to load playlists from disk: \(error)")
+            }
         }
     }
 
     private func saveUserPlaylists() {
+        guard let fileURL = playlistsFileURL() else { return }
         do {
             let encoder = JSONEncoder()
             let data = try encoder.encode(playlistManager.userPlaylists)
-            UserDefaults.standard.set(data, forKey: userPlaylistsKey)
+            try data.write(to: fileURL, options: [.atomic])
+            // Ensure we do not keep oversized data in UserDefaults
+            if UserDefaults.standard.object(forKey: userPlaylistsKey) != nil {
+                UserDefaults.standard.removeObject(forKey: userPlaylistsKey)
+            }
         } catch {
-            print("Failed to encode user playlists: \(error)")
+            print("Failed to save playlists to disk: \(error)")
         }
     }
 
@@ -410,10 +461,19 @@ struct ContentView: View {
                         }
                     }
                 }
-                .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
+                .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: true) { result in
                     switch result {
                     case .success(let urls):
-                        if let url = urls.first { importPlaylistFromM3U(url: url) }
+                        var lastImportedID: UUID? = nil
+                        for url in urls {
+                            importPlaylistFromM3U(url: url)
+                            // After importPlaylistFromM3U appends and selects, capture current selection
+                            lastImportedID = selectedPlaylistID
+                        }
+                        // Keep the last imported playlist selected
+                        if let last = lastImportedID {
+                            selectedPlaylistID = last
+                        }
                     case .failure(let error):
                         print("M3U import failed: \(error.localizedDescription)")
                     }
@@ -1694,3 +1754,4 @@ struct LyricsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 }
+
