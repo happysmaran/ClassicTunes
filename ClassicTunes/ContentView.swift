@@ -485,6 +485,15 @@ struct ContentView: View {
                     generateSystemPlaylists()
                     loadUserPlaylists()
                     setupRemoteCommands()
+
+                    // Stop security-scoped access cleanly when the app quits
+                    NotificationCenter.default.addObserver(
+                        forName: NSApplication.willTerminateNotification,
+                        object: nil,
+                        queue: .main
+                    ) { _ in
+                        releaseFolderAccess()
+                    }
                 }
                 .sheet(isPresented: $showNewPlaylistSheet) {
                     NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
@@ -541,17 +550,27 @@ struct ContentView: View {
         }
     }
 
+    private func releaseFolderAccess() {
+        musicFolderAccess?.stopAccessingSecurityScopedResource()
+        musicFolderAccess = nil
+    }
+
     private func handleFileImport(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
             if let folderURL = urls.first {
+                releaseFolderAccess()
                 if folderURL.startAccessingSecurityScopedResource() {
                     do {
                         musicFolderAccess = folderURL
                         let bookmark = try folderURL.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
                         musicFolderBookmarkData = bookmark
                         print("Saved security-scoped bookmark.")
-                        songs = loadSongs(from: folderURL)
+                        Task {
+                            let loaded = await loadSongs(from: folderURL)
+                            await MainActor.run { songs = loaded }
+                            generateSystemPlaylists()
+                        }
                         generateSystemPlaylists()
                     } catch {
                         print("Failed to create bookmark: \(error)")
@@ -574,7 +593,13 @@ struct ContentView: View {
 
             if resolvedURL.startAccessingSecurityScopedResource() {
                 musicFolderAccess = resolvedURL
-                songs = loadSongs(from: resolvedURL)
+                Task {
+                    let loaded = await loadSongs(from: resolvedURL)
+                    await MainActor.run {
+                        songs = loaded
+                        generateSystemPlaylists()
+                    }
+                }
                 print("Successfully loaded songs from bookmark.")
                 generateSystemPlaylists()
             } else {
@@ -1309,7 +1334,7 @@ struct ContentView: View {
     private func buildM3UContent(for playlist: Playlist) -> [String] {
         var lines: [String] = ["#EXTM3U"]
         for song in playlist.songs {
-            let duration = -1 // Cant get the info, so uhh well ignore it
+            let duration = -1 // Cant get the info, so uhh ignore it
             let title = song.title
             let artist = song.artist
             let display = artist.isEmpty ? title : "\(artist) - \(title)"
@@ -1334,29 +1359,143 @@ struct ContentView: View {
         return name.components(separatedBy: invalid).joined(separator: "_")
     }
 
-    // Normalize strings for forgiving matching (remove punctuation, collapse spaces, lowercase)
+    // Normalize strings for more forgiving matching
     private func normalizeForMatching(_ s: String) -> String {
-        let lowered = s.lowercased()
-        // Replace common separators with space
-        let replaced = lowered
+        // Normalize to NFC to avoid different Unicode compositions
+        let nfc = s.precomposedStringWithCanonicalMapping
+        // Remove diacritics and lowercase with locale-aware rules
+        let folded = nfc.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+        // Replace common separators with a space
+        let replaced = folded
             .replacingOccurrences(of: "_", with: " ")
             .replacingOccurrences(of: "-", with: " ")
+            .replacingOccurrences(of: "\u{2010}", with: " ") // hyphen
             .replacingOccurrences(of: "\u{2013}", with: " ") // en dash
             .replacingOccurrences(of: "\u{2014}", with: " ") // em dash
-        // Remove punctuation except spaces
-        let allowed = CharacterSet.alphanumerics.union(.whitespaces)
-        let filteredScalars = replaced.unicodeScalars.filter { allowed.contains($0) }
-        let filtered = String(String.UnicodeScalarView(filteredScalars))
-        // Collapse multiple spaces and trim
+            .replacingOccurrences(of: "\u{2212}", with: " ") // minus sign
+            .replacingOccurrences(of: "\u{2043}", with: " ") // hyphen bullet
+            .replacingOccurrences(of: "\u{30A0}", with: " ") // katakana-hiragana double hyphen
+        // Keep letters and numbers from all scripts plus whitespace
+        var scalars: [UnicodeScalar] = []
+        scalars.reserveCapacity(replaced.unicodeScalars.count)
+        for sc in replaced.unicodeScalars {
+            if CharacterSet.alphanumerics.contains(sc) || CharacterSet.whitespacesAndNewlines.contains(sc) {
+                scalars.append(sc)
+            }
+        }
+        let filtered = String(String.UnicodeScalarView(scalars))
+        // Collapse whitespace
         let components = filtered.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
         return components.joined(separator: " ")
+    }
+    
+    /// Parse M3U content into entries with optional EXTINF metadata
+    private func parseM3UEntries(text: String, baseDirectory: URL) -> [(path: String, title: String?, artist: String?)] {
+        // Normalize line endings and strip BOM
+        var content = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        if content.hasPrefix("\u{FEFF}") { content.removeFirst() }
+
+        var entries: [(String, String?, String?)] = []
+        var pendingTitle: String? = nil
+        var pendingArtist: String? = nil
+
+        for rawLine in content.components(separatedBy: .newlines) {
+            var line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            if line.isEmpty { continue }
+
+            if line.hasPrefix("#EXTINF:") {
+                // Format: #EXTINF:duration,Title - Artist
+                if let commaRange = line.range(of: ",") {
+                    let meta = String(line[commaRange.upperBound...]).trimmingCharacters(in: .whitespaces)
+                    // Split on common separators between Title and Artist
+                    // Prefer "Title - Artist" ordering as in your sample
+                    let seps = [" - ", " – ", " — ", " | ", " ~ ", " by "]
+                    var t: String? = nil
+                    var a: String? = nil
+                    for sep in seps {
+                        if let r = meta.range(of: sep, options: [.caseInsensitive]) {
+                            t = String(meta[..<r.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+                            a = String(meta[r.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                            break
+                        }
+                    }
+                    pendingTitle = t ?? meta
+                    pendingArtist = a
+                }
+                continue
+            }
+            if line.hasPrefix("#") { continue } // other comments
+
+            // Path line
+            // Remove optional surrounding quotes
+            if line.hasPrefix("\"") && line.hasSuffix("\"") && line.count >= 2 {
+                line = String(line.dropFirst().dropLast())
+            }
+            // Convert Windows backslashes
+            line = line.replacingOccurrences(of: "\\", with: "/")
+            // Percent decoding
+            if let decoded = line.removingPercentEncoding {
+                line = decoded
+            } else if let url = URL(string: line), let decoded = url.path.removingPercentEncoding {
+                line = decoded
+            }
+            // Precompose and tame excessive slashes
+            line = line.precomposedStringWithCanonicalMapping
+            if let regex = try? NSRegularExpression(pattern: #"/{3,}"#) {
+                let ns = line as NSString
+                let range = NSRange(location: 0, length: ns.length)
+                line = regex.stringByReplacingMatches(in: line, options: [], range: range, withTemplate: "//")
+            }
+
+            entries.append((line, pendingTitle, pendingArtist))
+            pendingTitle = nil
+            pendingArtist = nil
+        }
+
+        return entries
+    }
+
+    // Decode playlist data with best-effort encoding detection (handles non-Latin encodings)
+    private func decodePlaylistText(from data: Data) -> String? {
+        // Try automatic detection via NSString
+        if let detected = NSString(data: data, encoding: String.Encoding.utf8.rawValue) as String? {
+            return detected
+        }
+
+        // Common Unicode encodings with BOM or without
+        let unicodeEncodings: [String.Encoding] = [
+            .utf8, .utf16, .utf16LittleEndian, .utf16BigEndian, .utf32, .utf32LittleEndian, .utf32BigEndian
+        ]
+        for enc in unicodeEncodings {
+            if let s = String(data: data, encoding: enc) { return s }
+        }
+
+        // Common legacy encodings used in Asian locales
+        let legacyCandidates: [CFStringEncodings] = [
+            .shiftJIS, // Japanese
+            .GB_18030_2000, // Simplified Chinese
+            .big5, // Traditional Chinese
+            .EUC_KR // Korean
+        ]
+        for cfEnc in legacyCandidates {
+            let nsEnc = CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(cfEnc.rawValue))
+            let enc = String.Encoding(rawValue: nsEnc)
+            if let s = String(data: data, encoding: enc) { return s }
+        }
+
+        // Treat bytes as the ISO-8859-1 and promote to Unicode
+        if let s = String(data: data, encoding: .isoLatin1) { return s }
+
+        return nil
     }
 
     private func importPlaylistFromM3U(url: URL) {
         do {
-            let text = try String(contentsOf: url, encoding: .utf8)
+            let data = try Data(contentsOf: url)
+            let text = decodePlaylistText(from: data) ?? (String(data: data, encoding: .utf8) ?? "")
             let baseDir = url.deletingLastPathComponent()
-            let paths = parseM3U(text: text, baseDirectory: baseDir)
+            // Replace parseM3U with parseM3UEntries
+            let entries = parseM3UEntries(text: text, baseDirectory: baseDir)
 
             // Build fast lookup maps for name-based matching
             // Map normalized "title artist" -> [Song]
@@ -1386,20 +1525,23 @@ struct ContentView: View {
 
                 // Absolute POSIX path
                 if expanded.hasPrefix("/") {
-                    return URL(fileURLWithPath: expanded).standardizedFileURL
+                    let p = expanded.precomposedStringWithCanonicalMapping
+                    return URL(fileURLWithPath: p).standardizedFileURL
                 }
 
                 // Relative path: prefer selected music folder if available
                 if let base = musicFolderAccess {
-                    return base.appendingPathComponent(expanded).standardizedFileURL
+                    let p = expanded.precomposedStringWithCanonicalMapping
+                    return base.appendingPathComponent(p).standardizedFileURL
                 } else {
-                    return baseDir.appendingPathComponent(expanded).standardizedFileURL
+                    let p = expanded.precomposedStringWithCanonicalMapping
+                    return baseDir.appendingPathComponent(p).standardizedFileURL
                 }
             }
 
             // Helper to derive best-guess title/artist from a filename
             func parseTitleArtist(from filename: String) -> (title: String, artist: String?) {
-                let name = (filename as NSString).deletingPathExtension
+                let name = (filename as NSString).deletingPathExtension.precomposedStringWithCanonicalMapping
                 // Split on common separators
                 let separators = [" - ", " – ", " — ", " | ", " ~ ", " by "]
                 for sep in separators {
@@ -1419,7 +1561,11 @@ struct ContentView: View {
             var importedSongs: [Song] = []
             var seenIDs = Set<UUID>()
 
-            for raw in paths {
+            for entry in entries {
+                let raw = entry.path
+                let extTitle = entry.title
+                let extArtist = entry.artist
+
                 // Try direct file path match (standardized and resolving symlinks)
                 // Do not attempt to remove the try catches. It will break
                 let resolvedURL = resolveURL(for: raw).standardizedFileURL
@@ -1432,14 +1578,35 @@ struct ContentView: View {
                     continue
                 }
 
-                // On case-insensitive file systems, compare lowercased paths as a fallback
-                let targetPathLower = targetResolved.path.lowercased()
-                if let match = songs.first(where: { ($0.url.path.lowercased() == targetPathLower) }) {
+                // On case/diacritic-insensitive file systems, compare normalized paths as a fallback
+                let targetPathNorm = targetResolved.path.precomposedStringWithCanonicalMapping.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+                if let match = songs.first(where: {
+                    $0.url.path.precomposedStringWithCanonicalMapping.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current) == targetPathNorm
+                }) {
                     if !seenIDs.contains(match.id) {
                         importedSongs.append(match)
                         seenIDs.insert(match.id)
                     }
                     continue
+                }
+
+                // 2) Try EXTINF-based matching (Title - Artist) if available
+                if let t = extTitle {
+                    let titleKey = normalizeForMatching(t)
+                    var candidate: Song? = nil
+                    if let a = extArtist {
+                        let artistKey = normalizeForMatching(a)
+                        let keyTA = (titleKey + " " + artistKey).trimmingCharacters(in: .whitespaces)
+                        if let list = titleArtistMap[keyTA] { candidate = list.first }
+                    }
+                    if candidate == nil, let list = titleOnlyMap[titleKey] {
+                        if list.count == 1 { candidate = list.first }
+                    }
+                    if let match = candidate, !seenIDs.contains(match.id) {
+                        importedSongs.append(match)
+                        seenIDs.insert(match.id)
+                        continue
+                    }
                 }
 
                 // 2) Fallback to name-based matching using filename
@@ -1468,11 +1635,21 @@ struct ContentView: View {
                             let artistKey = normalizeForMatching(s.artist)
                             return !artistKey.isEmpty && loweredPath.contains(artistKey)
                         }
-                        // As another fallback, try matching by exact filename against each song's URL
+                        // As another fallback, try matching by filename against each song's URL (preserve non-Latin characters)
                         if candidate == nil {
                             let rawFilename = (raw as NSString).lastPathComponent
-                            candidate = songs.first { s in
-                                s.url.lastPathComponent.caseInsensitiveCompare(rawFilename) == .orderedSame
+                            let rawPrecomposed = rawFilename.precomposedStringWithCanonicalMapping
+
+                            // Exact case-sensitive match on precomposed strings
+                            if let exact = songs.first(where: { $0.url.lastPathComponent.precomposedStringWithCanonicalMapping == rawPrecomposed }) {
+                                candidate = exact
+                            } else {
+                                // Case and diacritic-insensitive match on precomposed strings
+                                candidate = songs.first { s in
+                                    let lhs = s.url.lastPathComponent.precomposedStringWithCanonicalMapping.folding(options: [.diacriticInsensitive], locale: .current)
+                                    let rhs = rawPrecomposed.folding(options: [.diacriticInsensitive], locale: .current)
+                                    return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedSame
+                                }
                             }
                         }
                     }
@@ -1486,7 +1663,7 @@ struct ContentView: View {
                 }
             }
 
-            print("M3U import: matched \(importedSongs.count) of \(paths.count) entries")
+            print("M3U import: matched \(importedSongs.count) of \(entries.count) entries")
 
             if importedSongs.isEmpty {
                 print("No matching songs found for imported M3U.")
@@ -1507,9 +1684,11 @@ struct ContentView: View {
 
     private func parseM3U(text: String, baseDirectory: URL) -> [String] {
         var result: [String] = []
-        // Normalize line endings and remove potential BOM
-        var content = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
-        if content.hasPrefix("\u{FEFF}") { // UTF-8 BOM
+        var content = text
+        // Normalize common line endings
+        content = content.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        // Strip UTF-8 BOM if present
+        if content.hasPrefix("\u{FEFF}") {
             content.removeFirst()
         }
 
@@ -1527,11 +1706,20 @@ struct ContentView: View {
             line = line.replacingOccurrences(of: "\\", with: "/")
 
             // Decode percent-encoding if present
-            if let decoded = line.removingPercentEncoding { line = decoded }
+            if let decoded = line.removingPercentEncoding {
+                line = decoded
+            } else if let url = URL(string: line), let decoded = url.path.removingPercentEncoding {
+                line = decoded
+            }
 
-            // Collapse duplicate slashes (but keep leading double slash for network shares if any)
-            while line.contains("//") {
-                line = line.replacingOccurrences(of: "///", with: "/").replacingOccurrences(of: "//", with: "/")
+            // Normalize Unicode composition for the path text
+            line = line.precomposedStringWithCanonicalMapping
+            // Avoid over-collapsing slashes; only reduce sequences of 3+ to 2, preserve scheme parts
+            let slashPattern = #"/{3,}"#
+            if let regex = try? NSRegularExpression(pattern: slashPattern) {
+                let ns = line as NSString
+                let range = NSRange(location: 0, length: ns.length)
+                line = regex.stringByReplacingMatches(in: line, options: [], range: range, withTemplate: "//")
             }
 
             result.append(line)
@@ -1754,4 +1942,3 @@ struct LyricsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 }
-

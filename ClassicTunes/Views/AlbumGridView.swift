@@ -97,8 +97,6 @@ struct AlbumGridView: View {
     }
     
     private func handleSongSelect(_ song: Song) {
-        var usedCustomHandler = false
-        // Detect if the onSongSelect was customized by comparing against a no-op? We can't reliably compare closures.
         // Always call the provided closure first.
         onSongSelect(song)
         // Also post a notification so a global player can respond by default.
@@ -109,8 +107,8 @@ struct AlbumGridView: View {
 
     private func albumCellWithDetailCollapsedOnly(album: String) -> some View {
         VStack {
-            if let artwork = songs.first(where: { $0.album == album })?.url,
-               let image = getArtwork(from: artwork) {
+            if let artworkData = songs.first(where: { $0.album == album })?.artworkData,
+               let image = NSImage(data: artworkData) {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFit()
@@ -239,11 +237,23 @@ struct AlbumDetailView: View {
                 // Songs list with vertical scrollbar
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading, spacing: 4) {
-                        ForEach(songs.indices, id: \.self) { index in
-                            let song = songs[index]
+                        let sortedSongs = songs.sorted {
+                            let a = $0.trackNumber ?? Int.max
+                            let b = $1.trackNumber ?? Int.max
+                            return a == b ? $0.title < $1.title : a < b
+                        }
+
+                        ForEach(Array(sortedSongs.enumerated()), id: \.offset) { index, song in
+                            let displayTrackNumber: Int = {
+                                if let track = song.trackNumber, track > 0 {
+                                    return track
+                                } else {
+                                    return index + 1
+                                }
+                            }()
                             Button(action: { onSongSelect(song) }) {
                                 HStack(spacing: 12) {
-                                    Text("\(index + 1)")
+                                    Text("\(displayTrackNumber)")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                         .frame(width: 20, alignment: .trailing)

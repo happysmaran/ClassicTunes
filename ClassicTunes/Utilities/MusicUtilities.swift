@@ -9,54 +9,31 @@ extension Color {
 }
 
 // Utility functions
-func loadSongs(from folderURL: URL) -> [Song] {
+func loadSongs(from folderURL: URL) async -> [Song] {
     let allowedExtensions = ["mp3", "m4a", "aac", "wav", "flac"]
     let fileManager = FileManager.default
-    var loadedSongs: [Song] = []
 
     guard let enumerator = fileManager.enumerator(at: folderURL, includingPropertiesForKeys: nil) else {
         print("Could not create enumerator")
         return []
     }
 
-    for case let fileURL as URL in enumerator {
-        guard allowedExtensions.contains(fileURL.pathExtension.lowercased()) else {
-            continue
-        }
+    let fileURLs = enumerator
+        .compactMap { $0 as? URL }
+        .filter { allowedExtensions.contains($0.pathExtension.lowercased()) }
 
-        let asset = AVURLAsset(url: fileURL)
-        var title = fileURL.deletingPathExtension().lastPathComponent
-        var artist = "Unknown Artist"
-        var album = "Unknown Album"
-        let year = "-"
-        var genre = "Unknown Genre"
-        var artworkData: Data? = nil
-        
-        // print(asset.commonMetadata)
-        
-        // why so many warning T-T
-        for item in asset.commonMetadata {
-            switch item.commonKey?.rawValue {
-            case "title":
-                title = item.value as? String ?? title
-            case "artist":
-                artist = item.value as? String ?? artist
-            case "albumName":
-                album = item.value as? String ?? album
-            case "type":
-                genre = item.value as? String ?? genre
-            case "artwork":
-                artworkData = item.value as? Data
-            default:
-                break
+    return await withTaskGroup(of: Song?.self) { group in
+        for fileURL in fileURLs {
+            group.addTask {
+                try? await Song.load(from: fileURL)
             }
         }
-
-        let song = Song(url: fileURL, title: title, artist: artist, album: album, year: year, genre: genre, artworkData: artworkData)
-        loadedSongs.append(song)
+        var results: [Song] = []
+        for await song in group {
+            if let song { results.append(song) }
+        }
+        return results
     }
-
-    return loadedSongs
 }
 
 func getArtwork(from url: URL) -> NSImage? {
