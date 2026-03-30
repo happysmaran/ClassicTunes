@@ -5,7 +5,32 @@ import MediaPlayer
 
 // the playlist code is a mess
 
+class PersistentPlayer {
+    static let shared = PersistentPlayer()
+    var player: AVPlayer?
+    var selectedSong: Song?
+    private init() {}
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // Switch to accessory mode when the last window is closed
+        NSApp.setActivationPolicy(.accessory)
+        NSApp.deactivate()
+        
+        // Do NOT terminate the app
+        return false
+    }
+}
+
 struct ContentView: View {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
     @State private var musicFolderAccess: URL?
     @State private var isAlbumView = false
@@ -22,9 +47,9 @@ struct ContentView: View {
     @State private var timeObserverToken: Any?
     @State private var isSeeking = false
     @State private var currentPlaybackSongs: [Song] = []
-    @State private var isShuffleEnabled = false
-    @State private var isRepeatEnabled = false
-    @State private var isRepeatOne = false
+    @AppStorage("isShuffleEnabled") private var isShuffleEnabled = false
+    @AppStorage("isRepeatEnabled") private var isRepeatEnabled = false
+    @AppStorage("isRepeatOne") private var isRepeatOne = false
     @State private var isStopped = false
     @State private var systemPlaylists: [Playlist] = []
     @State private var selectedPlaylistID: UUID?
@@ -42,9 +67,8 @@ struct ContentView: View {
     @State private var songToAddToPlaylist: Song?
 
     // MiniPlayer states
-    @State private var isMiniPlayerActive = false
+    @AppStorage("isMiniPlayerActive") private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
-    // Removed @State private var isPlayingFlag: Bool = false
 
     // Added observer tokens
     @State private var playbackEndObserver: NSObjectProtocol?
@@ -86,7 +110,7 @@ struct ContentView: View {
         }
     }
 
-    // One-time migration from UserDefaults (oversized) to file-based storage
+    // One-time migration from UserDefaults to file-based storage for legacy users
     private func migratePlaylistsFromUserDefaultsIfNeeded() {
         guard let fileURL = playlistsFileURL() else { return }
         let fm = FileManager.default
@@ -138,6 +162,33 @@ struct ContentView: View {
             }
         } catch {
             print("Failed to save playlists to disk: \(error)")
+        }
+    }
+    
+    private func restorePlaybackState() {
+        guard let persistentSong = PersistentPlayer.shared.selectedSong,
+              let persistentPlayer = PersistentPlayer.shared.player else { return }
+
+        selectedSong = persistentSong
+        player = persistentPlayer
+
+        if let currentItem = persistentPlayer.currentItem {
+            playbackDuration = currentItem.asset.duration.seconds
+            playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
+        }
+
+        setupTimeObserver(for: persistentPlayer)
+        if let item = persistentPlayer.currentItem {
+            setupPlaybackCompletionHandler(for: item)
+        }
+
+        currentPlaybackSongs = playbackContext(for: persistentSong)
+        updateUpcomingSongs()
+        updateNowPlayingInfo()
+
+        // Rebuild shuffle queue if shuffle was on
+        if isShuffleEnabled {
+            rebuildShuffleQueue(startingFrom: persistentSong)
         }
     }
 
@@ -485,6 +536,8 @@ struct ContentView: View {
                     generateSystemPlaylists()
                     loadUserPlaylists()
                     setupRemoteCommands()
+                    
+                    restorePlaybackState()
 
                     // Stop security-scoped access cleanly when the app quits
                     NotificationCenter.default.addObserver(
@@ -493,6 +546,17 @@ struct ContentView: View {
                         queue: .main
                     ) { _ in
                         releaseFolderAccess()
+                    }
+                }
+                .onDisappear {
+                    // Clean up observers when window closes, but do not stop playback
+                    if let token = timeObserverToken {
+                        player?.removeTimeObserver(token)
+                        timeObserverToken = nil
+                    }
+                    if let token = playbackEndObserver {
+                        NotificationCenter.default.removeObserver(token)
+                        playbackEndObserver = nil
                     }
                 }
                 .sheet(isPresented: $showNewPlaylistSheet) {
@@ -672,6 +736,9 @@ struct ContentView: View {
         setupTimeObserver(for: newPlayer)
         setupPlaybackCompletionHandler(for: item)
         updateNowPlayingInfo()
+        
+        PersistentPlayer.shared.player = newPlayer
+        PersistentPlayer.shared.selectedSong = song
     }
 
     private func stopCurrentPlayback() {
@@ -688,7 +755,9 @@ struct ContentView: View {
 
         playerItem = nil
         player = nil
-        // Removed isPlayingFlag = false
+        
+        PersistentPlayer.shared.player = nil
+        PersistentPlayer.shared.selectedSong = nil
     }
 
     private func setupTimeObserver(for player: AVPlayer) {
