@@ -402,6 +402,7 @@ struct ContentView: View {
                                         }
                                     )
                                     .environmentObject(playlistManager)
+                                    .tint(.iTunesBlue)
                                 }
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -614,6 +615,7 @@ struct ContentView: View {
                 .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
             }
         }
+        .tint(.iTunesBlue)
     }
 
     private func deletePlaylistAction() -> (() -> Void)? {

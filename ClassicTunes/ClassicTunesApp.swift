@@ -11,6 +11,14 @@ extension FocusedValues {
     }
 }
 
+extension Color {
+    static let iTunesBlue = Color(red: 0.23, green: 0.51, blue: 0.85)
+}
+
+extension NSColor {
+    static let iTunesBlue = NSColor(red: 0.23, green: 0.51, blue: 0.85, alpha: 1.0)
+}
+
 @main
 struct ClassicTunesApp: App {
     @StateObject private var appearanceManager = AppearanceManager()
@@ -18,12 +26,16 @@ struct ClassicTunesApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 1000, minHeight: 600)
+                .frame(minWidth: 1200, minHeight: 900)
                 .background(Color.clear)
                 .edgesIgnoringSafeArea(.top)
                 .environmentObject(appearanceManager)
                 .preferredColorScheme(appearanceManager.currentColorScheme())
-                .id(appearanceManager.appAppearance) // Force view refresh when appearance changes
+                .id(appearanceManager.appAppearance)
+                .tint(.iTunesBlue)
+                .onAppear {
+                    NSApp.appearance = NSAppearance(named: .aqua)
+                }
         }
         .windowStyle(HiddenTitleBarWindowStyle())
         .commands {
