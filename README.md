@@ -6,10 +6,13 @@ After the UI overhaul of the Music app in macOS 26 diverged from the long-standi
 
 **ClassicTunes** is an Apple Silicon–made app that emulates the classic designs of iTunes 7–10, featuring:
 
-- Working CoverFlow  
-- Playlists  
-- MiniPlayer  
-- Overall iTunes 7–10 aesthetics  
+- Working Cover Flow
+- MiniPlayer
+- Playlists (with smart m3u support)
+- iTunes Store integration
+- Lyrics support (with lrclib or metadata)
+- Discord Rich Presence (with MusicPresence)
+- Classic iTunes 7–10 aesthetics
 
 I ran out of things to say.
 
