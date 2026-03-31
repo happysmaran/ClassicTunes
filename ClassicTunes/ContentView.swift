@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         NSApp.deactivate()
         
-        // Do NOT terminate the app
+        // Do not terminate the app
         return false
     }
 }
@@ -55,6 +55,7 @@ struct ContentView: View {
     @State private var selectedPlaylistID: UUID?
     @State private var libraryActive: Bool = true
     @State private var searchText: String = ""
+    @State private var showITunesStore: Bool = false
 
     @State private var showNewPlaylistSheet = false
     @StateObject private var playlistManager = PlaylistManager()
@@ -352,17 +353,17 @@ struct ContentView: View {
                                 userPlaylists: $playlistManager.userPlaylists,
                                 selectedPlaylistID: $selectedPlaylistID,
                                 showNewPlaylistSheet: $showNewPlaylistSheet,
-                                libraryActive: $libraryActive
+                                libraryActive: $libraryActive,
+                                showITunesStore: $showITunesStore
                             )
-                            .frame(width: 220) // Fixed width
-                            .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
-                            .border(Color(nsColor: .separatorColor).opacity(0.5), width: 0.5) // Subtle border
-
-                            Divider()
-
-                            // Main content area
+                            .frame(width: 220)
+                            .tint(.blue)
+                            .background(ITunesSidebarBackground())
+	
                             Group {
-                                if isCoverFlowActive {
+                                if showITunesStore {
+                                    iTunesStoreView()
+                                } else if isCoverFlowActive {
                                     CoverFlowView(
                                         albums: albumsForCoverFlow,
                                         selectedAlbum: .constant(selectedSong?.album ?? ""),
@@ -610,6 +611,24 @@ struct ContentView: View {
                     saveUserPlaylists()
                 }
                 .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
+                .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
+            }
+        }
+    }
+
+    private func deletePlaylistAction() -> (() -> Void)? {
+        guard let playlistID = selectedPlaylistID,
+              playlistManager.userPlaylists.contains(where: { $0.id == playlistID }) else {
+            return nil
+        }
+        return {
+            if let i = playlistManager.userPlaylists.firstIndex(where: { $0.id == playlistID }) {
+                playlistManager.userPlaylists.remove(at: i)
+                saveUserPlaylists()
+                if selectedPlaylistID == playlistID {
+                    selectedPlaylistID = nil
+                    libraryActive = true
+                }
             }
         }
     }
@@ -2011,3 +2030,25 @@ struct LyricsView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 }
+
+struct ITunesSidebarBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let top = colorScheme == .dark
+            ? Color(nsColor: NSColor(calibratedWhite: 0.16, alpha: 1.0))
+            : Color(nsColor: NSColor(calibratedWhite: 0.97, alpha: 1.0))
+        let bottom = colorScheme == .dark
+            ? Color(nsColor: NSColor(calibratedWhite: 0.12, alpha: 1.0))
+            : Color(nsColor: NSColor(calibratedWhite: 0.90, alpha: 1.0))
+
+        return LinearGradient(gradient: Gradient(colors: [top, bottom]), startPoint: .top, endPoint: .bottom)
+            .overlay(
+                Rectangle()
+                    .fill(colorScheme == .dark ? Color.black.opacity(0.6) : Color.black.opacity(0.15))
+                    .frame(width: 1),
+                alignment: .trailing
+            )
+    }
+}
+
