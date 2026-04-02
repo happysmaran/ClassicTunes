@@ -1877,9 +1877,12 @@ struct UpNextView: View {
                             .frame(width: 50, height: 50)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     } else {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.3))
+                        Image("Icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
                             .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .opacity(0.9)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -1925,9 +1928,12 @@ struct UpNextView: View {
                                 .frame(width: 40, height: 40)
                                 .clipShape(RoundedRectangle(cornerRadius: 3))
                         } else {
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.gray.opacity(0.3))
+                            Image("Icon")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                                .opacity(0.9)
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -1954,10 +1960,17 @@ struct UpNextView: View {
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                Text("No song playing")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 12) {
+                    Image("Icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .opacity(0.9)
+                    Text("No song playing")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             Spacer()
@@ -1988,9 +2001,12 @@ struct LyricsView: View {
                             .frame(width: 50, height: 50)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     } else {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.3))
+                        Image("Icon")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
                             .frame(width: 50, height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .opacity(0.9)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {

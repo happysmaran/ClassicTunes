@@ -70,6 +70,7 @@ struct SidebarView: View {
                     Button(action: {
                         selectedPlaylistID = playlist.id
                         libraryActive = false
+                        showITunesStore = false
                     }) {
                         HStack {
                             Text(playlist.name)

@@ -39,7 +39,7 @@ struct NewPlaylistSheet: View {
     private func createPlaylist() {
         let newPlaylist = Playlist(name: playlistName, songs: [])
         playlists.append(newPlaylist)
-        savePlaylistsToUserDefaults(playlists)
+        PlaylistStore.shared.save(playlists)
         dismiss()
     }
 }

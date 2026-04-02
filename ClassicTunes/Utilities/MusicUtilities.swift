@@ -50,30 +50,6 @@ func getArtwork(from url: URL) -> NSImage? {
     return nil
 }
 
-func loadPlaylistsFromUserDefaults() -> [Playlist] {
-    guard let data = UserDefaults.standard.data(forKey: "playlists") else {
-        return []
-    }
-    let decoder = JSONDecoder()
-    do {
-        let playlists = try decoder.decode([Playlist].self, from: data)
-        return playlists
-    } catch {
-        print("Error decoding playlists: \(error)")
-        return []
-    }
-}
-
-func savePlaylistsToUserDefaults(_ playlists: [Playlist]) {
-    let encoder = JSONEncoder()
-    do {
-        let data = try encoder.encode(playlists)
-        UserDefaults.standard.set(data, forKey: "playlists")
-    } catch {
-        print("Error encoding playlists: \(error)")
-    }
-}
-
 let playHistoryKey = "playHistory"
 let playCountKey = "playCounts"
 
@@ -124,16 +100,6 @@ func generateTopPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -> Pla
     }
     let topSongs = Array(sortedSongs.prefix(maxCount))
     return Playlist(name: "Top 25 Most Played", songs: topSongs, isSystem: true)
-}
-
-func loadUserPlaylists() -> [Playlist] {
-    // Only custom playlists, not system ones
-    return loadPlaylistsFromUserDefaults().filter { !$0.isSystem }
-}
-
-func saveUserPlaylists(_ playlists: [Playlist]) {
-    // Only save custom playlists
-    savePlaylistsToUserDefaults(playlists.filter { !$0.isSystem })
 }
 
 // Returns a version of the string suitable for sorting by ignoring leading articles, whitespace, and non-alphanumerics

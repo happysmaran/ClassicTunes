@@ -14,11 +14,11 @@ struct TopToolbarView: View {
     var onSeek: (Double) -> Void
     @Binding var isSeeking: Bool
     @Binding var isShuffleEnabled: Bool
-    @Binding var isRepeatEnabled: Bool  // This represents repeat all
-    @Binding var isRepeatOne: Bool      // Added this parameter
+    @Binding var isRepeatEnabled: Bool
+    @Binding var isRepeatOne: Bool
     @Binding var isStopped: Bool
-    @Binding var isCoverFlowActive: Bool  // Add Cover Flow state binding
-    var onMiniPlayerToggle: (() -> Void)? = nil  // Add this new parameter
+    @Binding var isCoverFlowActive: Bool
+    var onMiniPlayerToggle: (() -> Void)? = nil
     @Binding var searchText: String
 
     @Environment(\.colorScheme) private var colorScheme
@@ -85,9 +85,12 @@ struct TopToolbarView: View {
             if let song = selectedSong, isPlaying || !isStopped {
                 songInfoView(song)
             } else {
-                Image(systemName: "applelogo")
-                    .font(.title)
-                    .foregroundColor(.gray)
+                Image("Icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 28, height: 28)
+                    .saturation(0)
+                    .opacity(0.9)
             }
         }
         .frame(maxWidth: .infinity)
@@ -279,4 +282,3 @@ struct RepeatButton: View {
         }
     }
 }
-
