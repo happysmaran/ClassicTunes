@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SongListView: View {
     var isAlbumView: Bool
@@ -328,9 +329,18 @@ struct SongListView: View {
             onSongSelect(song)
         }
         .contextMenu {
+            Button("Play Next") {
+                NotificationCenter.default.post(name: Notification.Name("AddToUpNextPlayNext"), object: song)
+            }
             Button("Add to Playlist") {
                 onAddToPlaylist(song)
             }
+        }
+        .onDrag {
+            if let data = try? JSONEncoder().encode(song) {
+                return NSItemProvider(item: data as NSData, typeIdentifier: UTType.json.identifier)
+            }
+            return NSItemProvider()
         }
         .frame(height: 16)
     }

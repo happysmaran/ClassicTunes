@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SidebarView: View {
     var playlists: [Playlist]
@@ -10,6 +11,7 @@ struct SidebarView: View {
 
     @State private var showComingSoon = false
     @State private var comingSoonSection = ""
+    @State private var dropHoverPlaylistID: UUID? = nil
 
     private var allPlaylists: [Playlist] {
         userPlaylists + playlists.filter { $0.isSystem }
@@ -78,6 +80,58 @@ struct SidebarView: View {
                         }
                     }
                     .buttonStyle(ITunesSidebarButtonStyle(selected: selectedPlaylistID == playlist.id && !libraryActive))
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.accentColor.opacity(dropHoverPlaylistID == playlist.id ? 0.8 : 0), lineWidth: 2)
+                    )
+                    .onDrop(of: [UTType.json], isTargeted: Binding(get: { dropHoverPlaylistID == playlist.id }, set: { isTargeted in
+                        dropHoverPlaylistID = isTargeted ? playlist.id : nil
+                    })) { providers in
+                        var handled = false
+                        let group = DispatchGroup()
+
+                        for p in providers where p.hasItemConformingToTypeIdentifier(UTType.json.identifier) {
+                            group.enter()
+                            p.loadItem(forTypeIdentifier: UTType.json.identifier, options: nil) { item, _ in
+                                defer { group.leave() }
+                                guard let data = (item as? Data) ?? (item as? URL).flatMap({ try? Data(contentsOf: $0) }) else { return }
+
+                                if let song = try? JSONDecoder().decode(Song.self, from: data) {
+                                    DispatchQueue.main.async {
+                                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
+                                            if !userPlaylists[idx].songs.contains(where: { $0.id == song.id }) {
+                                                withAnimation { userPlaylists[idx].songs.append(song) }
+                                            }
+                                        }
+                                    }
+                                    handled = true
+                                } else if let list = try? JSONDecoder().decode([Song].self, from: data) {
+                                    DispatchQueue.main.async {
+                                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
+                                            let existing = Set(userPlaylists[idx].songs.map { $0.id })
+                                            let toAdd = list.filter { !existing.contains($0.id) }
+                                            if !toAdd.isEmpty {
+                                                withAnimation { userPlaylists[idx].songs.append(contentsOf: toAdd) }
+                                            }
+                                        }
+                                    }
+                                    handled = true
+                                }
+                            }
+                        }
+
+                        group.notify(queue: .main) {
+                            // Clear hover state and select playlist so user sees updates immediately
+                            withAnimation { dropHoverPlaylistID = nil }
+                            if handled {
+                                selectedPlaylistID = playlist.id
+                                libraryActive = false
+                                showITunesStore = false
+                            }
+                        }
+
+                        return handled
+                    }
                 }
                 
                 Button(action: {

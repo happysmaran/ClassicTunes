@@ -2,6 +2,7 @@ import SwiftUI
 import AVKit
 import Combine
 import MediaPlayer
+import UniformTypeIdentifiers
 
 // the playlist code is a mess
 
@@ -78,9 +79,12 @@ struct ContentView: View {
     // Up Next states
     @State private var showUpNext = false
     @State private var upcomingSongs: [Song] = []
+    // Songs explicitly queued by user (Play Next / drag-drop). Prepended by updateUpcomingSongs.
+    @State private var manualQueue: [Song] = []
     @State private var shuffleQueue: [Song] = []
     @State private var playedShuffleSongs: [Song] = []
     @State private var isNavigatingBackward = false
+    @State private var dropTargetIndex: Int? = nil
 
     // Lyrics states
     @State private var showLyrics = false
@@ -306,6 +310,127 @@ struct ContentView: View {
         playedShuffleSongs.append(current)
     }
 
+    // Insert one or more songs to play next
+    private func addSongsNext(_ newSongs: [Song]) {
+        // Prevent adding songs if Repeat One is active
+        guard !isRepeatOne else { return }
+        
+        // Defer heavy array manipulation to let the UI (like context menus) dismiss smoothly
+        DispatchQueue.main.async {
+            let currentID = self.selectedSong?.id
+            var seen = Set<UUID>()
+            let filtered = newSongs.filter { s in
+                guard s.id != currentID else { return false }
+                if seen.contains(s.id) { return false }
+                seen.insert(s.id)
+                return true
+            }
+            guard !filtered.isEmpty else { return }
+
+            if self.isShuffleEnabled {
+                let ids = Set(filtered.map { $0.id })
+                self.shuffleQueue.removeAll { ids.contains($0.id) }
+                self.shuffleQueue.insert(contentsOf: filtered, at: 0)
+            } else {
+                // Store in manualQueue so updateUpcomingSongs() prepends them persistently
+                let ids = Set(filtered.map { $0.id })
+                self.manualQueue.removeAll { ids.contains($0.id) }
+                self.manualQueue.insert(contentsOf: filtered, at: 0)
+            }
+            self.updateUpcomingSongs()
+        }
+    }
+    
+    // Called by UpNextView after it has already mutated upcomingSongs via the binding.
+    // Mirror the reorder back into the authoritative queue (manualQueue or shuffleQueue).
+    private func moveUpcomingSongs(from source: IndexSet, to destination: Int) {
+        if isShuffleEnabled {
+            // upcomingSongs == shuffleQueue.prefix(25); mirror the full reorder into shuffleQueue
+            // Rebuild: take the reordered visible slice and splice it back into shuffleQueue
+            let tail = shuffleQueue.count > upcomingSongs.count
+                ? Array(shuffleQueue[upcomingSongs.count...])
+                : []
+            shuffleQueue = upcomingSongs + tail
+        } else {
+            manualQueue = upcomingSongs
+        }
+    }
+
+    private func decodeSongs(from providers: [NSItemProvider], completion: @escaping ([Song]) -> Void) {
+        let type = UTType.json.identifier
+        var collected: [Song] = []
+        let group = DispatchGroup()
+        for p in providers where p.hasItemConformingToTypeIdentifier(type) {
+            group.enter()
+            p.loadItem(forTypeIdentifier: type, options: nil) { item, _ in
+                defer { group.leave() }
+                if let data = item as? Data {
+                    if let s = try? JSONDecoder().decode(Song.self, from: data) {
+                        collected.append(s)
+                    } else if let list = try? JSONDecoder().decode([Song].self, from: data) {
+                        collected.append(contentsOf: list)
+                    }
+                } else if let url = item as? URL, let data = try? Data(contentsOf: url) {
+                    if let s = try? JSONDecoder().decode(Song.self, from: data) {
+                        collected.append(s)
+                    } else if let list = try? JSONDecoder().decode([Song].self, from: data) {
+                        collected.append(contentsOf: list)
+                    }
+                }
+            }
+        }
+        group.notify(queue: .main) { completion(collected) }
+    }
+
+    @ViewBuilder
+    private func mainContentArea() -> some View {
+        Group {
+            if showITunesStore {
+                iTunesStoreView()
+            } else if isCoverFlowActive {
+                CoverFlowView(
+                    albums: albumsForCoverFlow,
+                    selectedAlbum: .constant(selectedSong?.album ?? ""),
+                    isCoverFlowActive: $isCoverFlowActive,
+                    onAlbumSelect: { albumName in
+                        let albumSongs = displayedSongs.filter { $0.album == albumName }
+                        if let firstSong = albumSongs.first {
+                            currentPlaybackSongs = albumSongs
+                            playSong(firstSong)
+                        }
+                    },
+                    songs: displayedSongs,
+                    selectedSong: $selectedSong,
+                    currentPlaybackSongs: $currentPlaybackSongs,
+                    shuffleQueue: $shuffleQueue,
+                    isShuffleEnabled: $isShuffleEnabled,
+                    isRepeatOne: $isRepeatOne,
+                    isRepeatEnabled: $isRepeatEnabled
+                )
+            } else {
+                SongListView(
+                    isAlbumView: isAlbumView,
+                    songs: displayedSongs,
+                    onSongSelect: playSong,
+                    selectedSong: $selectedSong,
+                    onAlbumSelect: { album in
+                        let albumSongs = songs.filter { $0.album == album }
+                        if let firstSong = albumSongs.first {
+                            currentPlaybackSongs = albumSongs
+                            playSong(firstSong)
+                        }
+                    },
+                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                    onAddToPlaylist: { song in
+                        songToAddToPlaylist = song
+                    }
+                )
+                .environmentObject(playlistManager)
+                .tint(.iTunesBlue)
+            }
+        }
+    }
+
     var body: some View {
         Group {
             if isMiniPlayerActive {
@@ -359,52 +484,8 @@ struct ContentView: View {
                             .frame(width: 220)
                             .tint(.blue)
                             .background(ITunesSidebarBackground())
-	
-                            Group {
-                                if showITunesStore {
-                                    iTunesStoreView()
-                                } else if isCoverFlowActive {
-                                    CoverFlowView(
-                                        albums: albumsForCoverFlow,
-                                        selectedAlbum: .constant(selectedSong?.album ?? ""),
-                                        isCoverFlowActive: $isCoverFlowActive,
-                                        onAlbumSelect: { albumName in
-                                            let albumSongs = displayedSongs.filter { $0.album == albumName }
-                                            if let firstSong = albumSongs.first {
-                                                currentPlaybackSongs = albumSongs
-                                                playSong(firstSong)
-                                            }
-                                        },
-                                        songs: displayedSongs,
-                                        selectedSong: $selectedSong,
-                                        currentPlaybackSongs: $currentPlaybackSongs,
-                                        shuffleQueue: $shuffleQueue,
-                                        isShuffleEnabled: $isShuffleEnabled,
-                                        isRepeatOne: $isRepeatOne,
-                                        isRepeatEnabled: $isRepeatEnabled
-                                    )
-                                } else {
-                                    SongListView(
-                                        isAlbumView: isAlbumView,
-                                        songs: displayedSongs,
-                                        onSongSelect: playSong,
-                                        selectedSong: $selectedSong,
-                                        onAlbumSelect: { album in
-                                            let albumSongs = songs.filter { $0.album == album }
-                                            if let firstSong = albumSongs.first {
-                                                currentPlaybackSongs = albumSongs
-                                                playSong(firstSong)
-                                            }
-                                        },
-                                        playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                                        onAddToPlaylist: { song in
-                                            songToAddToPlaylist = song
-                                        }
-                                    )
-                                    .environmentObject(playlistManager)
-                                    .tint(.iTunesBlue)
-                                }
-                            }
+
+                            mainContentArea()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
 
@@ -412,9 +493,15 @@ struct ContentView: View {
                             Divider()
                             UpNextView(
                                 currentSong: selectedSong,
-                                upcomingSongs: upcomingSongs,
+                                upcomingSongs: $upcomingSongs,
                                 isPlaying: (player?.rate ?? 0) > 0,
-                                onSongSelect: playSongFromUpNext  // Added this parameter
+                                onSongSelect: playSongFromUpNext,
+                                onMove: { from, to in
+                                    moveUpcomingSongs(from: from, to: to)
+                                },
+                                onDropSongs: { dropped in
+                                    addSongsNext(dropped)
+                                }
                             )
                             .frame(width: 300)
                         }
@@ -611,6 +698,11 @@ struct ContentView: View {
                 .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in
                     saveUserPlaylists()
                 }
+                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext"))) { output in
+                    if let song = output.object as? Song {
+                        addSongsNext([song])
+                    }
+                }
                 .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
                 .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
             }
@@ -730,7 +822,15 @@ struct ContentView: View {
 
     // New function to play a song from Up Next view
     private func playSongFromUpNext(_ song: Song) {
-        playSong(song)
+        // Remove from whichever queue is authoritative so it isn't played again
+        manualQueue.removeAll { $0.id == song.id }
+        shuffleQueue.removeAll { $0.id == song.id }
+        // Skip the shuffle rebuild that playSong would normally trigger —
+        // the queue was already ordered by the user; preserve it.
+        playedShuffleSongs.append(song)
+        setupNewPlayback(for: song)
+        updateUpcomingSongs()
+        if showLyrics { loadLyrics(for: song) }
     }
 
     private func refreshSongPlayCounts() {
@@ -812,6 +912,13 @@ struct ContentView: View {
 
     private func playNext() {
         guard let current = selectedSong else { return }
+
+        // If there is a manually queued song at front, consume it first
+        if !isShuffleEnabled && !manualQueue.isEmpty {
+            let next = manualQueue.removeFirst()
+            playSong(next)
+            return
+        }
 
         if isShuffleEnabled {
             // Use the persistent shuffle queue
@@ -1093,39 +1200,36 @@ struct ContentView: View {
             return
         }
 
-        currentPlaybackSongs = playbackContext(for: current)
-
-        var upcoming: [Song] = []
-
-        // Special case: if repeat one is enabled, don't show upcoming songs
+        // If in "Repeat One" mode, the queue should be empty
         if isRepeatOne {
             upcomingSongs = []
             return
         }
-
+        
         if isShuffleEnabled {
-            // Show the next items from the persistent shuffle queue
-            upcoming = Array(shuffleQueue.prefix(15))
-        } else {
-            // Get next sequential songs
-            if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
-                let startIndex = currentIndex + 1
-                let endIndex = min(startIndex + 15, currentPlaybackSongs.count) // Show up to 15 songs
+            // Shuffle queue already reflects manual insertions; just show its front
+            upcomingSongs = Array(shuffleQueue.prefix(25))
+            return
+        }
 
-                if startIndex < endIndex {
-                    upcoming = Array(currentPlaybackSongs[startIndex..<endIndex])
-                }
-
-                // If we're near the end and repeat is enabled, add songs from the beginning
-                if (isRepeatEnabled) && upcoming.count < 15 {
-                    let additionalNeeded = 15 - upcoming.count
-                    let additionalSongs = currentPlaybackSongs.prefix(additionalNeeded)
-                    upcoming.append(contentsOf: additionalSongs)
-                }
+        // Non-shuffle: build computed "what comes next in the library" list
+        var computed: [Song] = []
+        if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
+            let startIndex = currentIndex + 1
+            let endIndex = min(startIndex + 25, currentPlaybackSongs.count)
+            if startIndex < endIndex {
+                computed = Array(currentPlaybackSongs[startIndex..<endIndex])
+            }
+            if isRepeatEnabled && computed.count < 25 {
+                let needed = 25 - computed.count
+                computed.append(contentsOf: currentPlaybackSongs.prefix(needed))
             }
         }
 
-        upcomingSongs = upcoming
+        // Prepend manualQueue, then fill with computed songs that aren't already in manual queue
+        let manualIDs = Set(manualQueue.map { $0.id })
+        let filteredComputed = computed.filter { !manualIDs.contains($0.id) }
+        upcomingSongs = manualQueue + filteredComputed
     }
 
     private func loadLyrics(for song: Song) {
@@ -1855,53 +1959,40 @@ struct ContentView: View {
     }
 }
 
+// Separate UTType identifier for internal reorder drags so they don't collide with Song JSON drops
+
 struct UpNextView: View {
     let currentSong: Song?
-    let upcomingSongs: [Song]
+    @Binding var upcomingSongs: [Song]
     let isPlaying: Bool
     var onSongSelect: (Song) -> Void = { _ in }
+    var onMove: (IndexSet, Int) -> Void = { _, _ in }
+    var onDropSongs: ([Song]) -> Void = { _ in }
+
+    @State private var draggingIndex: Int = -1
+    @State private var insertionIndex: Int? = nil
+    @State private var externalDropHovering: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Up Next")
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Now Playing")
                 .font(.headline)
                 .padding(.horizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
 
             if let current = currentSong {
                 HStack(spacing: 12) {
-                    if let artworkData = current.artworkData,
-                       let image = NSImage(data: artworkData) {
-                        Image(nsImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 50, height: 50)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    } else {
-                        Image("Icon")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 50, height: 50)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                            .opacity(0.9)
-                    }
-
+                    artworkView(for: current, size: 50)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(current.title)
-                            .font(.headline)
-                            .lineLimit(1)
-                        Text(current.artist)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
+                        Text(current.title).font(.headline).lineLimit(1)
+                        Text(current.artist).font(.subheadline).foregroundColor(.secondary).lineLimit(1)
                     }
-
                     Spacer()
-
-                    Image(systemName: "speaker.wave.2.fill")
-                        .foregroundColor(.blue)
+                    Image(systemName: "speaker.wave.2.fill").foregroundColor(.blue)
                 }
                 .padding(.horizontal)
-
+                .padding(.bottom, 12)
                 Divider()
             }
 
@@ -1910,55 +2001,58 @@ struct UpNextView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
+                    .padding(.top, 12)
+                    .padding(.bottom, 4)
 
-                // List of upcoming songs
-                List(upcomingSongs.indices, id: \.self) { index in
-                    let song = upcomingSongs[index]
-                    HStack(spacing: 12) {
-                        Text("\(index + 1)")
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        dropZone(at: 0)
+
+                        ForEach(Array(upcomingSongs.enumerated()), id: \.element.id) { index, song in
+                            UpNextSongBlock(song: song, index: index, isDragging: draggingIndex == index)
+                                .onTapGesture { onSongSelect(song) }
+                                .onDrag {
+                                    draggingIndex = index
+                                    let data = "\(index)".data(using: .utf8) ?? Data()
+                                    return NSItemProvider(item: data as NSData, typeIdentifier: UTType.plainText.identifier)
+                                }
+                            dropZone(at: index + 1)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 16)
+                }
+                .onDrop(of: [UTType.json], isTargeted: $externalDropHovering) { providers in
+                    handleExternalDrop(providers: providers)
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.accentColor, lineWidth: 2)
+                        .opacity(externalDropHovering ? 1 : 0)
+                        .padding(4)
+                )
+
+            } else if isPlaying {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.accentColor.opacity(externalDropHovering ? 1 : 0.35), lineWidth: 1.5)
+                    VStack(spacing: 8) {
+                        Image(systemName: "plus.circle")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("No upcoming songs")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .frame(width: 20)
-
-                        if let artworkData = song.artworkData,
-                           let image = NSImage(data: artworkData) {
-                            Image(nsImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 40, height: 40)
-                                .clipShape(RoundedRectangle(cornerRadius: 3))
-                        } else {
-                            Image("Icon")
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 40, height: 40)
-                                .clipShape(RoundedRectangle(cornerRadius: 3))
-                                .opacity(0.9)
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(song.title)
-                                .font(.subheadline)
-                                .lineLimit(1)
-                            Text(song.artist)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                    .onTapGesture {
-                        onSongSelect(song)
+                        Text("Drag songs here to queue them")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
-                .listStyle(PlainListStyle())
-            } else if isPlaying {
-                Text("No upcoming songs")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+                .onDrop(of: [UTType.json], isTargeted: $externalDropHovering) { providers in
+                    handleExternalDrop(providers: providers)
+                }
             } else {
                 VStack(spacing: 12) {
                     Image("Icon")
@@ -1973,12 +2067,173 @@ struct UpNextView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            Spacer()
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+
+    // MARK: - Drop zone strip between rows
+
+    @ViewBuilder
+    private func dropZone(at index: Int) -> some View {
+        let isActive = insertionIndex == index
+        ZStack {
+            // Tall invisible hit area
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 12)
+            // Visible accent line when active
+            if isActive {
+                Capsule()
+                    .fill(Color.accentColor)
+                    .frame(height: 3)
+                    .padding(.horizontal, 4)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onDrop(
+            of: [UTType.plainText],
+            isTargeted: Binding(
+                get: { insertionIndex == index },
+                set: { active in
+                    if active { insertionIndex = index }
+                    else if insertionIndex == index { insertionIndex = nil }
+                }
+            )
+        ) { providers in
+            handleReorderDrop(providers: providers, targetIndex: index)
+        }
+    }
+
+    // MARK: - Artwork helper
+
+    @ViewBuilder
+    private func artworkView(for song: Song, size: CGFloat) -> some View {
+        Group {
+            if let data = song.artworkData, let img = NSImage(data: data) {
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+            } else {
+                Image("Icon").resizable().aspectRatio(contentMode: .fill).opacity(0.9)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: size * 0.1))
+    }
+
+    // MARK: - Drop handlers
+
+    private func handleReorderDrop(providers: [NSItemProvider], targetIndex: Int) -> Bool {
+        guard let provider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+        }) else { return false }
+
+        provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { item, _ in
+            let raw: String?
+            if let d = item as? Data { raw = String(data: d, encoding: .utf8) }
+            else if let s = item as? String { raw = s }
+            else { raw = nil }
+
+            guard let src = raw.flatMap(Int.init) else { return }
+
+            DispatchQueue.main.async {
+                draggingIndex = -1
+                insertionIndex = nil
+                // Destination after accounting for removal of source
+                let dest: Int
+                if src < targetIndex {
+                    dest = targetIndex - 1  // shifting down: target shifts left after removal
+                } else if src == targetIndex || src == targetIndex - 1 {
+                    return  // no-op, already in position
+                } else {
+                    dest = targetIndex
+                }
+                var arr = upcomingSongs
+                arr.move(fromOffsets: IndexSet(integer: src), toOffset: src < targetIndex ? targetIndex : targetIndex)
+                upcomingSongs = arr
+                onMove(IndexSet(integer: src), src < targetIndex ? targetIndex : targetIndex)
+            }
+        }
+        return true
+    }
+
+    private func handleExternalDrop(providers: [NSItemProvider]) -> Bool {
+        let type = UTType.json.identifier
+        var collected: [Song] = []
+        let group = DispatchGroup()
+
+        for p in providers where p.hasItemConformingToTypeIdentifier(type) {
+            group.enter()
+            p.loadItem(forTypeIdentifier: type, options: nil) { item, _ in
+                defer { group.leave() }
+                let data: Data?
+                if let d = item as? Data { data = d }
+                else if let url = item as? URL { data = try? Data(contentsOf: url) }
+                else { data = nil }
+                guard let d = data else { return }
+                if let s = try? JSONDecoder().decode(Song.self, from: d) { collected.append(s) }
+                else if let list = try? JSONDecoder().decode([Song].self, from: d) { collected.append(contentsOf: list) }
+            }
+        }
+
+        group.notify(queue: .main) {
+            guard !collected.isEmpty else { return }
+            onDropSongs(collected)
+        }
+        return true
     }
 }
+
+// Song block card used in the Up Next queue
+private struct UpNextSongBlock: View {
+    let song: Song
+    let index: Int
+    let isDragging: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("\(index + 1)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .frame(width: 18, alignment: .trailing)
+
+            Group {
+                if let data = song.artworkData, let img = NSImage(data: data) {
+                    Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    Image("Icon").resizable().aspectRatio(contentMode: .fill).opacity(0.9)
+                }
+            }
+            .frame(width: 36, height: 36)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(song.title).font(.subheadline).lineLimit(1).truncationMode(.tail)
+                Text(song.artist).font(.caption).foregroundColor(.secondary).lineLimit(1).truncationMode(.tail)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "line.3.horizontal").font(.caption).foregroundColor(.secondary).opacity(0.5)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isDragging
+                    ? Color.accentColor.opacity(0.12)
+                    : Color(nsColor: .controlBackgroundColor).opacity(colorScheme == .dark ? 1 : 0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isDragging ? Color.accentColor.opacity(0.6) : Color.clear, lineWidth: 1.5)
+        )
+        .opacity(isDragging ? 0.45 : 1)
+        .animation(.easeInOut(duration: 0.12), value: isDragging)
+        .contentShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
 
 // Lyrics view implementation
 struct LyricsView: View {
@@ -2069,4 +2324,3 @@ struct ITunesSidebarBackground: View {
             )
     }
 }
-
