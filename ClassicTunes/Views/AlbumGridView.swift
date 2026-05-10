@@ -8,13 +8,42 @@ struct AlbumGridView: View {
     var onSongSelect: (Song) -> Void = { _ in } // Caller may override; we also provide a default fallback via handleSongSelect(_:)
     @State private var coverSize: CGFloat = 120
     @State private var expandedAlbum: String? = nil
+    @AppStorage("albumGridBackgroundStyle") private var albumGridBackgroundStyle: String = "light"
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appearanceManager: AppearanceManager
+
+    private var isAppDark: Bool {
+        if let forced = appearanceManager.currentColorScheme() {
+            return forced == .dark
+        } else {
+            return colorScheme == .dark
+        }
+    }
+
+    private var gridColorScheme: ColorScheme {
+        (isAppDark || albumGridBackgroundStyle == "dark") ? .dark : .light
+    }
+
+    private var effectiveBackgroundColor: Color {
+        if isAppDark {
+            return Color.itunesWindowBG
+        }
+        switch albumGridBackgroundStyle {
+        case "dark":
+            return Color.itunesWindowBG
+        default:
+            return Color(nsColor: .windowBackgroundColor)
+        }
+    }
 
     var body: some View {
         VStack {
             sizeSlider
             albumGrid
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(effectiveBackgroundColor)
+        .environment(\.colorScheme, gridColorScheme)
     }
     
     private var sizeSlider: some View {
@@ -41,6 +70,7 @@ struct AlbumGridView: View {
             }
             .frame(width: 160, height: 10)
         }
+        .frame(height: 26)
         .padding(.horizontal)
         .padding(.top, 8)
     }
@@ -79,6 +109,7 @@ struct AlbumGridView: View {
                             AlbumDetailView(
                                 albumName: expanded,
                                 songs: songs.filter { $0.album == expanded },
+                                backgroundColor: effectiveBackgroundColor,
                                 onSongSelect: { song in
                                     handleSongSelect(song)
                                 }
@@ -93,6 +124,7 @@ struct AlbumGridView: View {
                 .padding(.vertical, itemSpacing)
                 .frame(maxWidth: .infinity)
             }
+            .background(effectiveBackgroundColor)
         }
     }
     
@@ -187,7 +219,18 @@ struct AlbumGridView: View {
 struct AlbumDetailView: View {
     let albumName: String
     let songs: [Song]
+    var backgroundColor: Color = Color(nsColor: .windowBackgroundColor)
     let onSongSelect: (Song) -> Void
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appearanceManager: AppearanceManager
+    
+    private var isAppDark: Bool {
+        if let forced = appearanceManager.currentColorScheme() {
+            return forced == .dark
+        } else {
+            return colorScheme == .dark
+        }
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -201,7 +244,7 @@ struct AlbumDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                 } else {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(nsColor: .underPageBackgroundColor))
+                        .fill(isAppDark ? Color.itunesWindowBG : Color(nsColor: .underPageBackgroundColor))
                         .frame(width: 80, height: 80)
                         .overlay(
                             Image(systemName: "music.note")
@@ -288,7 +331,7 @@ struct AlbumDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .windowBackgroundColor))
+                .fill(backgroundColor)
                 .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
         )
         .padding(.horizontal)

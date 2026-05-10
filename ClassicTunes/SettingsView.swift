@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appearanceManager: AppearanceManager
+    @AppStorage("albumGridBackgroundStyle") private var albumGridBackgroundStyle: String = "dark" // there are better ways but nah
 
     var body: some View {
         Form {
@@ -21,6 +22,17 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     .frame(height: 40, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            
+            Section(header: Text("Album Grid")) {
+                Picker("Background", selection: $albumGridBackgroundStyle) {
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+                Text("When the app is in Dark appearance, the album grid will use Dark regardless of this setting.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()

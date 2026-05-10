@@ -471,7 +471,7 @@ struct ContentView: View {
 
                     Divider()
 
-                    HStack(spacing: 0) {
+                    HStack(alignment: .top, spacing: 0) {
                         HStack(spacing: 0) {
                             SidebarView(
                                 playlists: playlists,
@@ -487,6 +487,7 @@ struct ContentView: View {
 
                             mainContentArea()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .ignoresSafeArea()
                         }
 
                         if showUpNext {
@@ -516,7 +517,7 @@ struct ContentView: View {
                         }
                     }
 
-                    // Bottom bar - added lyrics button
+                    // Bottom bar
                     Divider()
                     HStack {
                         Spacer()

@@ -166,7 +166,6 @@ struct SongListView: View {
                     onAlbumSelect: onAlbumSelect,
                     onSongSelect: onSongSelect
                 )
-                .padding(.top, 8)
             } else {
                 listView
             }
