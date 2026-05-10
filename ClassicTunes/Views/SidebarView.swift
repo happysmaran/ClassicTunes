@@ -14,7 +14,7 @@ struct SidebarView: View {
     @State private var dropHoverPlaylistID: UUID? = nil
 
     private var allPlaylists: [Playlist] {
-        userPlaylists + playlists.filter { $0.isSystem }
+        playlists.filter { $0.isSystem } + userPlaylists
     }
 
     var body: some View {
@@ -53,6 +53,12 @@ struct SidebarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
+
+                Button(action: { comingSoonSection = "Purchased"; showComingSoon = true }) {
+                    Label("Purchased", systemImage: "purchased")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(ITunesSidebarButtonStyle(selected: false))
             }
             
             Section("STORE") {
@@ -68,16 +74,20 @@ struct SidebarView: View {
             }
             
             Section("PLAYLISTS") {
+                Button(action: { comingSoonSection = "Genius"; showComingSoon = true }) {
+                    Label("Genius", systemImage: "atom")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(ITunesSidebarButtonStyle(selected: false))
+
                 ForEach(allPlaylists) { playlist in
                     Button(action: {
                         selectedPlaylistID = playlist.id
                         libraryActive = false
                         showITunesStore = false
                     }) {
-                        HStack {
-                            Text(playlist.name)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                        Label(playlist.name, systemImage: playlist.isSystem ? "gearshape" : "music.note.list")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(ITunesSidebarButtonStyle(selected: selectedPlaylistID == playlist.id && !libraryActive))
                     .background(
@@ -207,4 +217,3 @@ struct ITunesSidebarButtonStyle: ButtonStyle {
         }
     }
 }
-

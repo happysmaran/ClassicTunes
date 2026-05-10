@@ -623,7 +623,6 @@ struct ContentView: View {
                 .onAppear {
                     print("Running loadSongsOnce at launch")
                     loadSongsOnce()
-                    generateSystemPlaylists()
                     loadUserPlaylists()
                     setupRemoteCommands()
                     
@@ -664,8 +663,8 @@ struct ContentView: View {
                 .onChange(of: selectedSong) { newSong in
                     guard let song = newSong else { return }
                     incrementPlayCount(for: song)
-                    generateSystemPlaylists()
                     refreshSongPlayCounts()
+                    generateSystemPlaylists()
                     updateNowPlayingInfo()
                     updateUpcomingSongs()
 
@@ -746,10 +745,12 @@ struct ContentView: View {
                         print("Saved security-scoped bookmark.")
                         Task {
                             let loaded = await loadSongs(from: folderURL)
-                            await MainActor.run { songs = loaded }
-                            generateSystemPlaylists()
+                            await MainActor.run {
+                                songs = loaded
+                                refreshSongPlayCounts()
+                                generateSystemPlaylists()
+                            }
                         }
-                        generateSystemPlaylists()
                     } catch {
                         print("Failed to create bookmark: \(error)")
                     }
@@ -775,11 +776,11 @@ struct ContentView: View {
                     let loaded = await loadSongs(from: resolvedURL)
                     await MainActor.run {
                         songs = loaded
+                        refreshSongPlayCounts()
                         generateSystemPlaylists()
                     }
                 }
                 print("Successfully loaded songs from bookmark.")
-                generateSystemPlaylists()
             } else {
                 print("Failed to access security scoped resource from bookmark.")
             }
@@ -1036,7 +1037,10 @@ struct ContentView: View {
         let uniqueSongs = Array(Dictionary(uniqueKeysWithValues: songs.map { ($0.id, $0) }).values)
         systemPlaylists = [
             generateRecentlyPlayedPlaylist(from: uniqueSongs),
-            generateTopPlayedPlaylist(from: uniqueSongs)
+            generateTopPlayedPlaylist(from: uniqueSongs),
+            generate90sMusicPlaylist(from: uniqueSongs),
+            generateClassicalMusicPlaylist(from: uniqueSongs),
+            generateRecentlyAddedPlaylist(from: uniqueSongs)
         ]
     }
 
@@ -1058,6 +1062,119 @@ struct ContentView: View {
             }
         }
         return Playlist(name: "Recently Played", songs: recentSongs, isSystem: true)
+    }
+
+    // Returns the recording year for a song by reading ID3/iTunes metadata from the file synchronously.
+    private func songYear(for song: Song) -> Int? {
+        let asset = AVURLAsset(url: song.url)
+        // Try common metadata (works for ID3 and iTunes atoms)
+        let items = asset.commonMetadata
+        for item in items {
+            guard let key = item.commonKey else { continue }
+            if key == .commonKeyCreationDate || key.rawValue == "creationDate" {
+                if let value = item.value as? String {
+                    // Extract first 4-digit year
+                    if let yearStr = value.components(separatedBy: CharacterSet.decimalDigits.inverted)
+                        .first(where: { $0.count == 4 }), let year = Int(yearStr) {
+                        return year
+                    }
+                }
+            }
+        }
+        
+        // Fallback to check all metadata for year-like keys
+        for format in asset.availableMetadataFormats {
+            let formatItems = AVMetadataItem.metadataItems(from: asset.metadata(forFormat: format),
+                                                           withKey: nil, keySpace: nil)
+            for item in formatItems {
+                let keyStr = (item.key as? String ?? "").lowercased()
+                let identifier = item.identifier?.rawValue.lowercased() ?? ""
+                if keyStr.contains("year") || keyStr.contains("date") ||
+                   identifier.contains("year") || identifier.contains("tdrc") ||
+                   identifier.contains("tyer") || identifier.contains("©day") {
+                    if let value = item.value as? String {
+                        let digits = value.components(separatedBy: CharacterSet.decimalDigits.inverted)
+                            .first(where: { $0.count == 4 })
+                        if let yearStr = digits, let year = Int(yearStr) {
+                            return year
+                        }
+                    } else if let value = item.value as? Int {
+                        return value
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Returns the genre string for a song by reading ID3/iTunes metadata synchronously.
+    private func songGenre(for song: Song) -> String? {
+        let asset = AVURLAsset(url: song.url)
+        // Common metadata genre key
+        for item in asset.commonMetadata {
+            guard let key = item.commonKey else { continue }
+            if key == .commonKeyType || key.rawValue == "type" {
+                return item.value as? String
+            }
+        }
+        // Fallback: all format metadata
+        for format in asset.availableMetadataFormats {
+            let formatItems = AVMetadataItem.metadataItems(from: asset.metadata(forFormat: format),
+                                                           withKey: nil, keySpace: nil)
+            for item in formatItems {
+                let keyStr = (item.key as? String ?? "").lowercased()
+                let identifier = item.identifier?.rawValue.lowercased() ?? ""
+                if keyStr.contains("genre") || identifier.contains("genre") ||
+                   identifier.contains("tcon") || identifier.contains("©gen") ||
+                   identifier.contains("gnre") {
+                    if let value = item.value as? String, !value.isEmpty {
+                        return value
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    private func generate90sMusicPlaylist(from songs: [Song]) -> Playlist {
+        let nineties = songs.filter { song in
+            if let year = songYear(for: song) {
+                return year >= 1990 && year <= 1999
+            }
+            return false
+        }
+        let sorted = nineties.sorted { $0.artist.localizedCaseInsensitiveCompare($1.artist) == .orderedAscending }
+        return Playlist(name: "90s Music", songs: sorted, isSystem: true)
+    }
+
+    private func generateClassicalMusicPlaylist(from songs: [Song]) -> Playlist {
+        let classical = songs.filter { song in
+            if let genre = songGenre(for: song) {
+                return genre.localizedCaseInsensitiveContains("classical") ||
+                       genre.localizedCaseInsensitiveContains("classic") ||
+                       genre.localizedCaseInsensitiveContains("orchestra") ||
+                       genre.localizedCaseInsensitiveContains("symphon") ||
+                       genre.localizedCaseInsensitiveContains("chamber") ||
+                       genre.localizedCaseInsensitiveContains("opera")
+            }
+            return false
+        }
+        let sorted = classical.sorted { $0.artist.localizedCaseInsensitiveCompare($1.artist) == .orderedAscending }
+        return Playlist(name: "Classical Music", songs: sorted, isSystem: true)
+    }
+
+    private func generateRecentlyAddedPlaylist(from songs: [Song]) -> Playlist {
+        let fm = FileManager.default
+        let withDates: [(song: Song, date: Date)] = songs.compactMap { song in
+            guard let attrs = try? fm.attributesOfItem(atPath: song.url.path),
+                  let created = attrs[.creationDate] as? Date else { return nil }
+            return (song, created)
+        }
+        let sorted = withDates
+            .sorted { $0.date > $1.date }
+            .prefix(25)
+            .map { $0.song }
+        return Playlist(name: "Recently Added", songs: sorted, isSystem: true)
     }
 
     private func incrementPlayCount(for song: Song) {

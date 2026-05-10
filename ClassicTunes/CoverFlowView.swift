@@ -63,15 +63,14 @@ struct CoverFlowView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .top) {
-                // LAYER 1: The Backgrounds (Always in the back)
+                // The Backgrounds (Back)
                 VStack(spacing: 0) {
                     backgroundColor
                         .frame(maxWidth: .infinity, maxHeight: 280)
                     Color.black // This stretches down to fill behind the text/slider
                 }
 
-                // LAYER 2: CoverFlow & Reflections (Middle)
-                // Constrained to 280 so your `y: size.height / 2 + 100` math works perfectly
+                // CoverFlow & Reflections (Middle)
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
                         .onAppear { containerSize = geometry.size }
@@ -81,8 +80,7 @@ struct CoverFlowView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: 280)
 
-                // LAYER 3: Text & Slider (Floating on top)
-                // The Color.clear preserves the exact layout height without blocking reflections
+                // Text & Slider (Front)
                 VStack(spacing: 0) {
                     Color.clear
                         .frame(height: 280)
