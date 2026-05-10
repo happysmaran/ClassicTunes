@@ -25,9 +25,10 @@ struct CoverFlowView: View {
 
     @State private var containerSize: CGSize = .zero
     private var coverSize: CGFloat {
-        // Auto-resize cover size based on the container's current size
-        let smaller = min(containerSize.width, containerSize.height)
-        return smaller * 0.5
+        // Base on height so covers fill the stage; cap so they don't overflow on wide windows
+        let heightBased = containerSize.height * 0.7
+        let widthCap = containerSize.width * 0.25
+        return min(heightBased, widthCap)
     }
 
     // Only render a window of items around the current index
@@ -61,25 +62,37 @@ struct CoverFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                backgroundColor
-                
+            ZStack(alignment: .top) {
+                // LAYER 1: The Backgrounds (Always in the back)
+                VStack(spacing: 0) {
+                    backgroundColor
+                        .frame(maxWidth: .infinity, maxHeight: 280)
+                    Color.black // This stretches down to fill behind the text/slider
+                }
+
+                // LAYER 2: CoverFlow & Reflections (Middle)
+                // Constrained to 280 so your `y: size.height / 2 + 100` math works perfectly
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
-                        .padding(.top, 12)
                         .onAppear { containerSize = geometry.size }
                         .onChange(of: geometry.size) { newSize in
                             containerSize = newSize
                         }
                 }
+                .frame(maxWidth: .infinity, maxHeight: 280)
+
+                // LAYER 3: Text & Slider (Floating on top)
+                // The Color.clear preserves the exact layout height without blocking reflections
+                VStack(spacing: 0) {
+                    Color.clear
+                        .frame(height: 280)
+                    
+                    albumInfoSection
+                    sliderSection
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: 340)
             .contentShape(Rectangle())
 
-            albumInfoSection
-            
-            sliderSection
-            
             controlsSection
             
             SongListView(
@@ -101,22 +114,21 @@ struct CoverFlowView: View {
                 onAddToPlaylist: { song in
                     // Handle adding song to playlist
                     print("Adding \(song.title) to playlist")
-                    // You might want to present a sheet or menu here to choose the playlist
                 }
             )
             .environmentObject(playlistManager)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .layoutPriority(1)
-            .padding(.top, 8) // Move the song list down by adding top padding
+            .padding(.top, 0)
 
             Spacer()
         }
-        .background(backgroundColor)
+        .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(Rectangle())
         .onChange(of: committedIndex) { newValue in
             if newValue < sortedAlbums.count {
                 selectedAlbum = sortedAlbums[newValue].name
-                // sliderValue follows currentIndex during interaction; no need to set here
+                // sliderValue follows currentIndex during interaction
             }
         }
         .onAppear {
@@ -142,26 +154,30 @@ struct CoverFlowView: View {
     }
 
     private var backgroundColor: some View {
-        colorScheme == .light ? Color.white : Color(nsColor: .windowBackgroundColor)
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color(white: 0.18), location: 0.0),
+                .init(color: Color(white: 0.05), location: 0.55),
+                .init(color: Color.black, location: 1.0)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
     private var albumInfoSection: some View {
         Group {
             if !sortedAlbums.isEmpty && currentIndex < sortedAlbums.count {
-                VStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .center, spacing: 4) {
                     Text(sortedAlbums[currentIndex].name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(colorScheme == .light ? .black : .primary)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
                     Text(sortedAlbums[currentIndex].artist)
-                        .font(.title3)
-                        .foregroundColor(colorScheme == .light ? .black.opacity(0.7) : .secondary)
+                        .font(.system(size: 17))
+                        .foregroundColor(Color(white: 0.7))
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(colorScheme == .light ?
-                    Color.white.opacity(0.7) :
-                    Color(nsColor: .underPageBackgroundColor).opacity(0.7))
+                .padding(.vertical, 8)
             }
         }
     }
@@ -172,10 +188,10 @@ struct CoverFlowView: View {
                 HStack {
                     Text("1")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color(white: 0.5))
                         .frame(width: 24, alignment: .leading)
 
-                    Slider(
+                    ClassicCoverFlowSlider(
                         value: Binding(
                             get: { sliderValue },
                             set: { newValue in
@@ -186,14 +202,11 @@ struct CoverFlowView: View {
                                 }
                             }
                         ),
-                        in: 0...Double(sortedAlbums.count - 1),
-                        step: 1,
+                        range: 0...Double(sortedAlbums.count - 1),
                         onEditingChanged: { isEditing in
                             isInteracting = isEditing
                             if !isEditing {
-                                // Commit the index after the drag ends
                                 committedIndex = currentIndex
-                                // Defer playback slightly to allow the animation to finish
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                     playCurrentAlbum()
                                 }
@@ -203,18 +216,15 @@ struct CoverFlowView: View {
                             }
                         }
                     )
-                    .tint(.accentColor)
-                    .frame(height: 4)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 0)
+                    .padding(.horizontal, 4)
 
                     Text("\(sortedAlbums.count)")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color(white: 0.5))
                         .frame(width: 24, alignment: .trailing)
                 }
                 .padding(.horizontal, 40)
-                .background(Color.clear)
+                .padding(.vertical, 8)
             }
         }
     }
@@ -244,11 +254,14 @@ struct CoverFlowView: View {
             .padding(.trailing, 12)
             .padding(.top, 4)
         }
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private func coverFlowContent(geometry: GeometryProxy) -> some View {
         let size = geometry.size
         let coverWidth = coverSize
+        // Each item's frame holds cover + reflection, so the cover occupies the top half
+        let frameHeight = coverWidth * 2.0  // cover + equal-height reflection area
         let centerX = size.width / 2
         let coverMargin = coverWidth / 2 + size.width * 0.04
         let leftEdge = coverMargin
@@ -262,7 +275,6 @@ struct CoverFlowView: View {
                 let index = item.globalIndex
                 let album = item.album
                 let isCenter = index == currentIndex
-                let frameWidth = isCenter ? coverWidth * 1.2 : coverWidth
 
                 let xPosition = calculateXPosition(
                     for: index,
@@ -282,9 +294,8 @@ struct CoverFlowView: View {
                     geometry: geometry,
                     isInteracting: isInteracting
                 )
-                .frame(width: frameWidth, height: frameWidth)
-                .aspectRatio(1, contentMode: .fit)
-                .position(x: xPosition, y: size.height / 2)
+                .frame(width: coverWidth, height: frameHeight)
+                .position(x: xPosition, y: size.height / 2 + 100)
                 .zIndex(Double(sortedAlbums.count) - abs(Double(index - currentIndex)))
                 .onTapGesture {
                     isInteracting = true
@@ -317,8 +328,8 @@ struct CoverFlowView: View {
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
-        // Base spacing between side items. Slightly less than cover width to create the overlap/fan effect.
-        let sideSpacing = coverWidth * 0.65
+        // Tighter spacing for side items — real CoverFlow packs them close together
+        let sideSpacing = coverWidth * 0.42
 
         if index == currentIndex {
             return centerX
@@ -420,80 +431,183 @@ struct CoverFlowItemView: View {
     }
 
     private var itemSaturation: Double {
-        // Desaturate non-center items subtly
-        return isCenterItem ? 1.0 : max(0.6, 1.0 - (Double(distanceFromCenter) * 0.15))
+        return isCenterItem ? 1.0 : max(0.5, 1.0 - (Double(distanceFromCenter) * 0.2))
+    }
+
+    // Brightness drops off for far items
+    private var itemBrightness: Double {
+        return isCenterItem ? 0.0 : max(-0.35, -Double(distanceFromCenter) * 0.1)
     }
 
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        ZStack {
-            if let image = album.artwork {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                    .shadow(color: .black.opacity(isCenterItem ? 0.35 : 0.18), radius: isCenterItem ? 10 : 2, x: 0, y: isCenterItem ? 8 : 2)
-            } else {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(LinearGradient(
+        VStack(spacing: 0) {
+            // Main cover
+            coverImage
+                .rotation3DEffect(
+                    .degrees(rotationAngle),
+                    axis: (x: 0, y: 1, z: 0),
+                    anchor: rotationAnchor,
+                    perspective: 0.25
+                )
+
+            // Reflection
+            coverImage
+                .rotation3DEffect(
+                    .degrees(rotationAngle),
+                    axis: (x: 0, y: 1, z: 0),
+                    anchor: rotationAnchor,
+                    perspective: 0.25
+                )
+                .scaleEffect(x: 1, y: -1) // flip vertically
+                .mask(
+                    LinearGradient(
                         gradient: Gradient(colors: [
-                            colorScheme == .light ?
-                                Color(nsColor: .separatorColor) :
-                                Color(nsColor: .separatorColor),
-                            colorScheme == .light ?
-                                Color(nsColor: .underPageBackgroundColor) :
-                                Color(nsColor: .underPageBackgroundColor)
+                            Color.black.opacity(0.45),
+                            Color.black.opacity(0.0)
                         ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .overlay(
-                        VStack {
-                            Text(album.name)
-                                .font(.caption)
-                                .foregroundColor(colorScheme == .light ? .black : .primary)
-                                .multilineTextAlignment(.center)
-                            Text(album.artist)
-                                .font(.caption2)
-                                .foregroundColor(colorScheme == .light ? .black.opacity(0.7) : .secondary)
-                        }
-                        .padding(4)
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
-                    .shadow(color: .black.opacity(isCenterItem ? 0.35 : 0.18), radius: isCenterItem ? 10 : 2, x: 0, y: isCenterItem ? 8 : 2)
-            }
+                )
         }
-        .scaleEffect(scaleEffect)
         .saturation(itemSaturation)
-        .opacity(1)
-        .rotation3DEffect(
-            .degrees(rotationAngle),
-            axis: (x: 0, y: 1, z: 0),
-            anchor: rotationAnchor,
-            perspective: 0.3
-        )
+        .brightness(itemBrightness)
         .compositingGroup()
         .animation(.easeInOut(duration: 0.3), value: currentIndex)
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
     }
 
+    @ViewBuilder
+    private var coverImage: some View {
+        if let image = album.artwork {
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .shadow(
+                    color: .black.opacity(isCenterItem ? 0.7 : 0.4),
+                    radius: isCenterItem ? 14 : 4,
+                    x: 0,
+                    y: isCenterItem ? 6 : 2
+                )
+        } else {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(white: 0.35),
+                        Color(white: 0.18)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .overlay(
+                    VStack(spacing: 4) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color(white: 0.6))
+                        Text(album.name)
+                            .font(.caption2)
+                            .foregroundColor(Color(white: 0.7))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(6)
+                )
+                .shadow(
+                    color: .black.opacity(isCenterItem ? 0.7 : 0.4),
+                    radius: isCenterItem ? 14 : 4,
+                    x: 0,
+                    y: isCenterItem ? 6 : 2
+                )
+        }
+    }
+
     private var scaleEffect: CGFloat {
-        guard !isCenterItem else { return 1.2 }
-        let scale = max(0.6, 1.0 - CGFloat(distanceFromCenter) * 0.15)
-        return scale
+        guard !isCenterItem else { return 1.0 }
+        return max(0.65, 1.0 - CGFloat(distanceFromCenter) * 0.1)
     }
 
     private var rotationAngle: Double {
         guard !isCenterItem else { return 0 }
-        let maxRotation: Double = 45.0
-        let rotation = maxRotation * Double(min(distanceFromCenter, 3)) / 3.0
-        return Double(index < currentIndex ? rotation : -rotation)
+        let baseRotation = 65.0
+        let extra = min(Double(distanceFromCenter - 1) * 3.0, 8.0)
+        let rotation = baseRotation + extra
+        return index < currentIndex ? rotation : -rotation
     }
 
     private var rotationAnchor: UnitPoint {
         guard !isCenterItem else { return .center }
         let diff = index - currentIndex
         return diff < 0 ? .trailing : .leading
+    }
+}
+
+struct ClassicCoverFlowSlider: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    var onEditingChanged: (Bool) -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            let trackHeight: CGFloat = 10
+            let thumbWidth: CGFloat = 36
+            let thumbHeight: CGFloat = 16
+            
+            // Calculate usable width so the thumb doesn't slide out of bounds
+            let usableWidth = geo.size.width - thumbWidth
+            // Normalize value between 0.0 and 1.0
+            let percentage = (usableWidth > 0) ? (value - range.lowerBound) / (range.upperBound - range.lowerBound) : 0
+            
+            // Calculate positions
+            let thumbX = (thumbWidth / 2) + (usableWidth * CGFloat(percentage))
+            let centerY = geo.size.height / 2
+            
+            ZStack {
+                // Track: Uniform dark grey with an inner shadow/border look
+                Capsule()
+                    .fill(Color(white: 0.15))
+                    .overlay(
+                        Capsule().stroke(Color(white: 0.3), lineWidth: 1)
+                    )
+                    .frame(height: trackHeight)
+                    .position(x: geo.size.width / 2, y: centerY)
+                
+                // Thumb: Wide oval, dark gradient, bright top highlight
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(white: 0.45), Color(white: 0.15)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        Capsule().stroke(Color.black, lineWidth: 1.5)
+                    )
+                    .overlay(
+                        Capsule().stroke(Color(white: 0.6), lineWidth: 0.5).padding(1)
+                    )
+                    .frame(width: thumbWidth, height: thumbHeight)
+                    .position(x: thumbX, y: centerY)
+                    .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 2)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { drag in
+                                onEditingChanged(true)
+                                // Calculate new value based on drag position
+                                let newOffset = drag.location.x - (thumbWidth / 2)
+                                let clampedOffset = max(0, min(newOffset, usableWidth))
+                                let newPercentage = clampedOffset / usableWidth
+                                value = range.lowerBound + Double(newPercentage) * (range.upperBound - range.lowerBound)
+                            }
+                            .onEnded { _ in
+                                onEditingChanged(false)
+                            }
+                    )
+            }
+        }
+        .frame(height: 24) // Comfortable hit target height
     }
 }
