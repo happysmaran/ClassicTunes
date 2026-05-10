@@ -408,25 +408,44 @@ struct ContentView: View {
                     isRepeatEnabled: $isRepeatEnabled
                 )
             } else {
-                SongListView(
-                    isAlbumView: isAlbumView,
-                    songs: displayedSongs,
-                    onSongSelect: playSong,
-                    selectedSong: $selectedSong,
-                    onAlbumSelect: { album in
-                        let albumSongs = songs.filter { $0.album == album }
-                        if let firstSong = albumSongs.first {
-                            currentPlaybackSongs = albumSongs
-                            playSong(firstSong)
-                        }
-                    },
-                    playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
-                    onAddToPlaylist: { song in
-                        songToAddToPlaylist = song
+                VStack(spacing: 0) {
+                    // iTunes-style playlist header — only when a playlist is selected
+                    if let playlistID = selectedPlaylistID,
+                       let playlist = playlists.first(where: { $0.id == playlistID }) {
+                        PlaylistHeaderView(
+                            playlist: playlist,
+                            onPlay: {
+                                if let first = displayedSongs.first { playSong(first) }
+                            },
+                            onShuffle: {
+                                isShuffleEnabled = true
+                                if let random = displayedSongs.randomElement() { playSong(random) }
+                            }
+                        )
+                        .id(playlist.id)
+                        Divider()
                     }
-                )
-                .environmentObject(playlistManager)
-                .tint(.iTunesBlue)
+
+                    SongListView(
+                        isAlbumView: isAlbumView,
+                        songs: displayedSongs,
+                        onSongSelect: playSong,
+                        selectedSong: $selectedSong,
+                        onAlbumSelect: { album in
+                            let albumSongs = songs.filter { $0.album == album }
+                            if let firstSong = albumSongs.first {
+                                currentPlaybackSongs = albumSongs
+                                playSong(firstSong)
+                            }
+                        },
+                        playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
+                        onAddToPlaylist: { song in
+                            songToAddToPlaylist = song
+                        }
+                    )
+                    .environmentObject(playlistManager)
+                    .tint(.iTunesBlue)
+                }
             }
         }
     }
@@ -717,6 +736,7 @@ struct ContentView: View {
         }
         return {
             if let i = playlistManager.userPlaylists.firstIndex(where: { $0.id == playlistID }) {
+                PlaylistArtworkStore.shared.delete(for: playlistID)
                 playlistManager.userPlaylists.remove(at: i)
                 saveUserPlaylists()
                 if selectedPlaylistID == playlistID {
