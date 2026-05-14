@@ -20,7 +20,7 @@
 
 // MARK: - Coming-soon alert
 "alert.comingSoon.title"      = "Coming Soon";
-"alert.comingSoon.message %@"    = "%@ is coming soon.";
+"alert.comingSoon.message"    = "%@ is coming soon.";
 "alert.ok"                    = "OK";
 
 // MARK: - Top toolbar
@@ -107,7 +107,7 @@
 "lyrics.title"                = "Lyrics";
 
 // MARK: - Album grid / detail
-"albumDetail.songs %lld"           = "%lld songs";
+"albumDetail.songs"           = "%lld songs";
 
 // MARK: - Mini player / Open in Mini Player
 "miniPlayer.openIn"           = "Open in MiniPlayer";
