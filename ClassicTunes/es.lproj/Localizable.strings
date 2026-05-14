@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Spanish – Español)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "BIBLIOTECA";
+"sidebar.store"               = "TIENDA";
+"sidebar.playlists"           = "LISTAS DE REPRODUCCIÓN";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "Música";
+"sidebar.movies"              = "Películas";
+"sidebar.tvShows"             = "Series de TV";
+"sidebar.podcasts"            = "Podcasts";
+"sidebar.radio"               = "Radio";
+"sidebar.purchased"           = "Comprado";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "Nueva lista de reproducción";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "Próximamente";
+"alert.comingSoon.message"    = "%@ estará disponible próximamente.";
+"alert.ok"                    = "OK";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "Importar música";
+"toolbar.search"              = "Buscar";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "Letra";
+"bottomBar.upNext"            = "A continuación";
+"bottomBar.importM3U"         = "Importar M3U";
+"bottomBar.exportM3U"         = "Exportar M3U";
+
+// MARK: - Song list column headers
+"column.title"                = "Título";
+"column.artist"               = "Artista";
+"column.album"                = "Álbum";
+"column.genre"                = "Género";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "Reproducir a continuación";
+"contextMenu.addToPlaylist"   = "Añadir a lista de reproducción";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "Reproducir";
+"playlistHeader.shuffle"      = "Aleatorio";
+"playlistHeader.songCount"    = "%lld canción";
+"playlistHeader.songCountPlural" = "%lld canciones";
+"playlistHeader.durationHours" = "%lld hora";
+"playlistHeader.durationHoursPlural" = "%lld horas";
+"playlistHeader.durationMinutes" = "%lld minuto";
+"playlistHeader.durationMinutesPlural" = "%lld minutos";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "Cambiar foto…";
+"artwork.removeCustomPhoto"   = "Eliminar foto personalizada";
+"artwork.help"                = "Haz clic para establecer una foto personalizada para la lista";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "Nueva lista de reproducción";
+"newPlaylist.namePlaceholder" = "Nombre de la lista";
+"newPlaylist.nameLabel"       = "Nombre";
+"newPlaylist.cancel"          = "Cancelar";
+"newPlaylist.create"          = "Crear";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "Añadir a lista de reproducción";
+"playlistSelection.message"   = "Selecciona una lista para añadir \"%@\":";
+"playlistSelection.empty"     = "No hay listas disponibles";
+"playlistSelection.cancel"    = "Cancelar";
+"playlistSelection.songCount" = "%lld canciones";
+
+// MARK: - Settings
+"settings.appearance"         = "Apariencia";
+"settings.appAppearance"      = "Apariencia de la app";
+"settings.system"             = "Sistema";
+"settings.light"              = "Claro";
+"settings.dark"               = "Oscuro";
+"settings.appearanceHelp.system" = "Sigue la apariencia del sistema.";
+"settings.appearanceHelp.light"  = "Obliga a la app a usar siempre la apariencia clara.";
+"settings.appearanceHelp.dark"   = "Obliga a la app a usar siempre la apariencia oscura.";
+"settings.albumGrid"          = "Cuadrícula de álbumes";
+"settings.albumGrid.background" = "Fondo";
+"settings.albumGrid.note"     = "Cuando la app esté en apariencia oscura, la cuadrícula de álbumes usará el modo oscuro independientemente de esta opción.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "Buscar canciones, álbumes, artistas, películas…";
+"store.searching"             = "Buscando en iTunes Store…";
+"store.noResults.title"       = "Sin resultados";
+"store.noResults.subtitle"    = "Prueba con otras palabras clave o tipo de contenido";
+"store.welcome.title"         = "Bienvenido a iTunes Store";
+"store.welcome.subtitle"      = "Busca música, álbumes, películas y series de TV";
+"store.media.music"           = "Música";
+"store.media.movies"          = "Películas";
+"store.media.tvShows"         = "Series de TV";
+"store.media.all"             = "Todo";
+"store.free"                  = "Gratis";
+"store.preview"               = "Vista previa";
+"store.stop"                  = "Detener";
+"store.viewInStore"           = "Ver en la tienda";
+"store.media.label"           = "Medio";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "Letra";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld canciones";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "Abrir en el minirreproductor";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "Eliminar lista de reproducción";

@@ -172,8 +172,8 @@ struct AlbumGridView: View {
     private func albumCellWithDetail(album: String) -> some View {
         VStack(spacing: 0) {
             VStack {
-                if let artwork = songs.first(where: { $0.album == album })?.url,
-                   let image = getArtwork(from: artwork) {
+                if let artworkData = songs.first(where: { $0.album == album })?.artworkData,
+                   let image = NSImage(data: artworkData) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
@@ -270,7 +270,7 @@ struct AlbumDetailView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    Text("\(songs.count) songs")
+                    Text(String(format: NSLocalizedString("albumDetail.songs", comment: "songsCount"), songs.count))
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }

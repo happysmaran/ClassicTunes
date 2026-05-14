@@ -1,5 +1,5 @@
 import SwiftUI
-import AVKit
+import AVFoundation
 import Combine
 import MediaPlayer
 import UniformTypeIdentifiers
@@ -178,8 +178,18 @@ struct ContentView: View {
         player = persistentPlayer
 
         if let currentItem = persistentPlayer.currentItem {
-            playbackDuration = currentItem.asset.duration.seconds
-            playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
+            if let d = selectedSong?.duration {
+                playbackDuration = d
+                playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
+            } else {
+                Task {
+                    let seconds = (try? await currentItem.asset.load(.duration).seconds) ?? 0
+                    await MainActor.run {
+                        playbackDuration = seconds
+                        playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
+                    }
+                }
+            }
         }
 
         setupTimeObserver(for: persistentPlayer)
@@ -410,6 +420,7 @@ struct ContentView: View {
             } else {
                 VStack(spacing: 0) {
                     // iTunes-style playlist header — only when a playlist is selected
+                    // This thing kept showing up in the regular view T-T
                     if let playlistID = selectedPlaylistID,
                        let playlist = playlists.first(where: { $0.id == playlistID }) {
                         PlaylistHeaderView(
@@ -445,6 +456,8 @@ struct ContentView: View {
                     )
                     .environmentObject(playlistManager)
                     .tint(.iTunesBlue)
+                    // Do not remove below func. It breaks without it.
+                    .ignoresSafeArea()
                 }
             }
         }
@@ -550,7 +563,7 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 Image(systemName: "text.alignleft")
-                                Text("Lyrics")
+                                Text("lyrics.title")
                             }
                         }
                         .padding(.horizontal)
@@ -567,7 +580,7 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 Image(systemName: "list.bullet")
-                                Text("Up Next")
+                                Text("bottomBar.upNext")
                             }
                         }
                         .padding(.horizontal)
@@ -579,7 +592,7 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 Image(systemName: "tray.and.arrow.down")
-                                Text("Import M3U")
+                                Text("bottomBar.importM3U")
                             }
                         }
                         .padding(.horizontal)
@@ -591,7 +604,7 @@ struct ContentView: View {
                         }) {
                             HStack {
                                 Image(systemName: "tray.and.arrow.up")
-                                Text("Export M3U")
+                                Text("bottomBar.exportM3U")
                             }
                         }
                         .padding(.horizontal)
@@ -873,7 +886,16 @@ struct ContentView: View {
         player = newPlayer
         playerItem = item
         selectedSong = song
-        playbackDuration = item.asset.duration.seconds
+
+        if let d = song.duration {
+            playbackDuration = d
+        } else {
+            Task {
+                let seconds = (try? await item.asset.load(.duration).seconds) ?? 0
+                await MainActor.run { playbackDuration = seconds }
+            }
+        }
+
         playbackPosition = 0.0
 
         setupTimeObserver(for: newPlayer)
@@ -1084,81 +1106,9 @@ struct ContentView: View {
         return Playlist(name: "Recently Played", songs: recentSongs, isSystem: true)
     }
 
-    // Returns the recording year for a song by reading ID3/iTunes metadata from the file synchronously.
-    private func songYear(for song: Song) -> Int? {
-        let asset = AVURLAsset(url: song.url)
-        // Try common metadata (works for ID3 and iTunes atoms)
-        let items = asset.commonMetadata
-        for item in items {
-            guard let key = item.commonKey else { continue }
-            if key == .commonKeyCreationDate || key.rawValue == "creationDate" {
-                if let value = item.value as? String {
-                    // Extract first 4-digit year
-                    if let yearStr = value.components(separatedBy: CharacterSet.decimalDigits.inverted)
-                        .first(where: { $0.count == 4 }), let year = Int(yearStr) {
-                        return year
-                    }
-                }
-            }
-        }
-        
-        // Fallback to check all metadata for year-like keys
-        for format in asset.availableMetadataFormats {
-            let formatItems = AVMetadataItem.metadataItems(from: asset.metadata(forFormat: format),
-                                                           withKey: nil, keySpace: nil)
-            for item in formatItems {
-                let keyStr = (item.key as? String ?? "").lowercased()
-                let identifier = item.identifier?.rawValue.lowercased() ?? ""
-                if keyStr.contains("year") || keyStr.contains("date") ||
-                   identifier.contains("year") || identifier.contains("tdrc") ||
-                   identifier.contains("tyer") || identifier.contains("©day") {
-                    if let value = item.value as? String {
-                        let digits = value.components(separatedBy: CharacterSet.decimalDigits.inverted)
-                            .first(where: { $0.count == 4 })
-                        if let yearStr = digits, let year = Int(yearStr) {
-                            return year
-                        }
-                    } else if let value = item.value as? Int {
-                        return value
-                    }
-                }
-            }
-        }
-        return nil
-    }
-
-    /// Returns the genre string for a song by reading ID3/iTunes metadata synchronously.
-    private func songGenre(for song: Song) -> String? {
-        let asset = AVURLAsset(url: song.url)
-        // Common metadata genre key
-        for item in asset.commonMetadata {
-            guard let key = item.commonKey else { continue }
-            if key == .commonKeyType || key.rawValue == "type" {
-                return item.value as? String
-            }
-        }
-        // Fallback: all format metadata
-        for format in asset.availableMetadataFormats {
-            let formatItems = AVMetadataItem.metadataItems(from: asset.metadata(forFormat: format),
-                                                           withKey: nil, keySpace: nil)
-            for item in formatItems {
-                let keyStr = (item.key as? String ?? "").lowercased()
-                let identifier = item.identifier?.rawValue.lowercased() ?? ""
-                if keyStr.contains("genre") || identifier.contains("genre") ||
-                   identifier.contains("tcon") || identifier.contains("©gen") ||
-                   identifier.contains("gnre") {
-                    if let value = item.value as? String, !value.isEmpty {
-                        return value
-                    }
-                }
-            }
-        }
-        return nil
-    }
-
     private func generate90sMusicPlaylist(from songs: [Song]) -> Playlist {
         let nineties = songs.filter { song in
-            if let year = songYear(for: song) {
+            if let yearStr = song.year, let year = Int(yearStr.prefix(4)) {
                 return year >= 1990 && year <= 1999
             }
             return false
@@ -1169,15 +1119,13 @@ struct ContentView: View {
 
     private func generateClassicalMusicPlaylist(from songs: [Song]) -> Playlist {
         let classical = songs.filter { song in
-            if let genre = songGenre(for: song) {
-                return genre.localizedCaseInsensitiveContains("classical") ||
-                       genre.localizedCaseInsensitiveContains("classic") ||
-                       genre.localizedCaseInsensitiveContains("orchestra") ||
-                       genre.localizedCaseInsensitiveContains("symphon") ||
-                       genre.localizedCaseInsensitiveContains("chamber") ||
-                       genre.localizedCaseInsensitiveContains("opera")
-            }
-            return false
+            let genre = song.genre
+            return genre.localizedCaseInsensitiveContains("classical") ||
+                   genre.localizedCaseInsensitiveContains("classic") ||
+                   genre.localizedCaseInsensitiveContains("orchestra") ||
+                   genre.localizedCaseInsensitiveContains("symphon") ||
+                   genre.localizedCaseInsensitiveContains("chamber") ||
+                   genre.localizedCaseInsensitiveContains("opera")
         }
         let sorted = classical.sorted { $0.artist.localizedCaseInsensitiveCompare($1.artist) == .orderedAscending }
         return Playlist(name: "Classical Music", songs: sorted, isSystem: true)
@@ -1551,7 +1499,7 @@ struct ContentView: View {
     }
 
     private func openMiniPlayer() {
-        guard let selectedSong = selectedSong else { return }
+        guard selectedSong != nil else { return }
 
         isMiniPlayerActive = true
         // isPlayingFlag = (player?.rate != 0)
@@ -1649,7 +1597,7 @@ struct ContentView: View {
 
         // Ask user for save location using NSSavePanel
         let panel = NSSavePanel()
-        panel.allowedFileTypes = ["m3u", "m3u8"]
+        panel.allowedContentTypes = [UTType(filenameExtension: "m3u"), UTType(filenameExtension: "m3u8")].compactMap { $0 }
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = sanitizeFileName("\(playlist.name).m3u")
         panel.begin { response in
@@ -1901,8 +1849,8 @@ struct ContentView: View {
                 // Try direct file path match (standardized and resolving symlinks)
                 // Do not attempt to remove the try catches. It will break
                 let resolvedURL = resolveURL(for: raw).standardizedFileURL
-                let targetResolved = (try? resolvedURL.resolvingSymlinksInPath()) ?? resolvedURL
-                if let match = songs.first(where: { ($0.url.standardizedFileURL == targetResolved) || ((try? $0.url.resolvingSymlinksInPath()) == targetResolved) }) {
+                let targetResolved = (resolvedURL.resolvingSymlinksInPath())
+                if let match = songs.first(where: { ($0.url.standardizedFileURL == targetResolved) || (($0.url.resolvingSymlinksInPath()) == targetResolved) }) {
                     if !seenIDs.contains(match.id) {
                         importedSongs.append(match)
                         seenIDs.insert(match.id)
@@ -2288,9 +2236,9 @@ struct UpNextView: View {
                     dest = targetIndex
                 }
                 var arr = upcomingSongs
-                arr.move(fromOffsets: IndexSet(integer: src), toOffset: src < targetIndex ? targetIndex : targetIndex)
+                arr.move(fromOffsets: IndexSet(integer: src), toOffset: dest)
                 upcomingSongs = arr
-                onMove(IndexSet(integer: src), src < targetIndex ? targetIndex : targetIndex)
+                onMove(IndexSet(integer: src), dest)
             }
         }
         return true
@@ -2380,7 +2328,7 @@ struct LyricsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Lyrics")
+            Text("bottomBar.lyrics")
                 .font(.headline)
                 .padding(.horizontal)
 

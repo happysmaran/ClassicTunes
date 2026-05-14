@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Korean – 한국어)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "보관함";
+"sidebar.store"               = "스토어";
+"sidebar.playlists"           = "재생 목록";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "음악";
+"sidebar.movies"              = "영화";
+"sidebar.tvShows"             = "TV 프로그램";
+"sidebar.podcasts"            = "팟캐스트";
+"sidebar.radio"               = "라디오";
+"sidebar.purchased"           = "구입한 항목";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "새로운 재생 목록";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "곧 출시 예정";
+"alert.comingSoon.message"    = "%@이(가) 곧 출시됩니다.";
+"alert.ok"                    = "확인";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "음악 가져오기";
+"toolbar.search"              = "검색";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "가사";
+"bottomBar.upNext"            = "다음 재생";
+"bottomBar.importM3U"         = "M3U 가져오기";
+"bottomBar.exportM3U"         = "M3U 내보내기";
+
+// MARK: - Song list column headers
+"column.title"                = "제목";
+"column.artist"               = "아티스트";
+"column.album"                = "앨범";
+"column.genre"                = "장르";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "다음에 재생";
+"contextMenu.addToPlaylist"   = "재생 목록에 추가";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "재생";
+"playlistHeader.shuffle"      = "셔플";
+"playlistHeader.songCount"    = "%lld곡";
+"playlistHeader.songCountPlural" = "%lld곡";
+"playlistHeader.durationHours" = "%lld시간";
+"playlistHeader.durationHoursPlural" = "%lld시간";
+"playlistHeader.durationMinutes" = "%lld분";
+"playlistHeader.durationMinutesPlural" = "%lld분";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "사진 변경…";
+"artwork.removeCustomPhoto"   = "사용자화 사진 제거";
+"artwork.help"                = "클릭하여 재생 목록 사용자화 사진 설정";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "새로운 재생 목록";
+"newPlaylist.namePlaceholder" = "재생 목록 이름";
+"newPlaylist.nameLabel"       = "이름";
+"newPlaylist.cancel"          = "취소";
+"newPlaylist.create"          = "생성";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "재생 목록에 추가";
+"playlistSelection.message"   = "'%@'을(를) 추가할 재생 목록 선택:";
+"playlistSelection.empty"     = "사용 가능한 재생 목록 없음";
+"playlistSelection.cancel"    = "취소";
+"playlistSelection.songCount" = "%lld곡";
+
+// MARK: - Settings
+"settings.appearance"         = "화면 모드";
+"settings.appAppearance"      = "앱 화면 모드";
+"settings.system"             = "시스템";
+"settings.light"              = "라이트";
+"settings.dark"               = "다크";
+"settings.appearanceHelp.system" = "시스템 화면 모드를 따릅니다.";
+"settings.appearanceHelp.light"  = "앱이 항상 라이트 모드를 사용합니다.";
+"settings.appearanceHelp.dark"   = "앱이 항상 다크 모드를 사용합니다.";
+"settings.albumGrid"          = "앨범 그리드";
+"settings.albumGrid.background" = "배경";
+"settings.albumGrid.note"     = "앱이 다크 모드일 때 앨범 그리드는 이 설정과 관계없이 다크를 사용합니다.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "노래, 앨범, 아티스트, 영화 검색…";
+"store.searching"             = "iTunes Store 검색 중…";
+"store.noResults.title"       = "결과 없음";
+"store.noResults.subtitle"    = "다른 키워드나 미디어 유형을 사용해 보세요";
+"store.welcome.title"         = "iTunes Store에 오신 것을 환영합니다";
+"store.welcome.subtitle"      = "음악, 앨범, 영화, TV 프로그램 검색";
+"store.media.music"           = "음악";
+"store.media.movies"          = "영화";
+"store.media.tvShows"         = "TV 프로그램";
+"store.media.all"             = "전체";
+"store.free"                  = "무료";
+"store.preview"               = "미리 듣기";
+"store.stop"                  = "정지";
+"store.viewInStore"           = "Store에서 보기";
+"store.media.label"           = "미디어";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "가사";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld곡";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "미니 플레이어에서 열기";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "재생 목록 삭제";

@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (German – Deutsch)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "MEDIATHEK";
+"sidebar.store"               = "STORE";
+"sidebar.playlists"           = "WIEDERGABELISTEN";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "Musik";
+"sidebar.movies"              = "Filme";
+"sidebar.tvShows"             = "TV-Sendungen";
+"sidebar.podcasts"            = "Podcasts";
+"sidebar.radio"               = "Radio";
+"sidebar.purchased"           = "Käufe";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "Neue Wiedergabeliste";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "Demnächst verfügbar";
+"alert.comingSoon.message"    = "%@ kommt bald.";
+"alert.ok"                    = "OK";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "Musik importieren";
+"toolbar.search"              = "Suchen";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "Liedtexte";
+"bottomBar.upNext"            = "Als Nächstes";
+"bottomBar.importM3U"         = "M3U importieren";
+"bottomBar.exportM3U"         = "M3U exportieren";
+
+// MARK: - Song list column headers
+"column.title"                = "Titel";
+"column.artist"               = "Interpret";
+"column.album"                = "Album";
+"column.genre"                = "Genre";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "Als Nächstes abspielen";
+"contextMenu.addToPlaylist"   = "Zur Wiedergabeliste hinzufügen";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "Abspielen";
+"playlistHeader.shuffle"      = "Zufällig";
+"playlistHeader.songCount"    = "%lld Titel";
+"playlistHeader.songCountPlural" = "%lld Titel";
+"playlistHeader.durationHours" = "%lld Stunde";
+"playlistHeader.durationHoursPlural" = "%lld Stunden";
+"playlistHeader.durationMinutes" = "%lld Minute";
+"playlistHeader.durationMinutesPlural" = "%lld Minuten";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "Foto ändern…";
+"artwork.removeCustomPhoto"   = "Eigenes Foto entfernen";
+"artwork.help"                = "Klicken, um ein eigenes Wiedergabelistenbild festzulegen";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "Neue Wiedergabeliste";
+"newPlaylist.namePlaceholder" = "Name der Wiedergabeliste";
+"newPlaylist.nameLabel"       = "Name";
+"newPlaylist.cancel"          = "Abbrechen";
+"newPlaylist.create"          = "Erstellen";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "Zur Wiedergabeliste hinzufügen";
+"playlistSelection.message"   = "Wiedergabeliste für „%@\" auswählen:";
+"playlistSelection.empty"     = "Keine Wiedergabelisten verfügbar";
+"playlistSelection.cancel"    = "Abbrechen";
+"playlistSelection.songCount" = "%lld Titel";
+
+// MARK: - Settings
+"settings.appearance"         = "Erscheinungsbild";
+"settings.appAppearance"      = "App-Erscheinungsbild";
+"settings.system"             = "System";
+"settings.light"              = "Hell";
+"settings.dark"               = "Dunkel";
+"settings.appearanceHelp.system" = "Folgt dem Systemerscheinungsbild.";
+"settings.appearanceHelp.light"  = "Erzwingt immer das helle Erscheinungsbild.";
+"settings.appearanceHelp.dark"   = "Erzwingt immer das dunkle Erscheinungsbild.";
+"settings.albumGrid"          = "Albumraster";
+"settings.albumGrid.background" = "Hintergrund";
+"settings.albumGrid.note"     = "Wenn die App das dunkle Erscheinungsbild verwendet, nutzt das Albumraster unabhängig von dieser Einstellung den dunklen Modus.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "Titel, Alben, Interpreten, Filme suchen …";
+"store.searching"             = "iTunes Store wird durchsucht …";
+"store.noResults.title"       = "Keine Ergebnisse";
+"store.noResults.subtitle"    = "Andere Suchbegriffe oder Medientyp ausprobieren";
+"store.welcome.title"         = "Willkommen im iTunes Store";
+"store.welcome.subtitle"      = "Musik, Alben, Filme und TV-Sendungen suchen";
+"store.media.music"           = "Musik";
+"store.media.movies"          = "Filme";
+"store.media.tvShows"         = "TV-Sendungen";
+"store.media.all"             = "Alle";
+"store.free"                  = "Kostenlos";
+"store.preview"               = "Vorschau";
+"store.stop"                  = "Stopp";
+"store.viewInStore"           = "Im Store anzeigen";
+"store.media.label"           = "Medien";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "Liedtexte";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld Titel";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "Im Mini-Player öffnen";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "Wiedergabeliste löschen";

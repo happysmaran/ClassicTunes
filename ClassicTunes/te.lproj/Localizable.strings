@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Telugu – తెలుగు)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "లైబ్రరీ";
+"sidebar.store"               = "స్టోర్";
+"sidebar.playlists"           = "ప్లేలిస్ట్‌లు";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "సంగీతం";
+"sidebar.movies"              = "సినిమాలు";
+"sidebar.tvShows"             = "టీవీ షోలు";
+"sidebar.podcasts"            = "పాడ్‌కాస్ట్‌లు";
+"sidebar.radio"               = "రేడియో";
+"sidebar.purchased"           = "కొనుగోలు చేసినవి";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "కొత్త ప్లేలిస్ట్";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "త్వరలో వస్తోంది";
+"alert.comingSoon.message"    = "%@ త్వరలో వస్తోంది.";
+"alert.ok"                    = "సరే";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "సంగీతాన్ని దిగుమతి చేయండి";
+"toolbar.search"              = "వెతకండి";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "పాట మాటలు";
+"bottomBar.upNext"            = "తర్వాత ఏమిటి";
+"bottomBar.importM3U"         = "M3U దిగుమతి";
+"bottomBar.exportM3U"         = "M3U ఎగుమతి";
+
+// MARK: - Song list column headers
+"column.title"                = "శీర్షిక";
+"column.artist"               = "కళాకారుడు";
+"column.album"                = "ఆల్బమ్";
+"column.genre"                = "శైలి";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "తర్వాత ప్లే చేయి";
+"contextMenu.addToPlaylist"   = "ప్లేలిస్ట్‌కు జోడించు";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "ప్లే చేయి";
+"playlistHeader.shuffle"      = "షఫుల్";
+"playlistHeader.songCount"    = "%lld పాట";
+"playlistHeader.songCountPlural" = "%lld పాటలు";
+"playlistHeader.durationHours" = "%lld గంట";
+"playlistHeader.durationHoursPlural" = "%lld గంటలు";
+"playlistHeader.durationMinutes" = "%lld నిమిషం";
+"playlistHeader.durationMinutesPlural" = "%lld నిమిషాలు";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "ఫోటో మార్చు…";
+"artwork.removeCustomPhoto"   = "కస్టమ్ ఫోటో తొలగించు";
+"artwork.help"                = "కస్టమ్ ప్లేలిస్ట్ ఫోటో సెట్ చేయడానికి క్లిక్ చేయండి";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "కొత్త ప్లేలిస్ట్";
+"newPlaylist.namePlaceholder" = "ప్లేలిస్ట్ పేరు";
+"newPlaylist.nameLabel"       = "పేరు";
+"newPlaylist.cancel"          = "రద్దు చేయి";
+"newPlaylist.create"          = "సృష్టించు";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "ప్లేలిస్ట్‌కు జోడించు";
+"playlistSelection.message"   = "'%@'ని జోడించడానికి ప్లేలిస్ట్ ఎంచుకోండి:";
+"playlistSelection.empty"     = "ప్లేలిస్ట్‌లు ఏవీ అందుబాటులో లేవు";
+"playlistSelection.cancel"    = "రద్దు చేయి";
+"playlistSelection.songCount" = "%lld పాటలు";
+
+// MARK: - Settings
+"settings.appearance"         = "రూపం";
+"settings.appAppearance"      = "యాప్ రూపం";
+"settings.system"             = "సిస్టమ్";
+"settings.light"              = "లైట్";
+"settings.dark"               = "డార్క్";
+"settings.appearanceHelp.system" = "సిస్టమ్ రూపాన్ని అనుసరిస్తుంది.";
+"settings.appearanceHelp.light"  = "యాప్ ఎల్లప్పుడూ లైట్ రూపాన్ని ఉపయోగిస్తుంది.";
+"settings.appearanceHelp.dark"   = "యాప్ ఎల్లప్పుడూ డార్క్ రూపాన్ని ఉపయోగిస్తుంది.";
+"settings.albumGrid"          = "ఆల్బమ్ గ్రిడ్";
+"settings.albumGrid.background" = "నేపథ్యం";
+"settings.albumGrid.note"     = "యాప్ డార్క్ రూపంలో ఉన్నప్పుడు, ఈ సెట్టింగ్ తో నిమిత్తం లేకుండా ఆల్బమ్ గ్రిడ్ డార్క్‌ని ఉపయోగిస్తుంది.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "పాటలు, ఆల్బమ్‌లు, కళాకారులు, సినిమాలు వెతకండి…";
+"store.searching"             = "iTunes Store వెతుకుతోంది…";
+"store.noResults.title"       = "ఫలితాలు కనుగొనబడలేదు";
+"store.noResults.subtitle"    = "వేరే కీవర్డులు లేదా మీడియా రకాన్ని ప్రయత్నించండి";
+"store.welcome.title"         = "iTunes Store కి స్వాగతం";
+"store.welcome.subtitle"      = "సంగీతం, ఆల్బమ్‌లు, సినిమాలు మరియు టీవీ షోలు వెతకండి";
+"store.media.music"           = "సంగీతం";
+"store.media.movies"          = "సినిమాలు";
+"store.media.tvShows"         = "టీవీ షోలు";
+"store.media.all"             = "అన్నీ";
+"store.free"                  = "ఉచితం";
+"store.preview"               = "ప్రివ్యూ";
+"store.stop"                  = "ఆపు";
+"store.viewInStore"           = "స్టోర్‌లో చూడు";
+"store.media.label"           = "మీడియా";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "పాట మాటలు";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld పాటలు";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "మినీ ప్లేయర్‌లో తెరవండి";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "ప్లేలిస్ట్ తొలగించు";

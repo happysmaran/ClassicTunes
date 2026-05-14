@@ -97,7 +97,7 @@ struct TopToolbarView: View {
         .padding(.horizontal)
         .padding(.vertical, 4)
         .contextMenu {
-            Button("Open in MiniPlayer") {
+            Button("miniPlayer.openIn") {
                 onMiniPlayerToggle?()
             }
         }
@@ -170,11 +170,11 @@ struct TopToolbarView: View {
 
     private var searchAndImportGroup: some View {
         HStack {
-            TextField("Search", text: $searchText)
+            TextField("toolbar.search", text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 160)
 
-            Button("Import Music") {
+            Button("toolbar.importMusic") {
                 showFileImporter = true
             }
         }

@@ -1,0 +1,116 @@
+/* ============================================================
+   ClassicTunes – Localizable.strings  (English – Base)
+   ============================================================ */
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "LIBRARY";
+"sidebar.store"               = "STORE";
+"sidebar.playlists"           = "PLAYLISTS";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "Music";
+"sidebar.movies"              = "Movies";
+"sidebar.tvShows"             = "TV Shows";
+"sidebar.podcasts"            = "Podcasts";
+"sidebar.radio"               = "Radio";
+"sidebar.purchased"           = "Purchased";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "New Playlist";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "Coming Soon";
+"alert.comingSoon.message %@"    = "%@ is coming soon.";
+"alert.ok"                    = "OK";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "Import Music";
+"toolbar.search"              = "Search";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "Lyrics";
+"bottomBar.upNext"            = "Up Next";
+"bottomBar.importM3U"         = "Import M3U";
+"bottomBar.exportM3U"         = "Export M3U";
+
+// MARK: - Song list column headers
+"column.title"                = "Title";
+"column.artist"               = "Artist";
+"column.album"                = "Album";
+"column.genre"                = "Genre";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "Play Next";
+"contextMenu.addToPlaylist"   = "Add to Playlist";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "Play";
+"playlistHeader.shuffle"      = "Shuffle";
+"playlistHeader.songCount"    = "%lld song";
+"playlistHeader.songCountPlural" = "%lld songs";
+"playlistHeader.durationHours" = "%lld hour";
+"playlistHeader.durationHoursPlural" = "%lld hours";
+"playlistHeader.durationMinutes" = "%lld minute";
+"playlistHeader.durationMinutesPlural" = "%lld minutes";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "Change Photo…";
+"artwork.removeCustomPhoto"   = "Remove Custom Photo";
+"artwork.help"                = "Click to set a custom playlist photo";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "New Playlist";
+"newPlaylist.namePlaceholder" = "Playlist name";
+"newPlaylist.nameLabel"       = "Name";
+"newPlaylist.cancel"          = "Cancel";
+"newPlaylist.create"          = "Create";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "Add to Playlist";
+"playlistSelection.message"   = "Select a playlist to add '%@' to:";
+"playlistSelection.empty"     = "No playlists available";
+"playlistSelection.cancel"    = "Cancel";
+"playlistSelection.songCount" = "%lld songs";
+
+// MARK: - Settings
+"settings.appearance"         = "Appearance";
+"settings.appAppearance"      = "App Appearance";
+"settings.system"             = "System";
+"settings.light"              = "Light";
+"settings.dark"               = "Dark";
+"settings.appearanceHelp.system" = "Follows the system appearance.";
+"settings.appearanceHelp.light"  = "Forces the app to always use Light appearance.";
+"settings.appearanceHelp.dark"   = "Forces the app to always use Dark appearance.";
+"settings.albumGrid"          = "Album Grid";
+"settings.albumGrid.background" = "Background";
+"settings.albumGrid.note"     = "When the app is in Dark appearance, the album grid will use Dark regardless of this setting.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "Search songs, albums, artists, movies…";
+"store.searching"             = "Searching iTunes Store…";
+"store.noResults.title"       = "No results found";
+"store.noResults.subtitle"    = "Try different keywords or media type";
+"store.welcome.title"         = "Welcome to the iTunes Store";
+"store.welcome.subtitle"      = "Search for music, albums, movies, and TV shows";
+"store.media.music"           = "Music";
+"store.media.movies"          = "Movies";
+"store.media.tvShows"         = "TV Shows";
+"store.media.all"             = "All";
+"store.free"                  = "Free";
+"store.preview"               = "Preview";
+"store.stop"                  = "Stop";
+"store.viewInStore"           = "View in Store";
+"store.media.label"           = "Media";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "Lyrics";
+
+// MARK: - Album grid / detail
+"albumDetail.songs %lld"           = "%lld songs";
+
+// MARK: - Mini player / Open in Mini Player
+"miniPlayer.openIn"           = "Open in MiniPlayer";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "Delete Playlist";

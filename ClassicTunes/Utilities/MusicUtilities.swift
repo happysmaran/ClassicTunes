@@ -1,5 +1,5 @@
 import SwiftUI
-import AVKit
+import AVFoundation
 
 extension Color {
     static let itunesSidebar = Color(NSColor(calibratedWhite: 0.9, alpha: 1.0))
@@ -36,13 +36,12 @@ func loadSongs(from folderURL: URL) async -> [Song] {
     }
 }
 
-func getArtwork(from url: URL) -> NSImage? {
+func getArtwork(from url: URL) async -> NSImage? {
     let asset = AVURLAsset(url: url)
-    let metadata = asset.commonMetadata
-
+    guard let metadata = try? await asset.load(.commonMetadata) else { return nil }
     for item in metadata {
-        if item.commonKey?.rawValue == "artwork",
-           let data = item.value as? Data,
+        if item.commonKey == .commonKeyArtwork,
+           let data = try? await item.load(.value) as? Data,
            let image = NSImage(data: data) {
             return image
         }

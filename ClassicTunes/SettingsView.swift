@@ -6,11 +6,11 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section(header: Text("Appearance")) {
-                Picker("App Appearance", selection: $appearanceManager.appAppearance) {
-                    Text("System").tag("system")
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
+            Section(header: Text("settings.appearance")) {
+                Picker("settings.appAppearance", selection: $appearanceManager.appAppearance) {
+                    Text("settings.system").tag("system")
+                    Text("settings.light").tag("light")
+                    Text("settings.dark").tag("dark")
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: appearanceManager.appAppearance) { _ in
@@ -24,13 +24,13 @@ struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Section(header: Text("Album Grid")) {
-                Picker("Background", selection: $albumGridBackgroundStyle) {
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
+            Section(header: Text("settings.albumGrid")) {
+                Picker("settings.albumGrid.background", selection: $albumGridBackgroundStyle) {
+                    Text("settings.light").tag("light")
+                    Text("settings.dark").tag("dark")
                 }
                 .pickerStyle(.segmented)
-                Text("When the app is in Dark appearance, the album grid will use Dark regardless of this setting.")
+                Text("settings.albumGrid.note")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -42,9 +42,9 @@ struct SettingsView: View {
 
     private var helpText: String {
         switch appearanceManager.appAppearance {
-        case "light": return "Forces the app to always use Light appearance."
-        case "dark": return "Forces the app to always use Dark appearance."
-        default: return "Follows the system appearance."
+        case "light": return NSLocalizedString("settings.appearanceHelp.light", comment: "light")
+        case "dark": return NSLocalizedString("settings.appearanceHelp.dark", comment: "dark")
+        default: return NSLocalizedString("settings.appearanceHelp.system", comment: "system")
         }
     }
 }

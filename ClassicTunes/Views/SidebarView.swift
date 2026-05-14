@@ -19,63 +19,63 @@ struct SidebarView: View {
 
     var body: some View {
         List {
-            Section("LIBRARY") {
+            Section("sidebar.library") {
                 Button(action: {
                     selectedPlaylistID = nil
                     libraryActive = true
                     showITunesStore = false
                 }) {
-                    Label("Music", systemImage: "music.note")
+                    Label("sidebar.music", systemImage: "music.note")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: libraryActive && selectedPlaylistID == nil))
 
                 Button(action: { comingSoonSection = "Movies"; showComingSoon = true }) {
-                    Label("Movies", systemImage: "film")
+                    Label("sidebar.movies", systemImage: "film")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
                 Button(action: { comingSoonSection = "TV Shows"; showComingSoon = true }) {
-                    Label("TV Shows", systemImage: "tv")
+                    Label("sidebar.tvShows", systemImage: "tv")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
                 Button(action: { comingSoonSection = "Podcasts"; showComingSoon = true }) {
-                    Label("Podcasts", systemImage: "mic")
+                    Label("sidebar.podcasts", systemImage: "mic")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
                 Button(action: { comingSoonSection = "Radio"; showComingSoon = true }) {
-                    Label("Radio", systemImage: "radio")
+                    Label("sidebar.radio", systemImage: "radio")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
                 Button(action: { comingSoonSection = "Purchased"; showComingSoon = true }) {
-                    Label("Purchased", systemImage: "purchased")
+                    Label("sidebar.purchased", systemImage: "purchased")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
             }
             
-            Section("STORE") {
+            Section("sidebar.store") {
                 Button(action: {
                     selectedPlaylistID = nil
                     libraryActive = false
                     showITunesStore = true
                 }) {
-                    Label("iTunes Store", systemImage: "bag")
+                    Label("sidebar.iTunesStore", systemImage: "bag")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: showITunesStore))
             }
             
-            Section("PLAYLISTS") {
+            Section("sidebar.playlists") {
                 Button(action: { comingSoonSection = "Genius"; showComingSoon = true }) {
-                    Label("Genius", systemImage: "atom")
+                    Label("sidebar.genius", systemImage: "atom")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
@@ -97,68 +97,75 @@ struct SidebarView: View {
                     .onDrop(of: [UTType.json], isTargeted: Binding(get: { dropHoverPlaylistID == playlist.id }, set: { isTargeted in
                         dropHoverPlaylistID = isTargeted ? playlist.id : nil
                     })) { providers in
-                        var handled = false
-                        let group = DispatchGroup()
-
-                        for p in providers where p.hasItemConformingToTypeIdentifier(UTType.json.identifier) {
-                            group.enter()
-                            p.loadItem(forTypeIdentifier: UTType.json.identifier, options: nil) { item, _ in
-                                defer { group.leave() }
-                                guard let data = (item as? Data) ?? (item as? URL).flatMap({ try? Data(contentsOf: $0) }) else { return }
-
-                                if let song = try? JSONDecoder().decode(Song.self, from: data) {
-                                    DispatchQueue.main.async {
-                                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
-                                            if !userPlaylists[idx].songs.contains(where: { $0.id == song.id }) {
-                                                withAnimation { userPlaylists[idx].songs.append(song) }
-                                            }
-                                        }
-                                    }
-                                    handled = true
-                                } else if let list = try? JSONDecoder().decode([Song].self, from: data) {
-                                    DispatchQueue.main.async {
-                                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
-                                            let existing = Set(userPlaylists[idx].songs.map { $0.id })
-                                            let toAdd = list.filter { !existing.contains($0.id) }
-                                            if !toAdd.isEmpty {
-                                                withAnimation { userPlaylists[idx].songs.append(contentsOf: toAdd) }
-                                            }
-                                        }
-                                    }
-                                    handled = true
-                                }
-                            }
-                        }
-
-                        group.notify(queue: .main) {
-                            // Clear hover state and select playlist so user sees updates immediately
-                            withAnimation { dropHoverPlaylistID = nil }
-                            if handled {
-                                selectedPlaylistID = playlist.id
-                                libraryActive = false
-                                showITunesStore = false
-                            }
-                        }
-
-                        return handled
+                        // The compiler can now easily type-check this single function call
+                        return handleDrop(providers: providers, for: playlist)
                     }
                 }
                 
                 Button(action: {
                     showNewPlaylistSheet = true
                 }) {
-                    Label("New Playlist", systemImage: "plus")
+                    Label("sidebar.newPlaylist", systemImage: "plus")
                 }
             }
         }
         .listStyle(SidebarListStyle())
-        .background(Color.itunesSidebar)
+        .background(Color.itunesSidebar) // Ensure this custom color is defined in your assets or extensions
         .foregroundColor(.primary)
-        .alert("Coming Soon", isPresented: $showComingSoon) {
-            Button("OK", role: .cancel) { }
+        .alert("alert.comingSoon.title", isPresented: $showComingSoon) {
+            Button("alert.ok", role: .cancel) { }
         } message: {
-            Text("\(comingSoonSection) is coming soon.")
+            Text(String(format: NSLocalizedString("alert.comingSoon.message", comment: "comingSoon"), comingSoonSection))
         }
+    }
+    
+    // Stupid type-checking thing why aaaaaaaaaaaaaaaaaaaaaaaaaaa
+    
+    private func handleDrop(providers: [NSItemProvider], for playlist: Playlist) -> Bool {
+        var handled = false
+        let group = DispatchGroup()
+
+        for p in providers where p.hasItemConformingToTypeIdentifier(UTType.json.identifier) {
+            group.enter()
+            p.loadItem(forTypeIdentifier: UTType.json.identifier, options: nil) { item, _ in
+                defer { group.leave() }
+                guard let data = (item as? Data) ?? (item as? URL).flatMap({ try? Data(contentsOf: $0) }) else { return }
+
+                if let song = try? JSONDecoder().decode(Song.self, from: data) {
+                    Task { @MainActor in
+                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
+                            if !userPlaylists[idx].songs.contains(where: { $0.id == song.id }) {
+                                withAnimation { userPlaylists[idx].songs.append(song) }
+                            }
+                        }
+                    }
+                    handled = true
+                } else if let list = try? JSONDecoder().decode([Song].self, from: data) {
+                    Task { @MainActor in
+                        if let idx = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
+                            let existing = Set(userPlaylists[idx].songs.map { $0.id })
+                            let toAdd = list.filter { !existing.contains($0.id) }
+                            if !toAdd.isEmpty {
+                                withAnimation { userPlaylists[idx].songs.append(contentsOf: toAdd) }
+                            }
+                        }
+                    }
+                    handled = true
+                }
+            }
+        }
+
+        group.notify(queue: .main) {
+            // Clear hover state and select playlist so user sees updates immediately
+            withAnimation { dropHoverPlaylistID = nil }
+            if handled {
+                selectedPlaylistID = playlist.id
+                libraryActive = false
+                showITunesStore = false
+            }
+        }
+
+        return handled
     }
 }
 
@@ -168,13 +175,11 @@ struct ITunesSidebarButtonStyle: ButtonStyle {
 
     private var selectionColors: [Color] {
         if colorScheme == .dark {
-            // Dark mode: deeper blues with subtle contrast
             return [
                 Color(red: 0.17, green: 0.28, blue: 0.52),
                 Color(red: 0.10, green: 0.20, blue: 0.42)
             ]
         } else {
-            // Light mode: classic iTunes blue
             return [
                 Color(red: 0.65, green: 0.80, blue: 1.0),
                 Color(red: 0.45, green: 0.65, blue: 1.0)
@@ -194,7 +199,6 @@ struct ITunesSidebarButtonStyle: ButtonStyle {
     @ViewBuilder
     private func background(isPressed: Bool) -> some View {
         if selected {
-            // Classic selection look
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -209,7 +213,6 @@ struct ITunesSidebarButtonStyle: ButtonStyle {
                 )
                 .shadow(color: Color.black.opacity(0.12), radius: 0.5, x: 0, y: 1)
         } else if isPressed {
-            // Pressed feedback
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(Color.black.opacity(colorScheme == .dark ? 0.35 : 0.08))
         } else {

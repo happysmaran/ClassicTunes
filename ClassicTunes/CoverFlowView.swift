@@ -272,7 +272,6 @@ struct CoverFlowView: View {
             ForEach(visibleAlbums, id: \.globalIndex) { item in
                 let index = item.globalIndex
                 let album = item.album
-                let isCenter = index == currentIndex
 
                 let xPosition = calculateXPosition(
                     for: index,
@@ -609,3 +608,4 @@ struct ClassicCoverFlowSlider: View {
         .frame(height: 24) // Comfortable hit target height
     }
 }
+

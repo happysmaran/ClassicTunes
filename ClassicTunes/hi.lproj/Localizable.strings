@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Hindi – हिन्दी)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "लाइब्रेरी";
+"sidebar.store"               = "स्टोर";
+"sidebar.playlists"           = "प्लेलिस्ट";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "संगीत";
+"sidebar.movies"              = "फ़िल्में";
+"sidebar.tvShows"             = "टीवी शो";
+"sidebar.podcasts"            = "पॉडकास्ट";
+"sidebar.radio"               = "रेडियो";
+"sidebar.purchased"           = "ख़रीदा गया";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "नई प्लेलिस्ट";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "जल्द आ रहा है";
+"alert.comingSoon.message"    = "%@ जल्द आ रहा है।";
+"alert.ok"                    = "ठीक है";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "संगीत आयात करें";
+"toolbar.search"              = "खोजें";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "गीत के बोल";
+"bottomBar.upNext"            = "आगे क्या";
+"bottomBar.importM3U"         = "M3U आयात करें";
+"bottomBar.exportM3U"         = "M3U निर्यात करें";
+
+// MARK: - Song list column headers
+"column.title"                = "शीर्षक";
+"column.artist"               = "कलाकार";
+"column.album"                = "एल्बम";
+"column.genre"                = "शैली";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "अगला चलाएँ";
+"contextMenu.addToPlaylist"   = "प्लेलिस्ट में जोड़ें";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "चलाएँ";
+"playlistHeader.shuffle"      = "शफ़ल";
+"playlistHeader.songCount"    = "%lld गाना";
+"playlistHeader.songCountPlural" = "%lld गाने";
+"playlistHeader.durationHours" = "%lld घंटा";
+"playlistHeader.durationHoursPlural" = "%lld घंटे";
+"playlistHeader.durationMinutes" = "%lld मिनट";
+"playlistHeader.durationMinutesPlural" = "%lld मिनट";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "फ़ोटो बदलें…";
+"artwork.removeCustomPhoto"   = "कस्टम फ़ोटो हटाएँ";
+"artwork.help"                = "कस्टम प्लेलिस्ट फ़ोटो सेट करने के लिए क्लिक करें";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "नई प्लेलिस्ट";
+"newPlaylist.namePlaceholder" = "प्लेलिस्ट का नाम";
+"newPlaylist.nameLabel"       = "नाम";
+"newPlaylist.cancel"          = "रद्द करें";
+"newPlaylist.create"          = "बनाएँ";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "प्लेलिस्ट में जोड़ें";
+"playlistSelection.message"   = "'%@' जोड़ने के लिए प्लेलिस्ट चुनें:";
+"playlistSelection.empty"     = "कोई प्लेलिस्ट उपलब्ध नहीं";
+"playlistSelection.cancel"    = "रद्द करें";
+"playlistSelection.songCount" = "%lld गाने";
+
+// MARK: - Settings
+"settings.appearance"         = "दिखावट";
+"settings.appAppearance"      = "ऐप की दिखावट";
+"settings.system"             = "सिस्टम";
+"settings.light"              = "हल्का";
+"settings.dark"               = "गहरा";
+"settings.appearanceHelp.system" = "सिस्टम की दिखावट का अनुसरण करता है।";
+"settings.appearanceHelp.light"  = "ऐप को हमेशा हल्की दिखावट में रखता है।";
+"settings.appearanceHelp.dark"   = "ऐप को हमेशा गहरी दिखावट में रखता है।";
+"settings.albumGrid"          = "एल्बम ग्रिड";
+"settings.albumGrid.background" = "पृष्ठभूमि";
+"settings.albumGrid.note"     = "जब ऐप गहरी दिखावट में हो, तो इस सेटिंग की परवाह किए बिना एल्बम ग्रिड गहरा रहेगा।";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "गाने, एल्बम, कलाकार, फ़िल्में खोजें…";
+"store.searching"             = "iTunes Store खोजा जा रहा है…";
+"store.noResults.title"       = "कोई परिणाम नहीं मिला";
+"store.noResults.subtitle"    = "अलग कीवर्ड या मीडिया प्रकार आज़माएँ";
+"store.welcome.title"         = "iTunes Store में आपका स्वागत है";
+"store.welcome.subtitle"      = "संगीत, एल्बम, फ़िल्में और टीवी शो खोजें";
+"store.media.music"           = "संगीत";
+"store.media.movies"          = "फ़िल्में";
+"store.media.tvShows"         = "टीवी शो";
+"store.media.all"             = "सभी";
+"store.free"                  = "निःशुल्क";
+"store.preview"               = "पूर्वावलोकन";
+"store.stop"                  = "रोकें";
+"store.viewInStore"           = "स्टोर में देखें";
+"store.media.label"           = "मीडिया";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "गीत के बोल";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld गाने";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "मिनी प्लेयर में खोलें";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "प्लेलिस्ट हटाएँ";

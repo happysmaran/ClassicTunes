@@ -7,25 +7,25 @@ struct NewPlaylistSheet: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("New Playlist")
+            Text("newPlaylist.title")
                 .font(.title2)
                 .bold()
             
             VStack(alignment: .leading, spacing: 5) {
-                Text("Name")
+                Text("newPlaylist.nameLabel")
                     .font(.headline)
-                TextField("Playlist name", text: $playlistName)
+                TextField("newPlaylist.namePlaceholder", text: $playlistName)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
             }
             
             HStack {
                 Spacer()
-                Button("Cancel") {
+                Button("newPlaylist.cancel") {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Create") {
+                Button("newPlaylist.create") {
                     createPlaylist()
                 }
                 .disabled(playlistName.isEmpty)

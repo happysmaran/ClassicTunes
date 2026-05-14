@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Chinese Simplified – 简体中文)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "媒体库";
+"sidebar.store"               = "商店";
+"sidebar.playlists"           = "播放列表";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "音乐";
+"sidebar.movies"              = "电影";
+"sidebar.tvShows"             = "电视节目";
+"sidebar.podcasts"            = "播客";
+"sidebar.radio"               = "广播";
+"sidebar.purchased"           = "已购项目";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "新建播放列表";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "即将推出";
+"alert.comingSoon.message"    = "%@ 即将推出。";
+"alert.ok"                    = "好";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "导入音乐";
+"toolbar.search"              = "搜索";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "歌词";
+"bottomBar.upNext"            = "即将播放";
+"bottomBar.importM3U"         = "导入 M3U";
+"bottomBar.exportM3U"         = "导出 M3U";
+
+// MARK: - Song list column headers
+"column.title"                = "标题";
+"column.artist"               = "艺人";
+"column.album"                = "专辑";
+"column.genre"                = "风格";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "下一首播放";
+"contextMenu.addToPlaylist"   = "添加到播放列表";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "播放";
+"playlistHeader.shuffle"      = "随机播放";
+"playlistHeader.songCount"    = "%lld 首歌曲";
+"playlistHeader.songCountPlural" = "%lld 首歌曲";
+"playlistHeader.durationHours" = "%lld 小时";
+"playlistHeader.durationHoursPlural" = "%lld 小时";
+"playlistHeader.durationMinutes" = "%lld 分钟";
+"playlistHeader.durationMinutesPlural" = "%lld 分钟";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "更改照片…";
+"artwork.removeCustomPhoto"   = "移除自定义照片";
+"artwork.help"                = "点按以设置自定义播放列表封面";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "新建播放列表";
+"newPlaylist.namePlaceholder" = "播放列表名称";
+"newPlaylist.nameLabel"       = "名称";
+"newPlaylist.cancel"          = "取消";
+"newPlaylist.create"          = "创建";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "添加到播放列表";
+"playlistSelection.message"   = "选择要将\"%@\"添加到的播放列表：";
+"playlistSelection.empty"     = "没有可用的播放列表";
+"playlistSelection.cancel"    = "取消";
+"playlistSelection.songCount" = "%lld 首歌曲";
+
+// MARK: - Settings
+"settings.appearance"         = "外观";
+"settings.appAppearance"      = "应用外观";
+"settings.system"             = "跟随系统";
+"settings.light"              = "浅色";
+"settings.dark"               = "深色";
+"settings.appearanceHelp.system" = "跟随系统外观。";
+"settings.appearanceHelp.light"  = "强制应用始终使用浅色外观。";
+"settings.appearanceHelp.dark"   = "强制应用始终使用深色外观。";
+"settings.albumGrid"          = "专辑网格";
+"settings.albumGrid.background" = "背景";
+"settings.albumGrid.note"     = "当应用处于深色外观时，专辑网格将无论此设置如何都使用深色。";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "搜索歌曲、专辑、艺人、电影……";
+"store.searching"             = "正在搜索 iTunes Store……";
+"store.noResults.title"       = "未找到结果";
+"store.noResults.subtitle"    = "请尝试其他关键词或媒体类型";
+"store.welcome.title"         = "欢迎来到 iTunes Store";
+"store.welcome.subtitle"      = "搜索音乐、专辑、电影和电视节目";
+"store.media.music"           = "音乐";
+"store.media.movies"          = "电影";
+"store.media.tvShows"         = "电视节目";
+"store.media.all"             = "全部";
+"store.free"                  = "免费";
+"store.preview"               = "试听";
+"store.stop"                  = "停止";
+"store.viewInStore"           = "在商店中查看";
+"store.media.label"           = "媒体";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "歌词";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld 首歌曲";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "在迷你播放器中打开";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "删除播放列表";

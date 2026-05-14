@@ -1,5 +1,5 @@
 import Foundation
-import AVKit
+import AVFoundation
 import AppKit
 
 struct Song: Identifiable, Codable, Hashable {
@@ -49,7 +49,9 @@ struct Song: Identifiable, Codable, Hashable {
         self.playCount = playCount
         self.artworkData = artworkData
     }
+}
 
+extension Song {
     var artworkImage: NSImage? {
         guard let data = artworkData else { return nil }
         return NSImage(data: data)
@@ -77,7 +79,7 @@ extension Song {
         var artworkData: Data?   = nil
 
         for item in commonItems {
-            // `.load(.value)` is the modern replacement for the deprecated `.value` property
+            // '.load(.value)' is the modern replacement for the deprecated `.value` property
             guard let value = try? await item.load(.value) else { continue }
 
             switch item.commonKey {

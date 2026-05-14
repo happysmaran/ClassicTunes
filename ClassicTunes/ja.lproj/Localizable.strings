@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Japanese – 日本語)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "ライブラリ";
+"sidebar.store"               = "ストア";
+"sidebar.playlists"           = "プレイリスト";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "ミュージック";
+"sidebar.movies"              = "映画";
+"sidebar.tvShows"             = "テレビ番組";
+"sidebar.podcasts"            = "ポッドキャスト";
+"sidebar.radio"               = "ラジオ";
+"sidebar.purchased"           = "購入済み";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "新規プレイリスト";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "近日公開";
+"alert.comingSoon.message"    = "%@ は近日公開予定です。";
+"alert.ok"                    = "OK";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "ミュージックを読み込む";
+"toolbar.search"              = "検索";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "歌詞";
+"bottomBar.upNext"            = "次に再生";
+"bottomBar.importM3U"         = "M3Uを読み込む";
+"bottomBar.exportM3U"         = "M3Uを書き出す";
+
+// MARK: - Song list column headers
+"column.title"                = "タイトル";
+"column.artist"               = "アーティスト";
+"column.album"                = "アルバム";
+"column.genre"                = "ジャンル";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "次に再生";
+"contextMenu.addToPlaylist"   = "プレイリストに追加";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "再生";
+"playlistHeader.shuffle"      = "シャッフル";
+"playlistHeader.songCount"    = "%lld曲";
+"playlistHeader.songCountPlural" = "%lld曲";
+"playlistHeader.durationHours" = "%lld時間";
+"playlistHeader.durationHoursPlural" = "%lld時間";
+"playlistHeader.durationMinutes" = "%lld分";
+"playlistHeader.durationMinutesPlural" = "%lld分";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "写真を変更…";
+"artwork.removeCustomPhoto"   = "カスタム写真を削除";
+"artwork.help"                = "クリックしてプレイリストのカスタム写真を設定";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "新規プレイリスト";
+"newPlaylist.namePlaceholder" = "プレイリスト名";
+"newPlaylist.nameLabel"       = "名前";
+"newPlaylist.cancel"          = "キャンセル";
+"newPlaylist.create"          = "作成";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "プレイリストに追加";
+"playlistSelection.message"   = "「%@」を追加するプレイリストを選択：";
+"playlistSelection.empty"     = "利用可能なプレイリストがありません";
+"playlistSelection.cancel"    = "キャンセル";
+"playlistSelection.songCount" = "%lld曲";
+
+// MARK: - Settings
+"settings.appearance"         = "外観";
+"settings.appAppearance"      = "アプリの外観";
+"settings.system"             = "システム";
+"settings.light"              = "ライト";
+"settings.dark"               = "ダーク";
+"settings.appearanceHelp.system" = "システムの外観に従います。";
+"settings.appearanceHelp.light"  = "常にライト外観を使用します。";
+"settings.appearanceHelp.dark"   = "常にダーク外観を使用します。";
+"settings.albumGrid"          = "アルバムグリッド";
+"settings.albumGrid.background" = "背景";
+"settings.albumGrid.note"     = "アプリがダーク外観のとき、この設定に関わらずアルバムグリッドはダークになります。";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "曲、アルバム、アーティスト、映画を検索…";
+"store.searching"             = "iTunes Storeを検索中…";
+"store.noResults.title"       = "結果が見つかりません";
+"store.noResults.subtitle"    = "別のキーワードまたはメディアタイプをお試しください";
+"store.welcome.title"         = "iTunes Storeへようこそ";
+"store.welcome.subtitle"      = "ミュージック、アルバム、映画、テレビ番組を検索";
+"store.media.music"           = "ミュージック";
+"store.media.movies"          = "映画";
+"store.media.tvShows"         = "テレビ番組";
+"store.media.all"             = "すべて";
+"store.free"                  = "無料";
+"store.preview"               = "プレビュー";
+"store.stop"                  = "停止";
+"store.viewInStore"           = "Storeで見る";
+"store.media.label"           = "メディア";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "歌詞";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld曲";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "ミニプレーヤーで開く";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "プレイリストを削除";

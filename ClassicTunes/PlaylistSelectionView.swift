@@ -8,16 +8,16 @@ struct PlaylistSelectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Add to Playlist")
+            Text("playlistSelection.title")
                 .font(.headline)
                 .padding(.top)
             
-            Text("Select a playlist to add '\(song.title)' to:")
+            Text("playlistSelection.message")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
             if playlistManager.userPlaylists.isEmpty {
-                Text("No playlists available")
+                Text("playlistSelection.message")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
@@ -27,7 +27,7 @@ struct PlaylistSelectionView: View {
                         VStack(alignment: .leading) {
                             Text(playlist.name)
                                 .font(.body)
-                            Text("\(playlist.songs.count) songs")
+                            Text("playlistSelection.songCount")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -48,7 +48,7 @@ struct PlaylistSelectionView: View {
             
             HStack {
                 Spacer()
-                Button("Cancel") {
+                Button("playlistSelection.cancel") {
                     presentationMode.wrappedValue.dismiss()
                 }
                 .keyboardShortcut(.cancelAction)

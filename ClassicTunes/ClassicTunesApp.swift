@@ -57,7 +57,7 @@ struct PlaylistCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .saveItem) {
-            Button("Delete Playlist") {
+            Button("menu.deletePlaylist") {
                 deleteAction?()
             }
             .keyboardShortcut(.delete, modifiers: [])

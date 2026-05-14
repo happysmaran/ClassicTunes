@@ -69,17 +69,17 @@ struct iTunesStoreView: View {
     @State private var selectedMedia: String = "music"  // music, movie, tvShow, etc.
     
     let mediaOptions = [
-        ("Music", "music"),
-        ("Movies", "movie"),
-        ("TV Shows", "tvShow"),
-        ("All", "all")
+        (NSLocalizedString("store.media.music", comment: "music"), "music"),
+        (NSLocalizedString("store.media.movies", comment: "movies"), "movie"),
+        (NSLocalizedString("store.media.tvShows", comment:"tvShows"), "tvShow"),
+        (NSLocalizedString("store.media.all", comment: "all"), "all")
     ]
     
     var body: some View {
         VStack(spacing: 0) {
             // Classic iTunes-style header
             HStack {
-                Picker("Media", selection: $selectedMedia) {
+                Picker("store.media.label", selection: $selectedMedia) {
                     ForEach(mediaOptions, id: \.1) { label, value in
                         Text(label).tag(value)
                     }
@@ -89,7 +89,7 @@ struct iTunesStoreView: View {
                 
                 Spacer()
                 
-                Text("iTunes Store")
+                Text("store.title")
                     .font(.title2.bold())
                     .foregroundColor(.primary)
                 
@@ -104,7 +104,7 @@ struct iTunesStoreView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search songs, albums, artists, movies...", text: $searchText, onCommit: performSearch)
+                TextField("store.welcome.subtitle", text: $searchText, onCommit: performSearch)
                     .textFieldStyle(.plain)
                     .font(.title3)
             }
@@ -116,16 +116,16 @@ struct iTunesStoreView: View {
             Divider()
             
             if isLoading {
-                ProgressView("Searching iTunes Store...")
+                ProgressView("store.searching")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if results.isEmpty && !searchText.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 48))
                         .foregroundColor(.secondary)
-                    Text("No results found")
+                    Text("store.noResults.title")
                         .font(.title2)
-                    Text("Try different keywords or media type")
+                    Text("store.noResults.subtitle")
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -134,10 +134,10 @@ struct iTunesStoreView: View {
                     Image(systemName: "music.note.list")
                         .font(.system(size: 60))
                         .foregroundColor(.secondary)
-                    Text("Welcome to the iTunes Store")
+                    Text("store.welcome.title")
                         .font(.largeTitle)
                         .fontWeight(.semibold)
-                    Text("Search for music, albums, movies, and TV shows")
+                    Text("store.welcome.subtitle")
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -285,7 +285,7 @@ struct StoreItemView: View {
                     .font(.subheadline)
                     .foregroundColor(.blue)
             } else {
-                Text("Free")
+                Text("store.free")
                     .font(.subheadline)
                     .foregroundColor(.green)
             }
@@ -307,7 +307,7 @@ struct StoreItemView: View {
                 
                 if let storeURLString = item.trackViewUrl ?? item.collectionViewUrl,
                    let url = URL(string: storeURLString) {
-                    Button("View in Store") {
+                    Button("store.viewInStore") {
                         // Opens in native Apple apps, if possible
                         NSWorkspace.shared.open(url)
                     }

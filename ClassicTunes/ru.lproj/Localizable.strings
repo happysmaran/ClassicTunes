@@ -1,0 +1,114 @@
+// ClassicTunes – Localizable.strings  (Russian – Русский)
+
+// MARK: - Sidebar sections
+"sidebar.library"             = "МЕДИАТЕКА";
+"sidebar.store"               = "МАГАЗИН";
+"sidebar.playlists"           = "ПЛЕЙЛИСТЫ";
+
+// MARK: - Sidebar items
+"sidebar.music"               = "Музыка";
+"sidebar.movies"              = "Фильмы";
+"sidebar.tvShows"             = "ТВ-программы";
+"sidebar.podcasts"            = "Подкасты";
+"sidebar.radio"               = "Радио";
+"sidebar.purchased"           = "Купленное";
+"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.genius"              = "Genius";
+"sidebar.newPlaylist"         = "Новый плейлист";
+
+// MARK: - Coming-soon alert
+"alert.comingSoon.title"      = "Скоро";
+"alert.comingSoon.message"    = "%@ скоро появится.";
+"alert.ok"                    = "OK";
+
+// MARK: - Top toolbar
+"toolbar.importMusic"         = "Импортировать музыку";
+"toolbar.search"              = "Поиск";
+
+// MARK: - Bottom bar
+"bottomBar.lyrics"            = "Текст песни";
+"bottomBar.upNext"            = "Далее";
+"bottomBar.importM3U"         = "Импорт M3U";
+"bottomBar.exportM3U"         = "Экспорт M3U";
+
+// MARK: - Song list column headers
+"column.title"                = "Название";
+"column.artist"               = "Исполнитель";
+"column.album"                = "Альбом";
+"column.genre"                = "Жанр";
+
+// MARK: - Song row context menu
+"contextMenu.playNext"        = "Воспроизвести следующим";
+"contextMenu.addToPlaylist"   = "Добавить в плейлист";
+
+// MARK: - Playlist header
+"playlistHeader.play"         = "Воспроизвести";
+"playlistHeader.shuffle"      = "Перемешать";
+"playlistHeader.songCount"    = "%lld песня";
+"playlistHeader.songCountPlural" = "%lld песен";
+"playlistHeader.durationHours" = "%lld час";
+"playlistHeader.durationHoursPlural" = "%lld часов";
+"playlistHeader.durationMinutes" = "%lld минута";
+"playlistHeader.durationMinutesPlural" = "%lld минут";
+
+// MARK: - Playlist artwork
+"artwork.changePhoto"         = "Изменить фото…";
+"artwork.removeCustomPhoto"   = "Удалить пользовательское фото";
+"artwork.help"                = "Нажмите, чтобы задать пользовательское фото плейлиста";
+
+// MARK: - New playlist sheet
+"newPlaylist.title"           = "Новый плейлист";
+"newPlaylist.namePlaceholder" = "Название плейлиста";
+"newPlaylist.nameLabel"       = "Название";
+"newPlaylist.cancel"          = "Отмена";
+"newPlaylist.create"          = "Создать";
+
+// MARK: - Playlist selection sheet
+"playlistSelection.title"     = "Добавить в плейлист";
+"playlistSelection.message"   = "Выберите плейлист для «%@»:";
+"playlistSelection.empty"     = "Нет доступных плейлистов";
+"playlistSelection.cancel"    = "Отмена";
+"playlistSelection.songCount" = "%lld песен";
+
+// MARK: - Settings
+"settings.appearance"         = "Внешний вид";
+"settings.appAppearance"      = "Вид приложения";
+"settings.system"             = "Системный";
+"settings.light"              = "Светлый";
+"settings.dark"               = "Тёмный";
+"settings.appearanceHelp.system" = "Следует системному виду.";
+"settings.appearanceHelp.light"  = "Приложение всегда использует светлый вид.";
+"settings.appearanceHelp.dark"   = "Приложение всегда использует тёмный вид.";
+"settings.albumGrid"          = "Сетка альбомов";
+"settings.albumGrid.background" = "Фон";
+"settings.albumGrid.note"     = "Когда приложение использует тёмный вид, сетка альбомов также будет тёмной независимо от этой настройки.";
+
+// MARK: - iTunes Store
+"store.title"                 = "iTunes Store";
+"store.searchPlaceholder"     = "Поиск песен, альбомов, исполнителей, фильмов…";
+"store.searching"             = "Поиск в iTunes Store…";
+"store.noResults.title"       = "Ничего не найдено";
+"store.noResults.subtitle"    = "Попробуйте другие ключевые слова или тип медиа";
+"store.welcome.title"         = "Добро пожаловать в iTunes Store";
+"store.welcome.subtitle"      = "Ищите музыку, альбомы, фильмы и ТВ-программы";
+"store.media.music"           = "Музыка";
+"store.media.movies"          = "Фильмы";
+"store.media.tvShows"         = "ТВ-программы";
+"store.media.all"             = "Все";
+"store.free"                  = "Бесплатно";
+"store.preview"               = "Предпросмотр";
+"store.stop"                  = "Стоп";
+"store.viewInStore"           = "Открыть в магазине";
+"store.media.label"           = "Медиа";
+
+// MARK: - Lyrics view
+"lyrics.title"                = "Текст песни";
+
+// MARK: - Album grid / detail
+"albumDetail.songs"           = "%lld песен";
+
+// MARK: - Mini player
+"miniPlayer.openIn"           = "Открыть в мини-плеере";
+
+// MARK: - Menu commands
+"menu.deletePlaylist"         = "Удалить плейлист";

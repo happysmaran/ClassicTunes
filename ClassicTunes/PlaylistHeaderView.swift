@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import AVKit
 import UniformTypeIdentifiers
 
 // Keyed by playlist UUID string. Images are written as JPEG to Application Support.
@@ -71,12 +70,10 @@ struct PlaylistHeaderView: View {
     @State private var isHoveringArtwork = false
     @Environment(\.colorScheme) private var colorScheme
 
-    // Synchronous duration sum — AVURLAsset.duration is available without async load
-    // for local files already cached by the OS after the library scan.
+    // Duration sum derived from parsed metadata (Song.duration)
     private var durationString: String {
         let total = playlist.songs.reduce(0.0) { acc, song in
-            let asset = AVURLAsset(url: song.url)
-            let secs = asset.duration.seconds
+            let secs = song.duration ?? 0
             return acc + (secs.isNaN || secs.isInfinite ? 0 : secs)
         }
         let hours = Int(total) / 3600
@@ -110,10 +107,10 @@ struct PlaylistHeaderView: View {
 
                     // Play / Shuffle buttons
                     HStack(spacing: 8) {
-                        headerButton(systemImage: "play.fill", accessibilityLabel: "Play") {
+                        headerButton(systemImage: "play.fill", accessibilityLabel: "playlistHeader.play") {
                             onPlay()
                         }
-                        headerButton(systemImage: "shuffle", accessibilityLabel: "Shuffle") {
+                        headerButton(systemImage: "shuffle", accessibilityLabel: "playlistHeader.shuffle") {
                             onShuffle()
                         }
                     }
@@ -175,15 +172,15 @@ struct PlaylistHeaderView: View {
         .onHover { isHoveringArtwork = $0 }
         .onTapGesture { pickArtwork() }
         .contextMenu {
-            Button("Change Photo…") { pickArtwork() }
+            Button("artwork.changePhoto") { pickArtwork() }
             if customImage != nil {
-                Button("Remove Custom Photo", role: .destructive) {
+                Button("artwork.removeCustomPhoto", role: .destructive) {
                     PlaylistArtworkStore.shared.save(nil, for: playlist.id)
                     customImage = nil
                 }
             }
         }
-        .help("Click to set a custom playlist photo")
+        .help("artwork.help")
     }
 
     @ViewBuilder
@@ -259,17 +256,18 @@ struct PlaylistHeaderView: View {
     // Photo picker
     private func pickArtwork() {
         let panel = NSOpenPanel()
-        panel.title = "Choose Playlist Artwork"
+        panel.title = "artwork.changePhoto"
         panel.allowedContentTypes = [.jpeg, .png, .heic, .tiff, .bmp, .gif]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.begin { response in
             guard response == .OK, let url = panel.url,
                   let image = NSImage(contentsOf: url) else { return }
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 PlaylistArtworkStore.shared.save(image, for: playlist.id)
                 customImage = image
             }
         }
     }
 }
+

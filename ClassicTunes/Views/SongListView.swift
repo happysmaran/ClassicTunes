@@ -209,7 +209,7 @@ struct SongListView: View {
 
             HStack(spacing: 0) {
                 ResizableHeader(
-                    title: "Title",
+                    title: NSLocalizedString("column.title", comment: "title"),
                     sort: "title",
                     width: .constant(titleWidth),
                     currentSort: sortBy,
@@ -228,7 +228,7 @@ struct SongListView: View {
                 )
 
                 ResizableHeader(
-                    title: "Artist",
+                    title: NSLocalizedString("column.artist", comment:"artist"),
                     sort: "artist",
                     width: .constant(artistWidth),
                     currentSort: sortBy,
@@ -247,7 +247,7 @@ struct SongListView: View {
                 )
 
                 ResizableHeader(
-                    title: "Album",
+                    title: NSLocalizedString("column.album", comment: "album"),
                     sort: "album",
                     width: .constant(albumWidth),
                     currentSort: sortBy,
@@ -266,7 +266,7 @@ struct SongListView: View {
                 )
 
                 ResizableHeader(
-                    title: "Genre",
+                    title: NSLocalizedString("column.genre", comment: "genre"),
                     sort: "genre",
                     width: .constant(genreWidth),
                     currentSort: sortBy,
@@ -328,10 +328,10 @@ struct SongListView: View {
             onSongSelect(song)
         }
         .contextMenu {
-            Button("Play Next") {
+            Button("contextMenu.playNext") {
                 NotificationCenter.default.post(name: Notification.Name("AddToUpNextPlayNext"), object: song)
             }
-            Button("Add to Playlist") {
+            Button("contextMenu.addToPlaylist") {
                 onAddToPlaylist(song)
             }
         }
@@ -359,7 +359,7 @@ struct ResizableHeader: View {
     private let handleWidth: CGFloat = 6
 
     var body: some View {
-        // The header occupies exactly `width` so the left edge of content stays aligned with rows
+        // The header occupies exactly 'width' so the left edge of content stays aligned with rows
         ZStack(alignment: .trailing) {
             // Label area fills the column width and is clipped to avoid overdraw/glitches
             HStack(spacing: 4) {

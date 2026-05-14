@@ -72,7 +72,7 @@ final class PlaylistStore {
                 do {
                     // Validate by decoding before writing to disk
                     let decoder = JSONDecoder()
-                    let loaded = try decoder.decode([Playlist].self, from: data)
+                    _ = try decoder.decode([Playlist].self, from: data)
                     try data.write(to: fileURL, options: [.atomic])
                     // Clear the large value from UserDefaults after successful migration
                     defaults.removeObject(forKey: key)
