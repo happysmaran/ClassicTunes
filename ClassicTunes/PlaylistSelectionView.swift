@@ -12,12 +12,12 @@ struct PlaylistSelectionView: View {
                 .font(.headline)
                 .padding(.top)
             
-            Text("playlistSelection.message")
+            Text(String(format: NSLocalizedString("playlistSelection.message", comment: "message"), song.title))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
             if playlistManager.userPlaylists.isEmpty {
-                Text("playlistSelection.message")
+                Text(String(format: NSLocalizedString("playlistSelection.message", comment: "message"), song.title))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding()
@@ -27,7 +27,8 @@ struct PlaylistSelectionView: View {
                         VStack(alignment: .leading) {
                             Text(playlist.name)
                                 .font(.body)
-                            Text("playlistSelection.songCount")
+                            
+                            Text(String(format: NSLocalizedString("playlistSelection.songCount", comment: "songCount"), playlist.songs.count))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

@@ -97,7 +97,6 @@ struct SidebarView: View {
                     .onDrop(of: [UTType.json], isTargeted: Binding(get: { dropHoverPlaylistID == playlist.id }, set: { isTargeted in
                         dropHoverPlaylistID = isTargeted ? playlist.id : nil
                     })) { providers in
-                        // The compiler can now easily type-check this single function call
                         return handleDrop(providers: providers, for: playlist)
                     }
                 }
@@ -110,7 +109,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(SidebarListStyle())
-        .background(Color.itunesSidebar) // Ensure this custom color is defined in your assets or extensions
+        .background(Color.itunesSidebar)
         .foregroundColor(.primary)
         .alert("alert.comingSoon.title", isPresented: $showComingSoon) {
             Button("alert.ok", role: .cancel) { }
