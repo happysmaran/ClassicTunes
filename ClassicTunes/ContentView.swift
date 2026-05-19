@@ -93,6 +93,11 @@ struct ContentView: View {
     @State private var showM3UExporter = false
     @State private var showM3UImporter = false
     @State private var m3UExportURL: URL?
+    
+    @State private var isDeviceSelected = false
+    
+    @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
+    @EnvironmentObject var syncEngine: iPodSyncEngine
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
@@ -511,15 +516,25 @@ struct ContentView: View {
                                 selectedPlaylistID: $selectedPlaylistID,
                                 showNewPlaylistSheet: $showNewPlaylistSheet,
                                 libraryActive: $libraryActive,
-                                showITunesStore: $showITunesStore
+                                showITunesStore: $showITunesStore,
+                                //connectedDevice: deviceMonitor.connectedDevice,
+                                isDeviceSelected: $isDeviceSelected
                             )
                             .frame(width: 220)
                             .tint(.blue)
                             .background(ITunesSidebarBackground())
-
-                            mainContentArea()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .ignoresSafeArea()
+                            
+                            if let device = deviceMonitor.connectedDevice, isDeviceSelected {
+                                            iPodDeviceView(
+                                                device: device,
+                                                syncEngine: syncEngine,
+                                                allLibrarySongs: songs
+                                            )
+                            } else {
+                                mainContentArea()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .ignoresSafeArea()
+                            }
                         }
 
                         if showUpNext {
@@ -724,11 +739,13 @@ struct ContentView: View {
                     updateUpcomingSongs()
                 }
                 .onChange(of: appAppearance) { _ in
-                    // Update mini player appearance when app appearance changes
                     updateMiniPlayerAppearance()
                 }
                 .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in
                     saveUserPlaylists()
+                }
+                .onChange(of: deviceMonitor.connectedDevice) { device in
+                    if device == nil { isDeviceSelected = false }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext"))) { output in
                     if let song = output.object as? Song {

@@ -22,6 +22,8 @@ extension NSColor {
 @main
 struct ClassicTunesApp: App {
     @StateObject private var appearanceManager = AppearanceManager()
+    @StateObject private var deviceMonitor = iPodDeviceMonitor()
+    @StateObject private var syncEngine = iPodSyncEngine()
 
     var body: some Scene {
         WindowGroup {
@@ -30,11 +32,14 @@ struct ClassicTunesApp: App {
                 .background(Color.clear)
                 .edgesIgnoringSafeArea(.top)
                 .environmentObject(appearanceManager)
+                .environmentObject(deviceMonitor)
+                .environmentObject(syncEngine)
                 .preferredColorScheme(appearanceManager.currentColorScheme())
                 .id(appearanceManager.appAppearance)
                 .tint(.iTunesBlue)
                 .onAppear {
                     NSApp.appearance = NSAppearance(named: .aqua)
+                    deviceMonitor.scanMountedVolumes()
                 }
         }
         .windowStyle(HiddenTitleBarWindowStyle())

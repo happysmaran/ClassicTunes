@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B10DF0682FBC7144003940BF /* DiskArbitration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10DF0672FBC7144003940BF /* DiskArbitration.framework */; };
 		B11D2A682F7F2493009400B5 /* icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B11D2A622F7F2493009400B5 /* icon.icon */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B10DF0672FBC7144003940BF /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
 		B11D2A622F7F2493009400B5 /* icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = icon.icon; sourceTree = "<group>"; };
 		B1A393782EB2C50B00E816E5 /* ClassicTunes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassicTunes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1A393852EB2C50D00E816E5 /* ClassicTunesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClassicTunesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -57,6 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B10DF0682FBC7144003940BF /* DiskArbitration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +80,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B10DF0662FBC7144003940BF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B10DF0672FBC7144003940BF /* DiskArbitration.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B1A3936F2EB2C50B00E816E5 = {
 			isa = PBXGroup;
 			children = (
@@ -85,6 +96,7 @@
 				B1A393922EB2C50D00E816E5 /* ClassicTunesUITests */,
 				B1A393792EB2C50B00E816E5 /* Products */,
 				B11D2A622F7F2493009400B5 /* icon.icon */,
+				B10DF0662FBC7144003940BF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -436,7 +448,7 @@
 				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_RESOURCE_ACCESS_USB = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ClassicTunes;
@@ -486,7 +498,7 @@
 				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_RESOURCE_ACCESS_USB = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ClassicTunes;

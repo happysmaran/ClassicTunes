@@ -114,3 +114,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Delete Playlist";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "Eject iPod";
+"device.trackCount"         = "%d songs on iPod";
+"device.empty"              = "No songs on this iPod.";
+"sync.addSongs"             = "Add Songs…";
+"sync.dragHere"             = "Add songs from your library\nto sync to this iPod.";
+"sync.syncNow"              = "Sync";
+"sync.cancel"               = "Cancel";
+"sync.writing"              = "Writing database…";
+"sync.ejecting"             = "Finishing…";
+"sync.done"                 = "Sync complete";
+"sync.failed"               = "Sync failed";
+"sync.chooseSongs"          = "Choose Songs to Sync";
+"sync.confirm.title"        = "Sync iPod?";
+"sync.confirm.message"      = "This will replace all %d songs on the iPod. Continue?";
+"eject.confirm.title"       = "Eject iPod?";
+"eject.confirm.message"     = "Make sure sync is complete before ejecting.";
+"eject.eject"               = "Eject";
+"eject.cancel"              = "Cancel";
+"picker.done"               = "Add to Sync List";
+"picker.cancel"             = "Cancel";
+"picker.queued"             = "Queued";

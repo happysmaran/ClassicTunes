@@ -8,6 +8,8 @@ struct SidebarView: View {
     @Binding var showNewPlaylistSheet: Bool
     @Binding var libraryActive: Bool
     @Binding var showITunesStore: Bool
+    @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
+    @Binding var isDeviceSelected: Bool
 
     @State private var showComingSoon = false
     @State private var comingSoonSection = ""
@@ -19,6 +21,21 @@ struct SidebarView: View {
 
     var body: some View {
         List {
+            if let device = deviceMonitor.connectedDevice {
+                Section("sidebar.devices") {
+                    SidebarDeviceEntry(
+                        device: device,
+                        isSelected: isDeviceSelected,
+                        onSelect: {
+                            isDeviceSelected = true
+                            selectedPlaylistID = nil
+                            libraryActive = false
+                            showITunesStore = false
+                        }
+                    )
+                }
+            }
+            
             Section("sidebar.library") {
                 Button(action: {
                     selectedPlaylistID = nil
