@@ -1,0 +1,9 @@
+<key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
+<array>
+    <string>/Volumes/</string>
+</array>
+
+<key>com.apple.security.exception.mach-lookup.global-name</key>
+<array>
+    <string>com.apple.audioanalyticsd</string>
+</array>

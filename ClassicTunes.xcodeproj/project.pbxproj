@@ -36,9 +36,22 @@
 		B1A3938F2EB2C50D00E816E5 /* ClassicTunesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClassicTunesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		B1CF72912FBD955E00309C2F /* Exceptions for "ClassicTunes" folder in "Compile Sources" phase from "ClassicTunes" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = B1A393742EB2C50B00E816E5 /* Sources */;
+			membershipExceptions = (
+				ClassicTunes.entitlements,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B1A3937A2EB2C50B00E816E5 /* ClassicTunes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1CF72912FBD955E00309C2F /* Exceptions for "ClassicTunes" folder in "Compile Sources" phase from "ClassicTunes" target */,
+			);
 			path = ClassicTunes;
 			sourceTree = "<group>";
 		};
@@ -427,6 +440,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = /Users/smaranvallabhaneni/Developer/ClassicTunes/ClassicTunes/ClassicTunes.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1.2;
@@ -477,6 +492,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = /Users/smaranvallabhaneni/Developer/ClassicTunes/ClassicTunes/ClassicTunes.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1.2;

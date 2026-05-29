@@ -22,6 +22,7 @@ struct iPodDevice: Identifiable, Equatable {
 enum iPodGeneration: String {
     case shuffle1 = "iPod Shuffle (1st gen)"
     case shuffle2 = "iPod Shuffle (2nd gen)"
+    case classic  = "iPod (Classic/Nano/Mini)"
     case unknown  = "iPod (Unknown)"
 }
 
@@ -85,6 +86,8 @@ final class iPodDeviceMonitor: ObservableObject {
         // Only care about volumes with a mount point
         guard let mountURL = (desc[kDADiskDescriptionVolumePathKey as String] as? URL) else { return }
 
+        print("iPodDeviceMonitor: disk appeared at \(mountURL.path)")
+
         // Check if this looks like an iPod Shuffle
         guard let device = identifyiPodShuffle(at: mountURL, description: desc) else { return }
 
@@ -96,6 +99,8 @@ final class iPodDeviceMonitor: ObservableObject {
     private func handleDiskDisappeared(_ disk: DADisk) {
         guard let desc = DADiskCopyDescription(disk) as? [String: Any],
               let mountURL = desc[kDADiskDescriptionVolumePathKey as String] as? URL else { return }
+
+        print("iPodDeviceMonitor: disk disappeared at \(mountURL.path)")
 
         DispatchQueue.main.async {
             if self.connectedDevice?.volumeURL == mountURL {
@@ -110,35 +115,60 @@ final class iPodDeviceMonitor: ObservableObject {
     private func identifyiPodShuffle(at url: URL, description: [String: Any]) -> iPodDevice? {
         let fm = FileManager.default
 
-        // iPod Shuffle fingerprint: must have /iPod_Control/iTunes/iTunesSD
-        let dbPath = url.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
-        let controlPath = url.appendingPathComponent("iPod_Control")
-
-        // Also accept an empty Shuffle that hasn't been synced yet (has iPod_Control but no DB)
-        guard fm.fileExists(atPath: controlPath.path) else { return nil }
-
+        // 1) Gather DiskArbitration hints
         let volumeName = (description[kDADiskDescriptionVolumeNameKey as String] as? String) ?? url.lastPathComponent
         let bsdName    = (description[kDADiskDescriptionMediaBSDNameKey as String] as? String) ?? ""
+        let model      = (description[kDADiskDescriptionDeviceModelKey as String] as? String) ?? ""
+        let vendor     = (description[kDADiskDescriptionDeviceVendorKey as String] as? String) ?? ""
 
-        // Determine generation by presence of iTunesSD vs iTunesDB
-        // Gen 1/2 Shuffle: only iTunesSD (no iTunesDB)
-        let hasiTunesSD = fm.fileExists(atPath: dbPath.path)
-        let hasiTunesDB = fm.fileExists(atPath: url.appendingPathComponent("iPod_Control/iTunes/iTunesDB").path)
+        // 2) Probe filesystem markers if we can (case variants included)
+        let possibleControlPaths = [
+            url.appendingPathComponent("iPod_Control"),
+            url.appendingPathComponent("IPOD_CONTROL")
+        ]
+        let controlDir = possibleControlPaths.first { fm.fileExists(atPath: $0.path) }
 
-        // If it has iTunesDB it's a Classic/Nano, not a Shuffle
-        guard !hasiTunesDB else { return nil }
+        var hasiTunesSD = false
+        var hasiTunesDB = false
+        if let actualControlDir = controlDir {
+            let iTunesDir = actualControlDir.appendingPathComponent("iTunes")
+            let ITUNESDir = actualControlDir.appendingPathComponent("ITUNES")
+            let actualITunesDir = fm.fileExists(atPath: iTunesDir.path) ? iTunesDir : ITUNESDir
 
-        // Determine capacity/free space
+            let sdPathCaps = actualITunesDir.appendingPathComponent("ITUNESSD")
+            let sdPathLower = actualITunesDir.appendingPathComponent("iTunesSD")
+            let dbPathCaps = actualITunesDir.appendingPathComponent("ITUNESDB")
+            let dbPathLower = actualITunesDir.appendingPathComponent("iTunesDB")
+
+            hasiTunesSD = fm.fileExists(atPath: sdPathCaps.path) || fm.fileExists(atPath: sdPathLower.path)
+            hasiTunesDB = fm.fileExists(atPath: dbPathCaps.path) || fm.fileExists(atPath: dbPathLower.path)
+        }
+
+        // 3) Decide if this looks like an iPod at all
+        let looksLikeIPodByFS = (controlDir != nil) || hasiTunesSD || hasiTunesDB
+        let looksLikeIPodByDA = model.localizedCaseInsensitiveContains("ipod") ||
+                                vendor.localizedCaseInsensitiveContains("ipod") ||
+                                volumeName.localizedCaseInsensitiveContains("ipod")
+        guard looksLikeIPodByFS || looksLikeIPodByDA else { return nil }
+
+        // 4) Determine capacity/free space (best-effort)
         let values = try? url.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityKey])
         let capacity  = Int64(values?.volumeTotalCapacity  ?? 0)
         let freeSpace = Int64(values?.volumeAvailableCapacity ?? 0)
 
-        // Guess generation: Gen 2 Shuffle shipped in 1GB configuration most commonly;
-        // Gen 1 was 512MB or 1GB. We can't distinguish perfectly without USB product ID,
-        // but for our purposes (Gen 2 uses same DB format as Gen 1) it doesn't matter.
-        let generation: iPodGeneration = hasiTunesSD ? .shuffle2 : .shuffle1
+        // 5) Identify generation: prefer concrete filesystem hints
+        let generation: iPodGeneration
+        if hasiTunesDB {
+            generation = .classic
+        } else if hasiTunesSD {
+            generation = .shuffle2
+        } else if controlDir != nil {
+            generation = .shuffle1 // early shuffles had no iTunesSD until first sync
+        } else {
+            generation = .unknown
+        }
 
-        return iPodDevice(
+        let device = iPodDevice(
             volumeURL: url,
             volumeName: volumeName,
             bsdName: bsdName,
@@ -146,6 +176,10 @@ final class iPodDeviceMonitor: ObservableObject {
             capacity: capacity,
             freeSpace: freeSpace
         )
+
+        // Debug print so we can see detection in the console
+        print("iPodDeviceMonitor: Detected potential iPod at \(url.path) — generation: \(device.generation.rawValue)")
+        return device
     }
 
     // MARK: Manual Scan (called on app launch to catch already-mounted devices)
@@ -154,6 +188,7 @@ final class iPodDeviceMonitor: ObservableObject {
         let fm = FileManager.default
         guard let volumes = fm.mountedVolumeURLs(includingResourceValuesForKeys: [], options: []) else { return }
         for url in volumes {
+            print("iPodDeviceMonitor: scanning mounted volume \(url.path)")
             // Build a minimal description dict for already-mounted volumes
             let name = url.lastPathComponent
             let desc: [String: Any] = [
@@ -175,7 +210,7 @@ final class iPodDeviceMonitor: ObservableObject {
 
 /// Handles the actual file copy + database write operations.
 final class iPodSyncEngine: ObservableObject {
-
+    var grantedVolumeURL: URL? = nil
     // MARK: Progress reporting
 
     struct SyncProgress {
@@ -212,18 +247,18 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: Music folder on device
 
-    /// Returns (or creates) the /iPod_Control/Music/f00/ folder.
+    /// Returns (or creates) the /iPod_Control/Music/F00/ folder.
     /// Gen 1/2 Shuffle only uses a single flat subdirectory.
     private func musicFolder(on device: iPodDevice) throws -> URL {
-        let folder = device.volumeURL
-            .appendingPathComponent("iPod_Control/Music/f00", isDirectory: true)
+        let folder = grantedVolumeURL ?? device.volumeURL
+            .appendingPathComponent("iPod_Control/Music/F00", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
     }
 
     /// Returns (or creates) the /iPod_Control/iTunes/ folder.
     private func iTunesFolder(on device: iPodDevice) throws -> URL {
-        let folder = device.volumeURL
+        let folder = grantedVolumeURL ?? device.volumeURL
             .appendingPathComponent("iPod_Control/iTunes", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
@@ -232,7 +267,7 @@ final class iPodSyncEngine: ObservableObject {
     // MARK: Read existing database
 
     func readDatabase(from device: iPodDevice) throws -> iPodShuffleDatabase {
-        let dbURL = device.volumeURL
+        let dbURL = grantedVolumeURL ?? device.volumeURL
             .appendingPathComponent("iPod_Control/iTunes/iTunesSD")
         guard FileManager.default.fileExists(atPath: dbURL.path) else {
             // Brand-new or never-synced device — start empty
@@ -249,6 +284,26 @@ final class iPodSyncEngine: ObservableObject {
     ///   - songs: Songs to write (in desired playback order).
     ///   - device: The mounted iPod Shuffle.
     func sync(songs: [Song], to device: iPodDevice) async {
+        let accessURL: URL? = await MainActor.run {
+            let panel = NSOpenPanel()
+            panel.message = "ClassicTunes needs access to your iPod to sync music."
+            panel.prompt = "Grant Access"
+            panel.canChooseFiles = false
+            panel.canChooseDirectories = true
+            panel.canCreateDirectories = false
+            panel.allowsMultipleSelection = false
+            panel.directoryURL = device.volumeURL
+            panel.runModal()  // synchronous — blocks main thread briefly but guarantees result
+            return panel.url
+        }
+        
+        guard let volumeURL = accessURL else {
+                await MainActor.run {
+                    progress.phase = .failed("Access to iPod was denied.")
+                }
+                return
+            }
+        
         await MainActor.run {
             progress = SyncProgress(phase: .copying, totalTracks: songs.count)
         }
@@ -295,7 +350,7 @@ final class iPodSyncEngine: ObservableObject {
                 // Build track entry
                 // Path on device is relative to volume root: /iPod_Control/Music/f00/XXXX.ext
                 var track = iTunesSDTrack()
-                track.filePath    = "/iPod_Control/Music/f00/\(destName)"
+                track.filePath    = "/iPod_Control/Music/F00/\(destName)"
                 track.fileType    = iPodShuffleDatabase.fileType(for: song.url)
                 track.volume      = 0x59     // 89 ≈ 100%
                 track.shuffleFlag = 0x01
@@ -317,16 +372,29 @@ final class iPodSyncEngine: ObservableObject {
             // 3. Write iTunesSD atomically
             await MainActor.run { progress.phase = .writing }
 
-            let dbURL  = itunesDir.appendingPathComponent("iTunesSD")
-            let tmpURL = itunesDir.appendingPathComponent("iTunesSD.tmp")
+            let dbURL    = itunesDir.appendingPathComponent("iTunesSD")
+            let statsURL = itunesDir.appendingPathComponent("iTunesStats")
+
+            // Write to app's own tmp dir first (always writable), then copy onto the volume.
+            // Writing .tmp directly into /iPod_Control/iTunes/ is blocked by macOS even
+            // without sandboxing because the folder is treated as a system-ish directory.
+            let appTmp   = URL(fileURLWithPath: NSTemporaryDirectory())
+            let tmpDB    = appTmp.appendingPathComponent("iTunesSD.tmp")
+            let tmpStats = appTmp.appendingPathComponent("iTunesStats.tmp")
 
             let serialised = db.serialise()
-            try serialised.write(to: tmpURL, options: .atomic)
-            _ = try? fm.replaceItemAt(dbURL, withItemAt: tmpURL)
+            try serialised.write(to: tmpDB, options: .atomic)
+
+            // Copy DB onto device then clean up local tmp
+            if fm.fileExists(atPath: dbURL.path) { try? fm.removeItem(at: dbURL) }
+            try fm.copyItem(at: tmpDB, to: dbURL)
+            try? fm.removeItem(at: tmpDB)
 
             // 4. Also write an empty iTunesStats so the device resets play counts
-            let statsURL = itunesDir.appendingPathComponent("iTunesStats")
-            writeEmptyiTunesStats(trackCount: db.tracks.count, to: statsURL)
+            writeEmptyiTunesStats(trackCount: db.tracks.count, to: tmpStats)
+            if fm.fileExists(atPath: statsURL.path) { try? fm.removeItem(at: statsURL) }
+            try? fm.copyItem(at: tmpStats, to: statsURL)
+            try? fm.removeItem(at: tmpStats)
 
             // 5. Flush to disk (sync) then notify the OS to eject cleanly
             await MainActor.run { progress.phase = .ejecting }
@@ -362,16 +430,18 @@ final class iPodSyncEngine: ObservableObject {
         try fm.copyItem(at: song.url, to: destURL)
 
         var track = iTunesSDTrack()
-        track.filePath    = "/iPod_Control/Music/f00/\(destName)"
+        track.filePath    = "/iPod_Control/Music/F00/\(destName)"
         track.fileType    = iPodShuffleDatabase.fileType(for: song.url)
         track.volume      = 0x59
         track.shuffleFlag = 0x01
         db.tracks.append(track)
 
         let dbURL  = itunesDir.appendingPathComponent("iTunesSD")
-        let tmpURL = itunesDir.appendingPathComponent("iTunesSD.tmp")
-        try db.serialise().write(to: tmpURL, options: .atomic)
-        _ = try? fm.replaceItemAt(dbURL, withItemAt: tmpURL)
+        let tmpDB  = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("iTunesSD.tmp")
+        try db.serialise().write(to: tmpDB, options: .atomic)
+        if fm.fileExists(atPath: dbURL.path) { try? fm.removeItem(at: dbURL) }
+        try fm.copyItem(at: tmpDB, to: dbURL)
+        try? fm.removeItem(at: tmpDB)
     }
 
     /// Removes a track by index and compacts the database.
@@ -404,14 +474,16 @@ final class iPodSyncEngine: ObservableObject {
             if oldURL != newURL {
                 try? fm.moveItem(at: oldURL, to: newURL)
             }
-            t.filePath   = "/iPod_Control/Music/f00/\(newName)"
+            t.filePath   = "/iPod_Control/Music/F00/\(newName)"
             db.tracks[i] = t
         }
 
         let dbURL  = itunesDir.appendingPathComponent("iTunesSD")
-        let tmpURL = itunesDir.appendingPathComponent("iTunesSD.tmp")
-        try db.serialise().write(to: tmpURL, options: .atomic)
-        _ = try? fm.replaceItemAt(dbURL, withItemAt: tmpURL)
+        let tmpDB  = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("iTunesSD.tmp")
+        try db.serialise().write(to: tmpDB, options: .atomic)
+        if fm.fileExists(atPath: dbURL.path) { try? fm.removeItem(at: dbURL) }
+        try fm.copyItem(at: tmpDB, to: dbURL)
+        try? fm.removeItem(at: tmpDB)
     }
 
     // MARK: iTunesStats
@@ -454,7 +526,7 @@ final class iPodSyncEngine: ObservableObject {
 // MARK: - Eject Helper
 
 extension iPodSyncEngine {
-    /// Asks macOS to unmount and eject the iPod volume safely.
+    // Asks macOS to unmount and eject the iPod volume safely.
     func eject(device: iPodDevice, completion: @escaping (Bool) -> Void) {
         let workspace = NSWorkspace.shared
         
