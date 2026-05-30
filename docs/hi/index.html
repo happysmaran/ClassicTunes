@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ClassicTunes स्विफ्ट और स्विफ्टयूआई का उपयोग करके शुरू से बनाया गया एक आधुनिक मैकओएस ऐप है, जो आधुनिक ऐप्पल सिलिकॉन मैक पर आईट्यून्स 7-10 के स्वरूप और अनुभव को निष्ठापूर्वक फिर से बनाता है।">
+    <title>ClassicTunes: ऐप्पल सिलिकॉन के लिए SwiftUI आईट्यून्स रीमेक</title>
+    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/hi/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <link rel="alternate" hreflang="zh" href="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
+    <link rel="alternate" hreflang="fr" href="https://smaran-vallabhaneni.com/ClassicTunes/fr/">
+    <link rel="alternate" hreflang="de" href="https://smaran-vallabhaneni.com/ClassicTunes/de/">
+    <link rel="alternate" hreflang="hi" href="https://smaran-vallabhaneni.com/ClassicTunes/hi/">
+    <link rel="alternate" hreflang="ja" href="https://smaran-vallabhaneni.com/ClassicTunes/ja/">
+    <link rel="alternate" hreflang="ko" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
+    <link rel="alternate" hreflang="pt" href="https://smaran-vallabhaneni.com/ClassicTunes/pt/">
+    <link rel="alternate" hreflang="ru" href="https://smaran-vallabhaneni.com/ClassicTunes/ru/">
+    <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
+    <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
+    
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="titlebar">
+    <div class="lang-selector-container">
+        <select id="lang-selector" class="mac-select" aria-label="भाषा चुनें" onchange="location = this.value;">
+            <option value="/ClassicTunes/">English</option>
+            <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
+            <option value="/ClassicTunes/fr/">Français (French)</option>
+            <option value="/ClassicTunes/de/">Deutsch (German)</option>
+            <option value="/ClassicTunes/hi/" selected>हिन्दी (Hindi)</option>
+            <option value="/ClassicTunes/ja/">日本語 (Japanese)</option>
+            <option value="/ClassicTunes/ko/">한국어 (Korean)</option>
+            <option value="/ClassicTunes/pt/">Português (Brazil)</option>
+            <option value="/ClassicTunes/ru/">Русский (Russian)</option>
+            <option value="/ClassicTunes/es/">Español (Spanish)</option>
+            <option value="/ClassicTunes/te/">తెలుగు (Telugu)</option>
+        </select>
+    </div>
+    <div class="title-content">
+        <h1>ClassicTunes</h1>
+        <p>क्लासिक आईट्यून्स अनुभव की वापसी</p>
+        <img src="../assets/classictunes.png" alt="ClassicTunes">
+    </div>
+</header>
+
+<main class="window">
+    <section class="about">
+        <h2>के बारे में</h2>
+        <p>
+            ClassicTunes स्विफ्ट और स्विफ्टयूआई का उपयोग करके शुरू से बनाया गया एक आधुनिक मैकओएस ऐप है, जो आधुनिक ऐप्पल सिलिकॉन मैक पर आईट्यून्स 7-10 के स्वरूप और अनुभव को निष्ठापूर्वक फिर से बनाता है।
+        </p>
+
+        <ul class="features">
+            <li>कार्यशील कवर फ्लो</li>
+            <li>मिनीप्लेयर</li>
+            <li>प्लेलिस्ट (स्मार्ट m3u समर्थन के साथ)</li>
+            <li>आईट्यून्स स्टोर एकीकरण</li>
+            <li>गीत के बोल समर्थन (lrclib या मेटाडेटा के साथ)</li>
+            <li>डिस्कॉर्ड रिच प्रेजेंस (म्यूजिकप्रेजेंस के साथ)</li>
+            <li>क्लासिक आईट्यून्स 7–10 सौंदर्यशास्त्र</li>
+        </ul>
+        
+        <p>
+            सिस्टम आवश्यकताएँ: macOS 13 वेंचुरा या बाद का संस्करण, Apple सिलिकॉन (M1 और बाद का संस्करण)।
+        </p>
+
+        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.2/ClassicTunes.zip">
+            क्लासिकट्यून्स डाउनलोड करें
+        </a>
+        <br/>
+        <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank">
+            GitHub पर देखें
+        </a>
+    </section>
+
+    <section class="screenshots">
+        <h2>स्क्रीनशॉट</h2>
+
+        <div class="screenshot-grid">
+            <figure>
+                <img src="../assets/songs.png" alt="गीत सूची दृश्य">
+                <figcaption>गीत सूची दृश्य</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/albums.png" alt="एल्बम दृश्य">
+                <figcaption>एल्बम दृश्य</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/coverflow.png" alt="कवर फ्लो दृश्य">
+                <figcaption>कवर फ्लो दृश्य</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/upnext_lyrics.png" alt="गीत और अप नेक्स्ट">
+                <figcaption>गीत (lrclib के साथ) और अप नेक्स्ट दृश्य</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/playlists.png" alt="प्लेलिस्ट">
+                <figcaption>प्लेलिस्ट</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/addto_playlist.png" alt="प्लेलिस्ट प्रबंधन">
+                <figcaption>स्मार्ट m3u प्रबंधन के साथ आयात/निर्यात के साथ प्लेलिस्ट प्रबंधन</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/itunes_store.png" alt="आईट्यून्स स्टोर एकीकरण">
+                <figcaption>आईट्यून्स स्टोर एकीकरण</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/miniplayer.png" alt="मिनीप्लेयर">
+                <figcaption>मिनीप्लेयर</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/translate.png" alt="अनुवाद समर्थन">
+                <figcaption>11 भाषाओं में अनुवादित</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/darkmode.png" alt="डार्क मोड समर्थन">
+                <figcaption>डार्क मोड समर्थन</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/discord_rpc.png" alt="डिस्कॉर्ड रिच प्रेजेंस">
+                <figcaption>डिस्कॉर्ड रिच प्रेजेंस (with <a href="https://musicpresence.app/" target="_blank">MusicPresence</a>)</figcaption>
+            </figure>
+        </div>
+    </section>
+</main>
+
+<footer>
+    © 2026 ClassicTunes
+</footer>
+
+<div class="lightbox-overlay" id="lightbox" hidden aria-hidden="true">
+    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="स्क्रीनशॉट पूर्वावलोकन">
+        <div class="lightbox-titlebar">
+            <div class="traffic-lights">
+                <button id="lightbox-close" class="traffic close" type="button" aria-label="पूर्वावलोकन बंद करें"></button>
+            </div>
+            <div class="lightbox-title">स्क्रीनशॉट पूर्वावलोकन</div>
+        </div>
+
+        <div class="lightbox-body">
+            <img id="lightbox-image" src="" alt="">
+            <p class="lightbox-caption" id="lightbox-caption"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Lightbox Logic ---
+        const overlay = document.getElementById('lightbox');
+        const previewImage = document.getElementById('lightbox-image');
+        const previewCaption = document.getElementById('lightbox-caption');
+        const closeButton = document.getElementById('lightbox-close');
+        const screenshots = document.querySelectorAll('.screenshot-grid img');
+
+        const closeModal = () => {
+            overlay.hidden = true;
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            previewImage.src = '';
+        };
+
+        const openModal = (image) => {
+            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || 'स्क्रीनशॉट पूर्वावलोकन';
+
+            previewImage.src = image.src;
+            previewImage.alt = image.alt;
+            previewCaption.innerHTML = captionContent;
+            overlay.hidden = false;
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        screenshots.forEach((image) => {
+            image.tabIndex = 0;
+            image.setAttribute('role', 'button');
+            image.setAttribute('aria-label', `${image.alt || 'स्क्रीनशॉट'} पूर्वावलोकन खोलें`);
+
+            image.addEventListener('click', () => openModal(image));
+            image.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openModal(image);
+                }
+            });
+        });
+
+        closeButton.addEventListener('click', closeModal);
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !overlay.hidden) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

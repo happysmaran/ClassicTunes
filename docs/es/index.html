@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClassicTunes — A modern macOS app recreating the classic iTunes 7–10 experience.">
-    <title>ClassicTunes: The SwiftUI iTunes Remake for Apple Silicon</title>
-    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <meta name="description" content="ClassicTunes es una aplicación moderna de macOS creada desde cero usando Swift y SwiftUI, recreando fielmente la apariencia y la sensación de iTunes 7–10 en los Mac actuales con Apple Silicon.">
+    <title>ClassicTunes: El Remake de iTunes en SwiftUI para Apple Silicon</title>
+    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
     
     <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
     <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
@@ -20,15 +20,15 @@
     <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
     <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
     
-    <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
 <header class="titlebar">
     <div class="lang-selector-container">
-        <select id="lang-selector" class="mac-select" aria-label="Select Language" onchange="location = this.value;">
-            <option value="/ClassicTunes/" selected>English</option>
+        <select id="lang-selector" class="mac-select" aria-label="Seleccionar idioma" onchange="location = this.value;">
+            <option value="/ClassicTunes/">English</option>
             <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
             <option value="/ClassicTunes/fr/">Français (French)</option>
             <option value="/ClassicTunes/de/">Deutsch (German)</option>
@@ -37,105 +37,105 @@
             <option value="/ClassicTunes/ko/">한국어 (Korean)</option>
             <option value="/ClassicTunes/pt/">Português (Brazil)</option>
             <option value="/ClassicTunes/ru/">Русский (Russian)</option>
-            <option value="/ClassicTunes/es/">Español (Spanish)</option>
+            <option value="/ClassicTunes/es/" selected>Español (Spanish)</option>
             <option value="/ClassicTunes/te/">తెలుగు (Telugu)</option>
         </select>
     </div>
     <div class="title-content">
         <h1>ClassicTunes</h1>
-        <p>Bringing back the classic iTunes experience</p>
-        <img src="assets/classictunes.png" alt="ClassicTunes">
+        <p>Trayendo de vuelta la experiencia clásica de iTunes</p>
+        <img src="../assets/classictunes.png" alt="ClassicTunes">
     </div>
 </header>
 
 <main class="window">
     <section class="about">
-        <h2>About</h2>
+        <h2>Acerca de</h2>
         <p>
-            ClassicTunes is a modern macOS app built from scratch using Swift and SwiftUI,
-            faithfully recreating the look and feel of iTunes 7–10 on modern-day Apple Silicon Macs.
+            ClassicTunes es una aplicación moderna de macOS creada desde cero usando Swift y SwiftUI,
+            recreando fielmente la apariencia y la sensación de iTunes 7–10 en los Mac actuales con Apple Silicon.
         </p>
 
         <ul class="features">
-            <li>Working Cover Flow</li>
-            <li>MiniPlayer</li>
-            <li>Playlists (with smart m3u support)</li>
-            <li>iTunes Store integration</li>
-            <li>Lyrics support (with lrclib or metadata)</li>
-            <li>Discord Rich Presence (with MusicPresence)</li>
-            <li>Classic iTunes 7–10 aesthetics</li>
+            <li>Cover Flow funcional</li>
+            <li>MiniReproductor</li>
+            <li>Listas de reproducción (con soporte m3u inteligente)</li>
+            <li>Integración con iTunes Store</li>
+            <li>Soporte de letras (con lrclib o metadatos)</li>
+            <li>Discord Rich Presence (con MusicPresence)</li>
+            <li>Estética clásica de iTunes 7–10</li>
         </ul>
         
         <p>
-            System requirements: macOS 13 Ventura or later, Apple Silicon (M1 and later).
+            Requisitos del sistema: macOS 13 Ventura o posterior, Apple Silicon (M1 y posterior).
         </p>
 
         <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.2/ClassicTunes.zip">
-            Download ClassicTunes
+            Descargar ClassicTunes
         </a>
         <br/>
         <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank">
-            View on GitHub
+            Ver en GitHub
         </a>
     </section>
 
     <section class="screenshots">
-        <h2>Screenshots</h2>
+        <h2>Capturas de pantalla</h2>
 
         <div class="screenshot-grid">
             <figure>
-                <img src="assets/songs.png" alt="Song List View">
-                <figcaption>Song List View</figcaption>
+                <img src="../assets/songs.png" alt="Vista de lista de canciones">
+                <figcaption>Vista de lista de canciones</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/albums.png" alt="Album View">
-                <figcaption>Album View</figcaption>
+                <img src="../assets/albums.png" alt="Vista de álbum">
+                <figcaption>Vista de álbum</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/coverflow.png" alt="Cover Flow View">
-                <figcaption>Cover Flow View</figcaption>
+                <img src="../assets/coverflow.png" alt="Vista de Cover Flow">
+                <figcaption>Vista de Cover Flow</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/upnext_lyrics.png" alt="Lyrics and Up Next">
-                <figcaption>Lyrics (with lrclib) and Up Next view</figcaption>
+                <img src="../assets/upnext_lyrics.png" alt="Letras y vista 'A continuación'">
+                <figcaption>Letras (con lrclib) y vista 'A continuación'</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/playlists.png" alt="Playlists">
-                <figcaption>Playlists</figcaption>
+                <img src="../assets/playlists.png" alt="Listas de reproducción">
+                <figcaption>Listas de reproducción</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/addto_playlist.png" alt="Playlist Management">
-                <figcaption>Playlist Management with import/export with smart m3u management</figcaption>
+                <img src="../assets/addto_playlist.png" alt="Gestión de listas de reproducción">
+                <figcaption>Gestión de listas de reproducción con importación/exportación y gestión inteligente m3u</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/itunes_store.png" alt="iTunes Store Integration">
-                <figcaption>iTunes Store Integration</figcaption>
+                <img src="../assets/itunes_store.png" alt="Integración con iTunes Store">
+                <figcaption>Integración con iTunes Store</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/miniplayer.png" alt="MiniPlayer">
-                <figcaption>MiniPlayer</figcaption>
+                <img src="../assets/miniplayer.png" alt="MiniReproductor">
+                <figcaption>MiniReproductor</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/translate.png" alt="Translation Support">
-                <figcaption>Translated into 11 languages</figcaption>
+                <img src="../assets/translate.png" alt="Soporte para traducción">
+                <figcaption>Traducido a 11 idiomas</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/darkmode.png" alt="Dark Mode Support">
-                <figcaption>Dark Mode Support</figcaption>
+                <img src="../assets/darkmode.png" alt="Soporte para Modo Oscuro">
+                <figcaption>Soporte para Modo Oscuro</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/discord_rpc.png" alt="Discord Rich Presence">
-                <figcaption>Discord Rich Presence (with <a href="https://musicpresence.app/" target="_blank">MusicPresence</a>)</figcaption>
+                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence">
+                <figcaption>Discord Rich Presence (con <a href="https://musicpresence.app/" target="_blank">MusicPresence</a>)</figcaption>
             </figure>
         </div>
     </section>
@@ -146,12 +146,12 @@
 </footer>
 
 <div class="lightbox-overlay" id="lightbox" hidden aria-hidden="true">
-    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="Vista previa de captura">
         <div class="lightbox-titlebar">
             <div class="traffic-lights">
-                <button id="lightbox-close" class="traffic close" type="button" aria-label="Close preview"></button>
+                <button id="lightbox-close" class="traffic close" type="button" aria-label="Cerrar vista previa"></button>
             </div>
-            <div class="lightbox-title">Screenshot Preview</div>
+            <div class="lightbox-title">Vista previa de captura</div>
         </div>
 
         <div class="lightbox-body">
@@ -178,7 +178,7 @@
         };
 
         const openModal = (image) => {
-            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || 'Screenshot Preview';
+            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || 'Vista previa de captura';
 
             previewImage.src = image.src;
             previewImage.alt = image.alt;
@@ -191,7 +191,7 @@
         screenshots.forEach((image) => {
             image.tabIndex = 0;
             image.setAttribute('role', 'button');
-            image.setAttribute('aria-label', `Open ${image.alt || 'screenshot'} preview`);
+            image.setAttribute('aria-label', `Abrir vista previa de ${image.alt || 'captura de pantalla'}`);
 
             image.addEventListener('click', () => openModal(image));
             image.addEventListener('keydown', (event) => {
@@ -217,5 +217,6 @@
         });
     });
 </script>
+
 </body>
 </html>

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClassicTunes — A modern macOS app recreating the classic iTunes 7–10 experience.">
-    <title>ClassicTunes: The SwiftUI iTunes Remake for Apple Silicon</title>
-    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <meta name="description" content="ClassicTunes는 Swift 및 SwiftUI를 사용하여 처음부터 구축된 최신 macOS 앱으로, 최신 Apple Silicon Mac에서 iTunes 7~10의 모양과 느낌을 충실하게 재현합니다.">
+    <title>ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크</title>
+    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
     
     <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
     <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
@@ -20,21 +20,21 @@
     <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
     <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
     
-    <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
 <header class="titlebar">
     <div class="lang-selector-container">
-        <select id="lang-selector" class="mac-select" aria-label="Select Language" onchange="location = this.value;">
-            <option value="/ClassicTunes/" selected>English</option>
+        <select id="lang-selector" class="mac-select" aria-label="언어 선택" onchange="location = this.value;">
+            <option value="/ClassicTunes/">English</option>
             <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
             <option value="/ClassicTunes/fr/">Français (French)</option>
             <option value="/ClassicTunes/de/">Deutsch (German)</option>
             <option value="/ClassicTunes/hi/">हिन्दी (Hindi)</option>
             <option value="/ClassicTunes/ja/">日本語 (Japanese)</option>
-            <option value="/ClassicTunes/ko/">한국어 (Korean)</option>
+            <option value="/ClassicTunes/ko/" selected>한국어 (Korean)</option>
             <option value="/ClassicTunes/pt/">Português (Brazil)</option>
             <option value="/ClassicTunes/ru/">Русский (Russian)</option>
             <option value="/ClassicTunes/es/">Español (Spanish)</option>
@@ -43,99 +43,98 @@
     </div>
     <div class="title-content">
         <h1>ClassicTunes</h1>
-        <p>Bringing back the classic iTunes experience</p>
-        <img src="assets/classictunes.png" alt="ClassicTunes">
+        <p>클래식 iTunes 경험의 귀환</p>
+        <img src="../assets/classictunes.png" alt="ClassicTunes">
     </div>
 </header>
 
 <main class="window">
     <section class="about">
-        <h2>About</h2>
+        <h2>정보</h2>
         <p>
-            ClassicTunes is a modern macOS app built from scratch using Swift and SwiftUI,
-            faithfully recreating the look and feel of iTunes 7–10 on modern-day Apple Silicon Macs.
+            ClassicTunes는 Swift 및 SwiftUI를 사용하여 처음부터 구축된 최신 macOS 앱으로, 최신 Apple Silicon Mac에서 iTunes 7~10의 모양과 느낌을 충실하게 재현합니다.
         </p>
 
         <ul class="features">
-            <li>Working Cover Flow</li>
-            <li>MiniPlayer</li>
-            <li>Playlists (with smart m3u support)</li>
-            <li>iTunes Store integration</li>
-            <li>Lyrics support (with lrclib or metadata)</li>
-            <li>Discord Rich Presence (with MusicPresence)</li>
-            <li>Classic iTunes 7–10 aesthetics</li>
+            <li>작동하는 Cover Flow</li>
+            <li>미니 플레이어</li>
+            <li>재생 목록 (스마트 m3u 지원 포함)</li>
+            <li>iTunes Store 통합</li>
+            <li>가사 지원 (lrclib 또는 메타데이터 사용)</li>
+            <li>Discord Rich Presence (MusicPresence 사용)</li>
+            <li>클래식 iTunes 7–10 미학</li>
         </ul>
         
         <p>
-            System requirements: macOS 13 Ventura or later, Apple Silicon (M1 and later).
+            시스템 요구 사항: macOS 13 Ventura 이상, Apple Silicon (M1 이상).
         </p>
 
         <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.2/ClassicTunes.zip">
-            Download ClassicTunes
+            ClassicTunes 다운로드
         </a>
         <br/>
         <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank">
-            View on GitHub
+            GitHub에서 보기
         </a>
     </section>
 
     <section class="screenshots">
-        <h2>Screenshots</h2>
+        <h2>스크린샷</h2>
 
         <div class="screenshot-grid">
             <figure>
-                <img src="assets/songs.png" alt="Song List View">
-                <figcaption>Song List View</figcaption>
+                <img src="../assets/songs.png" alt="노래 목록 보기">
+                <figcaption>노래 목록 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/albums.png" alt="Album View">
-                <figcaption>Album View</figcaption>
+                <img src="../assets/albums.png" alt="앨범 보기">
+                <figcaption>앨범 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/coverflow.png" alt="Cover Flow View">
-                <figcaption>Cover Flow View</figcaption>
+                <img src="../assets/coverflow.png" alt="Cover Flow 보기">
+                <figcaption>Cover Flow 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/upnext_lyrics.png" alt="Lyrics and Up Next">
-                <figcaption>Lyrics (with lrclib) and Up Next view</figcaption>
+                <img src="../assets/upnext_lyrics.png" alt="가사 및 다음 항목 보기">
+                <figcaption>가사(lrclib 사용) 및 다음 항목 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/playlists.png" alt="Playlists">
-                <figcaption>Playlists</figcaption>
+                <img src="../assets/playlists.png" alt="재생 목록">
+                <figcaption>재생 목록</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/addto_playlist.png" alt="Playlist Management">
-                <figcaption>Playlist Management with import/export with smart m3u management</figcaption>
+                <img src="../assets/addto_playlist.png" alt="재생 목록 관리">
+                <figcaption>가져오기/내보내기 및 스마트 m3u 관리가 포함된 재생 목록 관리</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/itunes_store.png" alt="iTunes Store Integration">
-                <figcaption>iTunes Store Integration</figcaption>
+                <img src="../assets/itunes_store.png" alt="iTunes Store 통합">
+                <figcaption>iTunes Store 통합</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/miniplayer.png" alt="MiniPlayer">
-                <figcaption>MiniPlayer</figcaption>
+                <img src="../assets/miniplayer.png" alt="미니 플레이어">
+                <figcaption>미니 플레이어</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/translate.png" alt="Translation Support">
-                <figcaption>Translated into 11 languages</figcaption>
+                <img src="../assets/translate.png" alt="번역 지원">
+                <figcaption>11개 언어로 번역됨</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/darkmode.png" alt="Dark Mode Support">
-                <figcaption>Dark Mode Support</figcaption>
+                <img src="../assets/darkmode.png" alt="다크 모드 지원">
+                <figcaption>다크 모드 지원</figcaption>
             </figure>
 
             <figure>
-                <img src="assets/discord_rpc.png" alt="Discord Rich Presence">
-                <figcaption>Discord Rich Presence (with <a href="https://musicpresence.app/" target="_blank">MusicPresence</a>)</figcaption>
+                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence">
+                <figcaption>Discord Rich Presence (<a href="https://musicpresence.app/" target="_blank">MusicPresence</a> 사용)</figcaption>
             </figure>
         </div>
     </section>
@@ -146,12 +145,12 @@
 </footer>
 
 <div class="lightbox-overlay" id="lightbox" hidden aria-hidden="true">
-    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="Screenshot preview">
+    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="스크린샷 미리보기">
         <div class="lightbox-titlebar">
             <div class="traffic-lights">
-                <button id="lightbox-close" class="traffic close" type="button" aria-label="Close preview"></button>
+                <button id="lightbox-close" class="traffic close" type="button" aria-label="미리보기 닫기"></button>
             </div>
-            <div class="lightbox-title">Screenshot Preview</div>
+            <div class="lightbox-title">스크린샷 미리보기</div>
         </div>
 
         <div class="lightbox-body">
@@ -178,7 +177,7 @@
         };
 
         const openModal = (image) => {
-            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || 'Screenshot Preview';
+            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || '스크린샷 미리보기';
 
             previewImage.src = image.src;
             previewImage.alt = image.alt;
@@ -191,7 +190,7 @@
         screenshots.forEach((image) => {
             image.tabIndex = 0;
             image.setAttribute('role', 'button');
-            image.setAttribute('aria-label', `Open ${image.alt || 'screenshot'} preview`);
+            image.setAttribute('aria-label', `${image.alt || '스크린샷'} 미리보기 열기`);
 
             image.addEventListener('click', () => openModal(image));
             image.addEventListener('keydown', (event) => {
@@ -217,5 +216,6 @@
         });
     });
 </script>
+
 </body>
 </html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="క్లాసిక్ ట్యూన్స్ అనేది స్విఫ్ట్ మరియు స్విఫ్ట్ యూఐ ఉపయోగించి మొదటి నుండి నిర్మించబడిన ఆధునిక మాక్ఓఎస్ (macOS) యాప్. ఇది ఆధునిక ఆపిల్ సిలికాన్ మాక్స్ లో ఐట్యూన్స్ 7-10 రూపాన్ని మరియు అనుభూతిని విశ్వసనీయంగా పునఃసృష్టిస్తుంది.">
+    <title>ClassicTunes: ఆపిల్ సిలికాన్ కోసం SwiftUI ఐట్యూన్స్ రీమేక్</title>
+    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
+    <link rel="alternate" hreflang="zh" href="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
+    <link rel="alternate" hreflang="fr" href="https://smaran-vallabhaneni.com/ClassicTunes/fr/">
+    <link rel="alternate" hreflang="de" href="https://smaran-vallabhaneni.com/ClassicTunes/de/">
+    <link rel="alternate" hreflang="hi" href="https://smaran-vallabhaneni.com/ClassicTunes/hi/">
+    <link rel="alternate" hreflang="ja" href="https://smaran-vallabhaneni.com/ClassicTunes/ja/">
+    <link rel="alternate" hreflang="ko" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
+    <link rel="alternate" hreflang="pt" href="https://smaran-vallabhaneni.com/ClassicTunes/pt/">
+    <link rel="alternate" hreflang="ru" href="https://smaran-vallabhaneni.com/ClassicTunes/ru/">
+    <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
+    <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
+    
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<header class="titlebar">
+    <div class="lang-selector-container">
+        <select id="lang-selector" class="mac-select" aria-label="భాషను ఎంచుకోండి" onchange="location = this.value;">
+            <option value="/ClassicTunes/">English</option>
+            <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
+            <option value="/ClassicTunes/fr/">Français (French)</option>
+            <option value="/ClassicTunes/de/">Deutsch (German)</option>
+            <option value="/ClassicTunes/hi/">हिन्दी (Hindi)</option>
+            <option value="/ClassicTunes/ja/">日本語 (Japanese)</option>
+            <option value="/ClassicTunes/ko/">한국어 (Korean)</option>
+            <option value="/ClassicTunes/pt/">Português (Brazil)</option>
+            <option value="/ClassicTunes/ru/">Русский (Russian)</option>
+            <option value="/ClassicTunes/es/">Español (Spanish)</option>
+            <option value="/ClassicTunes/te/" selected>తెలుగు (Telugu)</option>
+        </select>
+    </div>
+    <div class="title-content">
+        <h1>ClassicTunes</h1>
+        <p>క్లాసిక్ ఐట్యూన్స్ అనుభవాన్ని తిరిగి తీసుకురావడం</p>
+        <img src="../assets/classictunes.png" alt="ClassicTunes">
+    </div>
+</header>
+
+<main class="window">
+    <section class="about">
+        <h2>గురించి</h2>
+        <p>
+            క్లాసిక్ ట్యూన్స్ అనేది స్విఫ్ట్ మరియు స్విఫ్ట్ యూఐ ఉపయోగించి మొదటి నుండి నిర్మించబడిన ఆధునిక మాక్ఓఎస్ (macOS) యాప్. ఇది ఆధునిక ఆపిల్ సిలికాన్ మాక్స్ లో ఐట్యూన్స్ 7-10 రూపాన్ని మరియు అనుభూతిని విశ్వసనీయంగా పునఃసృష్టిస్తుంది.
+        </p>
+
+        <ul class="features">
+            <li>పనిచేస్తున్న కవర్ ఫ్లో</li>
+            <li>మినిప్లేయర్</li>
+            <li>ప్లేజాబితాలు (స్మార్ట్ m3u మద్దతుతో)</li>
+            <li>ఐట్యూన్స్ స్టోర్ ఇంటిగ్రేషన్</li>
+            <li>సాహిత్యం మద్దతు (lrclib లేదా మెటాడేటాతో)</li>
+            <li>డిస్కార్డ్ రిచ్ ప్రెజెన్స్ (మ్యూజిక్ ప్రెజెన్స్‌తో)</li>
+            <li>క్లాసిక్ ఐట్యూన్స్ 7-10 సౌందర్యం</li>
+        </ul>
+        
+        <p>
+            సిస్టమ్ అవసరాలు: macOS 13 వెంచురా లేదా ఆ తర్వాతిది, ఆపిల్ సిలికాన్ (M1 మరియు ఆ తర్వాతిది).
+        </p>
+
+        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.2/ClassicTunes.zip">
+            ClassicTunes డౌన్‌లోడ్ చేయండి
+        </a>
+        <br/>
+        <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank">
+            GitHub లో చూడండి
+        </a>
+    </section>
+
+    <section class="screenshots">
+        <h2>స్క్రీన్‌షాట్‌లు</h2>
+
+        <div class="screenshot-grid">
+            <figure>
+                <img src="../assets/songs.png" alt="పాటల జాబితా వీక్షణ">
+                <figcaption>పాటల జాబితా వీక్షణ</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/albums.png" alt="ఆల్బమ్ వీక్షణ">
+                <figcaption>ఆల్బమ్ వీక్షణ</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/coverflow.png" alt="కవర్ ఫ్లో వీక్షణ">
+                <figcaption>కవర్ ఫ్లో వీక్షణ</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/upnext_lyrics.png" alt="సాహిత్యం మరియు అప్ నెక్స్ట్ వీక్షణ">
+                <figcaption>సాహిత్యం (lrclibతో) మరియు అప్ నెక్స్ట్ వీక్షణ</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/playlists.png" alt="ప్లేజాబితాలు">
+                <figcaption>ప్లేజాబితాలు</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/addto_playlist.png" alt="ప్లేజాబితా నిర్వహణ">
+                <figcaption>దిగుమతి/ఎగుమతి మరియు స్మార్ట్ m3u నిర్వహణతో ప్లేజాబితా నిర్వహణ</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/itunes_store.png" alt="ఐట్యూన్స్ స్టోర్ ఇంటిగ్రేషన్">
+                <figcaption>ఐట్యూన్స్ స్టోర్ ఇంటిగ్రేషన్</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/miniplayer.png" alt="మినిప్లేయర్">
+                <figcaption>మినిప్లేయర్</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/translate.png" alt="అనువాద మద్దతు">
+                <figcaption>11 భాషల్లోకి అనువదించబడింది</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/darkmode.png" alt="డార్క్ మోడ్ మద్దతు">
+                <figcaption>డార్క్ మోడ్ మద్దతు</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/discord_rpc.png" alt="డిస్కార్డ్ రిచ్ ప్రెజెన్స్">
+                <figcaption>డిస్కార్డ్ రిచ్ ప్రెజెన్స్ (<a href="https://musicpresence.app/" target="_blank">MusicPresence</a>తో)</figcaption>
+            </figure>
+        </div>
+    </section>
+</main>
+
+<footer>
+    © 2026 ClassicTunes
+</footer>
+
+<div class="lightbox-overlay" id="lightbox" hidden aria-hidden="true">
+    <div class="lightbox-window" role="dialog" aria-modal="true" aria-label="స్క్రీన్‌షాట్ పరిదృశ్యం">
+        <div class="lightbox-titlebar">
+            <div class="traffic-lights">
+                <button id="lightbox-close" class="traffic close" type="button" aria-label="పరిదృశ్యాన్ని మూసివేయి"></button>
+            </div>
+            <div class="lightbox-title">స్క్రీన్‌షాట్ పరిదృశ్యం</div>
+        </div>
+
+        <div class="lightbox-body">
+            <img id="lightbox-image" src="" alt="">
+            <p class="lightbox-caption" id="lightbox-caption"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Lightbox Logic ---
+        const overlay = document.getElementById('lightbox');
+        const previewImage = document.getElementById('lightbox-image');
+        const previewCaption = document.getElementById('lightbox-caption');
+        const closeButton = document.getElementById('lightbox-close');
+        const screenshots = document.querySelectorAll('.screenshot-grid img');
+
+        const closeModal = () => {
+            overlay.hidden = true;
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            previewImage.src = '';
+        };
+
+        const openModal = (image) => {
+            const captionContent = image.closest('figure')?.querySelector('figcaption')?.innerHTML || image.alt || 'స్క్రీన్‌షాట్ పరిదృశ్యం';
+
+            previewImage.src = image.src;
+            previewImage.alt = image.alt;
+            previewCaption.innerHTML = captionContent;
+            overlay.hidden = false;
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        };
+
+        screenshots.forEach((image) => {
+            image.tabIndex = 0;
+            image.setAttribute('role', 'button');
+            image.setAttribute('aria-label', `${image.alt || 'స్క్రీన్‌షాట్'} పరిదృశ్యాన్ని తెరువు`);
+
+            image.addEventListener('click', () => openModal(image));
+            image.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openModal(image);
+                }
+            });
+        });
+
+        closeButton.addEventListener('click', closeModal);
+
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !overlay.hidden) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
