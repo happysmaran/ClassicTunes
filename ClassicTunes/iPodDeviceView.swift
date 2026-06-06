@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import AVKit
 
 // MARK: - Root iPod Panel
 // Drop this into ContentView when connectedDevice != nil.
@@ -15,6 +16,7 @@ struct iPodDeviceView: View {
     @State private var showEjectAlert  = false
     @State private var loadError:      String?         = nil
     @State private var showSyncConfirm = false
+    @State private var isLoadingTracks = false
 
     // Songs the user has chosen to sync (persisted in-view for the session)
     @State private var syncList: [Song] = []
@@ -87,7 +89,7 @@ struct iPodDeviceView: View {
                         startPoint: .top, endPoint: .bottom
                     ))
                     .shadow(radius: 3)
-                Image(systemName: "ipodshuffle")
+                Image(systemName: "ipod")
                     .resizable()
                     .scaledToFit()
                     .foregroundColor(.primary.opacity(0.7))
@@ -164,7 +166,15 @@ struct iPodDeviceView: View {
                     EmptyView()
                 }
                 Divider()
-                if deviceTracks.isEmpty {
+                if isLoadingTracks {
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading tracks…")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if deviceTracks.isEmpty {
                     Text("device.empty")
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -219,8 +229,9 @@ struct iPodDeviceView: View {
                         .foregroundColor(.secondary)
                         .frame(width: 24, alignment: .trailing)
 
-                    // Show the filename since we don't have full metadata from iTunesSD
-                    Text((track.filePath as NSString).lastPathComponent)
+                    Text(track.displayName.isEmpty
+                        ? (track.filePath as NSString).lastPathComponent
+                        : track.displayName)
                         .font(.body)
                         .lineLimit(1)
 
@@ -425,11 +436,68 @@ struct iPodDeviceView: View {
     }
 
     private func loadDeviceTracks() {
+        Task {
+            await loadDeviceTracksAsync()
+        }
+    }
+
+    private func loadDeviceTracksAsync() async {
+        await MainActor.run { isLoadingTracks = true }
+        
+        if syncEngine.grantedVolumeURL == nil {
+            syncEngine.grantedVolumeURL = syncEngine.loadPersistedAccess(for: device.bsdName)
+        }
+        
+        let baseURL = syncEngine.grantedVolumeURL ?? device.volumeURL
+        let dbURL = baseURL.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
+        
+        guard FileManager.default.fileExists(atPath: dbURL.path) else {
+            await MainActor.run { self.deviceTracks = [] }
+            return
+        }
+        
+        let accessGranted = baseURL.startAccessingSecurityScopedResource()
+        defer {
+            if accessGranted { baseURL.stopAccessingSecurityScopedResource() }
+        }
+        
         do {
-            let db = try syncEngine.readDatabase(from: device)
-            deviceTracks = db.tracks
+            let fileData = try Data(contentsOf: dbURL)
+            let parsedDB = try iPodShuffleDatabase.parse(from: fileData)
+            var tracks = parsedDB.tracks
+
+            await withTaskGroup(of: (Int, String).self) { group in
+                for i in tracks.indices {
+                    let relativePath = String(tracks[i].filePath.drop(while: { $0 == "/" }))
+                    let fileURL = baseURL.appendingPathComponent(relativePath)
+                    let index = i
+                    
+                    group.addTask {
+                        let asset = AVAsset(url: fileURL)
+                        let metadata = try? await asset.load(.commonMetadata)
+                        let title = try? await metadata?.first { $0.commonKey == .commonKeyTitle }?.load(.stringValue)
+                        let artist = try? await metadata?.first { $0.commonKey == .commonKeyArtist }?.load(.stringValue)
+                        let display = [title, artist].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " — ")
+                        return (index, display.isEmpty ? (tracks[index].filePath as NSString).lastPathComponent : display)
+                    }
+                }
+                
+                for await (index, displayName) in group {
+                    tracks[index].displayName = displayName
+                }
+            }
+            
+            //print("Setting \(tracks.count) tracks")
+            await MainActor.run {
+                self.deviceTracks = tracks
+                isLoadingTracks = false
+            }
+            
         } catch {
-            loadError = error.localizedDescription
+            await MainActor.run {
+                self.loadError = error.localizedDescription
+                self.deviceTracks = []
+            }
         }
     }
 
@@ -654,7 +722,7 @@ struct SidebarDeviceEntry: View {
 
     var body: some View {
         Button(action: onSelect) {
-            Label(device.volumeName, systemImage: "ipodshuffle")
+            Label(device.volumeName, systemImage: "ipod")
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(ITunesSidebarButtonStyle(selected: isSelected))

@@ -48,8 +48,11 @@ struct iTunesSDTrack {
     var unknown3: UInt8 = 0x00
 
     // Offset 16–527: 256 UTF-16BE code units = 512 bytes — file path
-    // Path is relative to iPod root, e.g. /iPod_Control/Music/f00/AAAA.mp3
+    // Path is relative to iPod root, e.g. /iPod_Control/Music/F00/AAAA.mp3
     var filePath: String = ""
+    
+    // File name. Nothing more to it.
+    var displayName: String = ""
 
     // Offset 528–557: 30 bytes padding / reserved (write zeros)
 }
@@ -100,6 +103,8 @@ struct iPodShuffleDatabase {
         guard data.count == 558 else {
             throw iPodSyncError.invalidDatabase("Track entry wrong size: \(data.count)")
         }
+        
+        let start = data.startIndex
 
         var track = iTunesSDTrack()
         track.startPositionMS = UInt32(data[0]) << 16 | UInt32(data[1]) << 8 | UInt32(data[2])
@@ -113,10 +118,15 @@ struct iPodShuffleDatabase {
         track.bookmarkFlag    = data[14]
         track.unknown3        = data[15]
 
-        // Path: 256 UTF-16BE code units starting at offset 29
-        let pathData = data.subdata(in: 35..<558)
-        track.filePath = String(data: pathData, encoding: .utf16LittleEndian)?
-            .trimmingCharacters(in: .init(charactersIn: "\0")) ?? ""
+        let pathData = data.subdata(in: (start + 35)..<(start + 558))
+        //print("Parsing path block bytes: \(pathData as NSData)")
+        
+        if let decodedString = String(data: pathData, encoding: .utf16LittleEndian) {
+            track.filePath = decodedString.replacingOccurrences(of: "\0", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            track.filePath = ""
+        }
 
         return track
     }

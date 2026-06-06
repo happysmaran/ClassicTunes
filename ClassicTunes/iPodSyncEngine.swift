@@ -164,7 +164,11 @@ final class iPodDeviceMonitor: ObservableObject {
         } else if hasiTunesSD {
             generation = .shuffle2
         } else if controlDir != nil {
-            generation = .shuffle1 // early shuffles had no iTunesSD until first sync
+            if capacity > 0 && capacity < 2_100_000_000 {
+                generation = .shuffle2
+            } else {
+                generation = .shuffle1
+            }
         } else {
             generation = .unknown
         }
