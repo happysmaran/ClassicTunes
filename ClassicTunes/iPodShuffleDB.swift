@@ -74,20 +74,20 @@ struct iPodShuffleDatabase {
     // MARK: Parse from Data
 
     static func parse(from data: Data) throws -> iPodShuffleDatabase {
-        guard data.count >= 18 else {
+        guard data.count >= 16 else {
             throw iPodSyncError.invalidDatabase("File too small for header")
         }
 
         // Header: first 3 bytes = track count (big-endian uint24)
         let trackCount = UInt32(data[0]) << 16 | UInt32(data[1]) << 8 | UInt32(data[2])
 
-        guard data.count >= 18 + Int(trackCount) * 558 else {
+        guard data.count >= 16 + Int(trackCount) * 558 else {
             throw iPodSyncError.invalidDatabase("File truncated — expected \(trackCount) tracks")
         }
 
         var tracks: [iTunesSDTrack] = []
         for i in 0..<Int(trackCount) {
-            let offset = 18 + i * 558
+            let offset = 16 + i * 558
             let entry = data.subdata(in: offset..<(offset + 558))
             let track = try parseTrackEntry(entry)
             tracks.append(track)
@@ -113,9 +113,9 @@ struct iPodShuffleDatabase {
         track.bookmarkFlag    = data[14]
         track.unknown3        = data[15]
 
-        // Path: 256 UTF-16BE code units starting at offset 16
-        let pathData = data.subdata(in: 16..<528)
-        track.filePath = String(data: pathData, encoding: .utf16BigEndian)?
+        // Path: 256 UTF-16BE code units starting at offset 29
+        let pathData = data.subdata(in: 35..<558)
+        track.filePath = String(data: pathData, encoding: .utf16LittleEndian)?
             .trimmingCharacters(in: .init(charactersIn: "\0")) ?? ""
 
         return track
@@ -126,69 +126,65 @@ struct iPodShuffleDatabase {
     func serialise() -> Data {
         var data = Data()
 
-        // Header (18 bytes)
         let count = tracks.count
         data.append(UInt8((count >> 16) & 0xFF))
         data.append(UInt8((count >> 8)  & 0xFF))
         data.append(UInt8( count        & 0xFF))
-        data.append(contentsOf: [0x01, 0x00])   // unknown1
-        data.append(contentsOf: [UInt8](repeating: 0, count: 13)) // padding
+        data.append(contentsOf: [0x01, 0x08])
+        data.append(contentsOf: [0x00, 0x00, 0x00, 0x12])
+        data.append(contentsOf: [UInt8](repeating: 0, count: 7))
 
-        // Track entries (558 bytes each)
+        assert(data.count == 16, "Header must be 16 bytes, got \(data.count)")
+
         for track in tracks {
             data.append(contentsOf: serialiseTrack(track))
         }
-
         return data
     }
 
     private func serialiseTrack(_ track: iTunesSDTrack) -> [UInt8] {
         var entry = [UInt8](repeating: 0, count: 558)
 
-        // Start position (uint24 BE)
+        // Bytes 0–2: startPositionMS (uint24 BE)
         entry[0] = UInt8((track.startPositionMS >> 16) & 0xFF)
         entry[1] = UInt8((track.startPositionMS >> 8)  & 0xFF)
         entry[2] = UInt8( track.startPositionMS        & 0xFF)
 
-        // Stop position (uint24 BE)
+        // Bytes 3–5: stopPositionMS (uint24 BE)
         entry[3] = UInt8((track.stopPositionMS >> 16) & 0xFF)
         entry[4] = UInt8((track.stopPositionMS >> 8)  & 0xFF)
         entry[5] = UInt8( track.stopPositionMS        & 0xFF)
 
-        // Volume (uint24 BE)
-        entry[6] = UInt8((track.volume >> 16) & 0xFF)
-        entry[7] = UInt8((track.volume >> 8)  & 0xFF)
-        entry[8] = UInt8( track.volume        & 0xFF)
+        // Bytes 6–8: volume
+        entry[6] = 0xa5
+        entry[7] = 0x01
+        entry[8] = 0x00
 
-        entry[9]  = track.fileType
-        entry[10] = track.unknown1
-        entry[11] = track.unknown2
-        entry[12] = track.shuffleFlag
-        entry[13] = track.podcastFlag
-        entry[14] = track.bookmarkFlag
-        entry[15] = track.unknown3
+        // Bytes 9–25: zeros (already zero from initialisation)
 
-        // File path: encode as UTF-16BE, pad/truncate to 512 bytes (256 code units)
-        let pathBytes = encodePathUTF16BE(track.filePath)
-        for (i, byte) in pathBytes.enumerated() where i < 512 {
-            entry[16 + i] = byte
+        // Bytes 26–28: mystery bytes, exactly as iTunes writes them
+        entry[31] = 0x01
+        entry[32] = 0x00
+        entry[33] = 0x02
+
+        // Bytes 29–556: file path as UTF-16BE, zero padded
+        let pathBytes = encodePathUTF16LE(track.filePath)
+        for (i, byte) in pathBytes.enumerated() where i < 527 {
+            entry[35 + i] = byte
         }
-        // Bytes 528–557 remain zero (reserved)
+
+        entry[557] = 0x01
 
         return entry
     }
 
-    private func encodePathUTF16BE(_ path: String) -> [UInt8] {
-        // Encode to UTF-16BE, no BOM
-        let utf16 = path.utf16
+    private func encodePathUTF16LE(_ path: String) -> [UInt8] {
         var bytes = [UInt8]()
-        bytes.reserveCapacity(utf16.count * 2)
-        for codeUnit in utf16 {
+        for codeUnit in path.utf16 {
+            bytes.append(UInt8(codeUnit & 0xFF))
             bytes.append(UInt8((codeUnit >> 8) & 0xFF))
-            bytes.append(UInt8( codeUnit       & 0xFF))
         }
-        // Pad to 512 bytes
-        while bytes.count < 512 { bytes.append(0) }
+        while bytes.count < 523 { bytes.append(0) }
         return bytes
     }
 }

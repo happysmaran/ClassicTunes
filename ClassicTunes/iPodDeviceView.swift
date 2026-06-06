@@ -444,19 +444,24 @@ struct iPodDeviceView: View {
     }
     
     private func requestVolumeAccess(for device: iPodDevice) {
+        if let savedURL = syncEngine.loadPersistedAccess(for: device.bsdName) {
+            syncEngine.grantedVolumeURL = savedURL
+            loadDeviceTracks()
+            return
+        }
+
         let panel = NSOpenPanel()
         panel.message = "Select your iPod to allow ClassicTunes to sync music to it."
         panel.prompt = "Grant Access"
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
-        panel.canCreateDirectories = false
-        panel.allowsMultipleSelection = false
         panel.directoryURL = device.volumeURL
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            // Store the security-scoped URL for use during sync
+            
             _ = url.startAccessingSecurityScopedResource()
-            syncEngine.grantedVolumeURL = url
+            syncEngine.persistAccess(for: url, bsdName: device.bsdName)
+            loadDeviceTracks()
         }
     }
 }
