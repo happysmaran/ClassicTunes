@@ -28,7 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      # 2. List available Xcode versions for debugging or choosing specific versions
+      # 2. List available Xcode versions
       - name: Show Available Xcode Versions
         run: ls /Applications/Xcode*
 
@@ -40,11 +40,19 @@ jobs:
       - name: Resolve Swift Package Dependencies
         run: xcodebuild -resolvePackageDependencies $BUILD_TARGET -scheme "$SCHEME_NAME"
 
-      # 5. Build the application for testing
+      # 5. Build the application and output it to a dedicated folder
       - name: Build Application
         run: |
           xcodebuild build \
             $BUILD_TARGET \
             -scheme "$SCHEME_NAME" \
             -destination 'platform=macOS' \
+            CONFIGURATION_BUILD_DIR=$GITHUB_WORKSPACE/build \
             CODE_SIGNING_ALLOWED=NO
+
+      # 6. Upload the built app
+      - name: Upload Built App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClassicTunes-Unsigned
+          path: ${{ github.workspace }}/build/ClassicTunes.app
