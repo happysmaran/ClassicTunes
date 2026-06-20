@@ -95,7 +95,12 @@ struct ContentView: View {
     @State private var m3UExportURL: URL?
     
     @State private var isDeviceSelected = false
-    
+
+    // Menu command support (File/Edit/View/Controls/Help)
+    @FocusState private var isSearchFieldFocused: Bool
+    @State private var volumeBeforeMute: Double = 0.5
+    @State private var showKeyboardShortcuts = false
+
     @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
     @EnvironmentObject var syncEngine: iPodSyncEngine
 
@@ -503,7 +508,8 @@ struct ContentView: View {
                         isStopped: $isStopped,
                         isCoverFlowActive: $isCoverFlowActive,
                         onMiniPlayerToggle: toggleMiniPlayer,
-                        searchText: $searchText
+                        searchText: $searchText,
+                        searchFieldFocus: $isSearchFieldFocused
                     )
 
                     Divider()
@@ -754,9 +760,136 @@ struct ContentView: View {
                 }
                 .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
                 .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
+                .focusedSceneValue(\.newPlaylistAction, newPlaylistAction)
+                .focusedSceneValue(\.importMusicAction, importMusicAction)
+                .focusedSceneValue(\.importPlaylistAction, importPlaylistAction)
+                .focusedSceneValue(\.exportPlaylistAction, exportPlaylistMenuAction())
+                .focusedSceneValue(\.focusSearchFieldAction, focusSearchFieldAction)
+                .focusedSceneValue(\.showListViewAction, showListViewAction)
+                .focusedSceneValue(\.showAlbumGridAction, showAlbumGridAction)
+                .focusedSceneValue(\.showCoverFlowAction, showCoverFlowAction)
+                .focusedSceneValue(\.toggleUpNextAction, toggleUpNextMenuAction)
+                .focusedSceneValue(\.showUpNextValue, showUpNext)
+                .focusedSceneValue(\.toggleLyricsAction, toggleLyricsMenuAction)
+                .focusedSceneValue(\.showLyricsValue, showLyrics)
+                .focusedSceneValue(\.toggleMiniPlayerAction, toggleMiniPlayer)
+                .focusedSceneValue(\.togglePlayPauseAction, togglePlayPauseAction)
+                .focusedSceneValue(\.isPlayingValue, player?.rate != 0)
+                .focusedSceneValue(\.playNextAction, playNext)
+                .focusedSceneValue(\.playPreviousAction, playPrevious)
+                .focusedSceneValue(\.increaseVolumeAction, increaseVolumeAction)
+                .focusedSceneValue(\.decreaseVolumeAction, decreaseVolumeAction)
+                .focusedSceneValue(\.toggleMuteAction, toggleMuteAction)
+                .focusedSceneValue(\.isMutedValue, volume == 0)
+                .focusedSceneValue(\.toggleShuffleAction, toggleShuffleAction)
+                .focusedSceneValue(\.isShuffleValue, isShuffleEnabled)
+                .focusedSceneValue(\.cycleRepeatModeAction, cycleRepeatModeAction)
+                .focusedSceneValue(\.isRepeatAllValue, isRepeatEnabled)
+                .focusedSceneValue(\.isRepeatOneValue, isRepeatOne)
+                .focusedSceneValue(\.showKeyboardShortcutsAction, { showKeyboardShortcuts = true })
+                .sheet(isPresented: $showKeyboardShortcuts) {
+                    KeyboardShortcutsView()
+                }
             }
         }
         .tint(.iTunesBlue)
+    }
+
+    private func newPlaylistAction() {
+        showNewPlaylistSheet = true
+    }
+
+    private func importMusicAction() {
+        showFileImporter = true
+    }
+
+    private func importPlaylistAction() {
+        showM3UImporter = true
+    }
+
+    private func exportPlaylistMenuAction() -> (() -> Void)? {
+        guard selectedPlaylistID != nil else { return nil }
+        return { exportSelectedPlaylist() }
+    }
+
+    private func focusSearchFieldAction() {
+        isSearchFieldFocused = true
+    }
+
+    private func showListViewAction() {
+        isAlbumView = false
+        isCoverFlowActive = false
+    }
+
+    private func showAlbumGridAction() {
+        isAlbumView = true
+        isCoverFlowActive = false
+    }
+
+    private func showCoverFlowAction() {
+        isCoverFlowActive = true
+        isAlbumView = false
+    }
+
+    private func toggleUpNextMenuAction() {
+        withAnimation {
+            showUpNext.toggle()
+            if showUpNext {
+                updateUpcomingSongs()
+            }
+        }
+    }
+
+    private func toggleLyricsMenuAction() {
+        withAnimation {
+            showLyrics.toggle()
+            if showLyrics, let song = selectedSong {
+                loadLyrics(for: song)
+            }
+        }
+    }
+
+    private func togglePlayPauseAction() {
+        if player?.rate != 0 {
+            player?.pause()
+        } else {
+            player?.play()
+            updateNowPlayingInfo()
+        }
+    }
+
+    private func increaseVolumeAction() {
+        volume = min(1.0, volume + 0.1)
+    }
+
+    private func decreaseVolumeAction() {
+        volume = max(0.0, volume - 0.1)
+    }
+
+    private func toggleMuteAction() {
+        if volume > 0 {
+            volumeBeforeMute = volume
+            volume = 0
+        } else {
+            volume = volumeBeforeMute > 0 ? volumeBeforeMute : 0.5
+        }
+    }
+
+    private func toggleShuffleAction() {
+        isShuffleEnabled.toggle()
+    }
+
+    private func cycleRepeatModeAction() {
+        if !isRepeatEnabled && !isRepeatOne {
+            isRepeatEnabled = true
+            isRepeatOne = false
+        } else if isRepeatEnabled && !isRepeatOne {
+            isRepeatEnabled = false
+            isRepeatOne = true
+        } else {
+            isRepeatEnabled = false
+            isRepeatOne = false
+        }
     }
 
     private func deletePlaylistAction() -> (() -> Void)? {

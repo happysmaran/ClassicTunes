@@ -20,6 +20,7 @@ struct TopToolbarView: View {
     @Binding var isCoverFlowActive: Bool
     var onMiniPlayerToggle: (() -> Void)? = nil
     @Binding var searchText: String
+    var searchFieldFocus: FocusState<Bool>.Binding
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -173,6 +174,7 @@ struct TopToolbarView: View {
             TextField("toolbar.search", text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 160)
+                .focused(searchFieldFocus)
 
             Button("toolbar.importMusic") {
                 showFileImporter = true

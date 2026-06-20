@@ -113,6 +113,47 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Delete Playlist";
+"menu.newPlaylist"            = "New Playlist…";
+"menu.importMusic"            = "Import Music Folder…";
+"menu.importPlaylist"         = "Import Playlist (M3U)…";
+"menu.exportPlaylist"         = "Export Playlist (M3U)…";
+"menu.find"                   = "Find";
+"menu.showAsList"             = "as List";
+"menu.showAsAlbums"           = "as Albums";
+"menu.showAsCoverFlow"        = "as Cover Flow";
+"menu.showUpNext"             = "Show Up Next";
+"menu.hideUpNext"             = "Hide Up Next";
+"menu.showLyrics"             = "Show Lyrics";
+"menu.hideLyrics"             = "Hide Lyrics";
+"menu.switchToMiniPlayer"     = "Switch to MiniPlayer";
+"menu.controls"               = "Controls";
+"menu.play"                   = "Play";
+"menu.pause"                  = "Pause";
+"menu.nextSong"                = "Next Song";
+"menu.previousSong"           = "Previous Song";
+"menu.increaseVolume"         = "Increase Volume";
+"menu.decreaseVolume"         = "Decrease Volume";
+"menu.mute"                   = "Mute";
+"menu.unmute"                 = "Unmute";
+"menu.shuffle"                = "Shuffle";
+"menu.repeatAll"              = "Repeat";
+"menu.repeatOne"              = "Repeat One";
+"menu.repeatOff"              = "Turn Off Repeat";
+"menu.keyboardShortcuts"      = "Keyboard Shortcuts…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Keyboard Shortcuts";
+"shortcuts.close"             = "Close";
+"shortcuts.group.file"        = "File";
+"shortcuts.group.edit"        = "Edit";
+"shortcuts.group.view"        = "View";
+"shortcuts.group.controls"    = "Controls";
+"menu.playPause"              = "Play / Pause";
+"menu.toggleUpNext"           = "Show/Hide Up Next";
+"menu.toggleLyrics"           = "Show/Hide Lyrics";
+"menu.toggleMute"             = "Mute / Unmute";
+"menu.repeat"                 = "Cycle Repeat Mode";
+
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Eject iPod";
