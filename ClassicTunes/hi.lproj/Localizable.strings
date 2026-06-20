@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "अगला चलाएँ";
 "contextMenu.addToPlaylist"   = "प्लेलिस्ट में जोड़ें";
+"contextMenu.findMusicVideo"  = "म्यूज़िक वीडियो ढूंढें";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "चलाएँ";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "प्लेलिस्ट हटाएँ";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "iPod बाहर निकालें";
+"device.trackCount"         = "iPod पर %d गाने";
+"device.empty"              = "इस iPod पर कोई गाने नहीं हैं।";
+"sync.addSongs"             = "गाने जोड़ें…";
+"sync.dragHere"             = "इस iPod से सिंक करने के लिए\nअपनी लाइब्रेरी से गाने यहाँ लाएँ।";
+"sync.syncNow"              = "सिंक करें";
+"sync.cancel"               = "रद्द करें";
+"sync.writing"              = "डेटाबेस लिखा जा रहा है…";
+"sync.ejecting"             = "समाप्त किया जा रहा है…";
+"sync.done"                 = "सिंक पूरा हुआ";
+"sync.failed"               = "सिंक विफल रहा";
+"sync.chooseSongs"          = "सिंक करने के लिए गाने चुनें";
+"sync.confirm.title"        = "iPod सिंक करें?";
+"sync.confirm.message"      = "इससे iPod पर मौजूद सभी %d गाने बदल दिए जाएँगे। जारी रखें?";
+"eject.confirm.title"       = "iPod बाहर निकालें?";
+"eject.confirm.message"     = "बाहर निकालने से पहले सुनिश्चित करें कि सिंक पूरा हो गया है।";
+"eject.eject"               = "बाहर निकालें";
+"eject.cancel"              = "रद्द करें";
+"picker.done"               = "सिंक सूची में जोड़ें";
+"picker.cancel"             = "रद्द करें";
+"picker.queued"             = "कतार में है";

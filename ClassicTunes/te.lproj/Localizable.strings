@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "తర్వాత ప్లే చేయి";
 "contextMenu.addToPlaylist"   = "ప్లేలిస్ట్‌కు జోడించు";
+"contextMenu.findMusicVideo"  = "మ్యూజిక్ వీడియోను కనుగొనండి";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "ప్లే చేయి";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "ప్లేలిస్ట్ తొలగించు";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "iPodని ఎజెక్ట్ చేయి";
+"device.trackCount"         = "iPodలో %d పాటలు ఉన్నాయి";
+"device.empty"              = "ఈ iPodలో పాటలు లేవు.";
+"sync.addSongs"             = "పాటలను జోడించు…";
+"sync.dragHere"             = "ఈ iPodకి సింక్ చేయడానికి మీ లైబ్రరీ\nనుండి పాటలను ఇక్కడకు చేర్చండి.";
+"sync.syncNow"              = "సింక్ చేయి";
+"sync.cancel"               = "రద్దు చేయి";
+"sync.writing"              = "డేటాబేస్ వ్రాయబడుతోంది…";
+"sync.ejecting"             = "ముగిస్తోంది…";
+"sync.done"                 = "సింక్ పూర్తయింది";
+"sync.failed"               = "సింక్ విఫలమైంది";
+"sync.chooseSongs"          = "సింక్ చేయడానికి పాటలను ఎంచుకోండి";
+"sync.confirm.title"        = "iPodని సింక్ చేయాలా?";
+"sync.confirm.message"      = "ఇది iPodలోని అన్ని %d పాటలను భర్తీ చేస్తుంది. కొనసాగించాలా?";
+"eject.confirm.title"       = "iPodని ఎజెక్ట్ చేయాలా?";
+"eject.confirm.message"     = "ఎజెక్ట్ చేయడానికి ముందు సింక్ పూర్తయిందని నిర్ధారించుకోండి.";
+"eject.eject"               = "ఎజెక్ట్ చేయి";
+"eject.cancel"              = "రద్దు చేయి";
+"picker.done"               = "సింక్ లిస్ట్‌కు జోడించు";
+"picker.cancel"             = "రద్దు చేయి";
+"picker.queued"             = "క్యూలో ఉంది";

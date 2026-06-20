@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "下一首播放";
 "contextMenu.addToPlaylist"   = "添加到播放列表";
+"contextMenu.findMusicVideo"  = "查找音乐视频";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "播放";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "删除播放列表";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "弹出 iPod";
+"device.trackCount"         = "iPod 上共有 %d 首歌曲";
+"device.empty"              = "此 iPod 上没有歌曲。";
+"sync.addSongs"             = "添加歌曲…";
+"sync.dragHere"             = "从您的资料库中添加歌曲\n以同步到此 iPod。";
+"sync.syncNow"              = "同步";
+"sync.cancel"               = "取消";
+"sync.writing"              = "正在写入数据库…";
+"sync.ejecting"             = "正在完成…";
+"sync.done"                 = "同步完成";
+"sync.failed"               = "同步失败";
+"sync.chooseSongs"          = "选择要同步的歌曲";
+"sync.confirm.title"        = "同步 iPod？";
+"sync.confirm.message"      = "这将替换 iPod 上的所有 %d 首歌曲。是否继续？";
+"eject.confirm.title"       = "弹出 iPod？";
+"eject.confirm.message"     = "弹出前请确保同步已完成。";
+"eject.eject"               = "弹出";
+"eject.cancel"              = "取消";
+"picker.done"               = "添加到同步列表";
+"picker.cancel"             = "取消";
+"picker.queued"             = "已排队";

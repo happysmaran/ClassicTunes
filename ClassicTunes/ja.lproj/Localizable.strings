@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "次に再生";
 "contextMenu.addToPlaylist"   = "プレイリストに追加";
+"contextMenu.findMusicVideo"  = "ミュージックビデオを探す";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "再生";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "プレイリストを削除";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "iPodを取り出す";
+"device.trackCount"         = "iPod内に%d曲";
+"device.empty"              = "このiPodには曲がありません。";
+"sync.addSongs"             = "曲を追加…";
+"sync.dragHere"             = "このiPodに同期するには、\nライブラリから曲を追加してください。";
+"sync.syncNow"              = "同期";
+"sync.cancel"               = "キャンセル";
+"sync.writing"              = "データベースを書き込み中…";
+"sync.ejecting"             = "終了処理中…";
+"sync.done"                 = "同期が完了しました";
+"sync.failed"               = "同期に失敗しました";
+"sync.chooseSongs"          = "同期する曲を選択";
+"sync.confirm.title"        = "iPodを同期しますか？";
+"sync.confirm.message"      = "これにより、iPod内のすべての%d曲が上書きされます。続行しますか？";
+"eject.confirm.title"       = "iPodを取り出しますか？";
+"eject.confirm.message"     = "取り出す前に、同期が完了していることを確認してください。";
+"eject.eject"               = "取り出す";
+"eject.cancel"              = "キャンセル";
+"picker.done"               = "同期リストに追加";
+"picker.cancel"             = "キャンセル";
+"picker.queued"             = "待機中";

@@ -1,6 +1,4 @@
-/* ============================================================
-   ClassicTunes – Localizable.strings  (English – Base)
-   ============================================================ */
+// ClassicTunes – Localizable.strings  (English – Base)
 
 // MARK: - Sidebar sections
 "sidebar.library"             = "LIBRARY";
@@ -42,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Play Next";
 "contextMenu.addToPlaylist"   = "Add to Playlist";
+"contextMenu.findMusicVideo"  = "Find Music Video";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Play";

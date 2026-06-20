@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Воспроизвести следующим";
 "contextMenu.addToPlaylist"   = "Добавить в плейлист";
+"contextMenu.findMusicVideo"  = "Найти музыкальный клип";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Воспроизвести";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Удалить плейлист";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "Извлечь iPod";
+"device.trackCount"         = "Песен на iPod: %d";
+"device.empty"              = "На этом iPod нет песен.";
+"sync.addSongs"             = "Добавить песни…";
+"sync.dragHere"             = "Добавьте песни из медиатеки,\nчтобы синхронизировать их с этим iPod.";
+"sync.syncNow"              = "Синхронизировать";
+"sync.cancel"               = "Отмена";
+"sync.writing"              = "Запись базы данных…";
+"sync.ejecting"             = "Завершение…";
+"sync.done"                 = "Синхронизация завершена";
+"sync.failed"               = "Сбой синхронизации";
+"sync.chooseSongs"          = "Выберите песни для синхронизации";
+"sync.confirm.title"        = "Синхронизировать iPod?";
+"sync.confirm.message"      = "Это действие заменит все песни (%d) на iPod. Продолжить?";
+"eject.confirm.title"       = "Извлечь iPod?";
+"eject.confirm.message"     = "Перед извлечением убедитесь, что синхронизация завершена.";
+"eject.eject"               = "Извлечь";
+"eject.cancel"              = "Отмена";
+"picker.done"               = "Добавить в список синхронизации";
+"picker.cancel"             = "Отмена";
+"picker.queued"             = "В очереди";

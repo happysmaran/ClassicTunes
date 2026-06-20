@@ -24,6 +24,7 @@
 // MARK: - Top toolbar
 "toolbar.importMusic"         = "음악 가져오기";
 "toolbar.search"              = "검색";
+"contextMenu.findMusicVideo"  = "뮤직비디오 찾기";
 
 // MARK: - Bottom bar
 "bottomBar.lyrics"            = "가사";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "재생 목록 삭제";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "iPod 추출";
+"device.trackCount"         = "iPod에 노래 %d곡";
+"device.empty"              = "이 iPod에 노래가 없습니다.";
+"sync.addSongs"             = "노래 추가…";
+"sync.dragHere"             = "이 iPod에 동기화하려면\n보관함에서 노래를 추가하십시오.";
+"sync.syncNow"              = "동기화";
+"sync.cancel"               = "취소";
+"sync.writing"              = "데이터베이스 쓰는 중…";
+"sync.ejecting"             = "마무리 중…";
+"sync.done"                 = "동기화 완료";
+"sync.failed"               = "동기화 실패";
+"sync.chooseSongs"          = "동기화할 노래 선택";
+"sync.confirm.title"        = "iPod을 동기화하겠습니까?";
+"sync.confirm.message"      = "이 작업은 iPod의 모든 %d곡을 대체합니다. 계속하시겠습니까?";
+"eject.confirm.title"       = "iPod을 추출하겠습니까?";
+"eject.confirm.message"     = "추출하기 전에 동기화가 완료되었는지 확인하십시오.";
+"eject.eject"               = "추출";
+"eject.cancel"              = "취소";
+"picker.done"               = "동기화 목록에 추가";
+"picker.cancel"             = "취소";
+"picker.queued"             = "대기 중";

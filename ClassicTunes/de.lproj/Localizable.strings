@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Als Nächstes abspielen";
 "contextMenu.addToPlaylist"   = "Zur Wiedergabeliste hinzufügen";
+"contextMenu.findMusicVideo"  = "Musikvideo finden";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Abspielen";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Wiedergabeliste löschen";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "iPod auswerfen";
+"device.trackCount"         = "%d Titel auf dem iPod";
+"device.empty"              = "Keine Titel auf diesem iPod.";
+"sync.addSongs"             = "Titel hinzufügen…";
+"sync.dragHere"             = "Füge Titel aus deiner Mediathek hinzu,\num sie mit diesem iPod zu synchronisieren.";
+"sync.syncNow"              = "Synchronisieren";
+"sync.cancel"               = "Abbrechen";
+"sync.writing"              = "Datenbank wird geschrieben…";
+"sync.ejecting"             = "Wird beendet…";
+"sync.done"                 = "Synchronisierung abgeschlossen";
+"sync.failed"               = "Synchronisierung fehlgeschlagen";
+"sync.chooseSongs"          = "Titel zum Synchronisieren auswählen";
+"sync.confirm.title"        = "iPod synchronisieren?";
+"sync.confirm.message"      = "Dadurch werden alle %d Titel auf dem iPod ersetzt. Fortfahren?";
+"eject.confirm.title"       = "iPod auswerfen?";
+"eject.confirm.message"     = "Stelle sicher, dass die Synchronisierung abgeschlossen ist, bevor du den iPod auswirfst.";
+"eject.eject"               = "Auswerfen";
+"eject.cancel"              = "Abbrechen";
+"picker.done"               = "Zur Sync-Liste hinzufügen";
+"picker.cancel"             = "Abbrechen";
+"picker.queued"             = "In Warteschlange";

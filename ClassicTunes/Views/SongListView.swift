@@ -174,6 +174,15 @@ struct SongListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
     }
+    
+    // Did you really expect something more bespoke? Naaaaah
+    private func openYouTubeSearch(for song: Song) {
+        let query = "\(song.artist) \(song.title) official music video"
+        var components = URLComponents(string: "https://www.youtube.com/results")!
+        components.queryItems = [URLQueryItem(name: "search_query", value: query)]
+        guard let url = components.url else { return }
+        NSWorkspace.shared.open(url)
+    }
 
     private var listView: some View {
         VStack(spacing: 0) {
@@ -333,6 +342,9 @@ struct SongListView: View {
             }
             Button("contextMenu.addToPlaylist") {
                 onAddToPlaylist(song)
+            }
+            Button("contextMenu.findMusicVideo") {
+                openYouTubeSearch(for: song)
             }
         }
         .onDrag {

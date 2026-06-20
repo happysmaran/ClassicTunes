@@ -40,6 +40,7 @@
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Reproducir a continuación";
 "contextMenu.addToPlaylist"   = "Añadir a lista de reproducción";
+"contextMenu.findMusicVideo"  = "Buscar videoclip";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Reproducir";
@@ -112,3 +113,26 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Eliminar lista de reproducción";
+
+// MARK: - iPod Syncing Details
+"device.eject"              = "Expulsar iPod";
+"device.trackCount"         = "%d canciones en el iPod";
+"device.empty"              = "No hay canciones en este iPod.";
+"sync.addSongs"             = "Añadir canciones…";
+"sync.dragHere"             = "Arrastra canciones desde tu biblioteca\npara sincronizarlas con este iPod.";
+"sync.syncNow"              = "Sincronizar";
+"sync.cancel"               = "Cancelar";
+"sync.writing"              = "Escribiendo base de datos…";
+"sync.ejecting"             = "Finalizando…";
+"sync.done"                 = "Sincronización completada";
+"sync.failed"               = "Error de sincronización";
+"sync.chooseSongs"          = "Seleccionar canciones para sincronizar";
+"sync.confirm.title"        = "¿Sincronizar iPod?";
+"sync.confirm.message"      = "Esto reemplazará las %d canciones del iPod. ¿Continuar?";
+"eject.confirm.title"       = "¿Expulsar iPod?";
+"eject.confirm.message"     = "Asegúrate de que la sincronización haya terminado antes de expulsar.";
+"eject.eject"               = "Expulsar";
+"eject.cancel"              = "Cancelar";
+"picker.done"               = "Añadir a la lista de sincronización";
+"picker.cancel"             = "Cancelar";
+"picker.queued"             = "En cola";
