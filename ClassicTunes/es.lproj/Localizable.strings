@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Eliminar lista de reproducción";
+"menu.newPlaylist"            = "Nueva lista de reproducción…";
+"menu.importMusic"            = "Importar carpeta de música…";
+"menu.importPlaylist"         = "Importar lista de reproducción (M3U)…";
+"menu.exportPlaylist"         = "Exportar lista de reproducción (M3U)…";
+"menu.find"                   = "Buscar";
+"menu.showAsList"             = "como lista";
+"menu.showAsAlbums"           = "como álbumes";
+"menu.showAsCoverFlow"        = "como Cover Flow";
+"menu.showUpNext"             = "Mostrar \"A continuación\"";
+"menu.hideUpNext"             = "Ocultar \"A continuación\"";
+"menu.showLyrics"             = "Mostrar letra";
+"menu.hideLyrics"             = "Ocultar letra";
+"menu.switchToMiniPlayer"     = "Cambiar a MiniPlayer";
+"menu.controls"               = "Controles";
+"menu.play"                   = "Reproducir";
+"menu.pause"                  = "Pausa";
+"menu.nextSong"                = "Siguiente canción";
+"menu.previousSong"           = "Canción anterior";
+"menu.increaseVolume"         = "Subir volumen";
+"menu.decreaseVolume"         = "Bajar volumen";
+"menu.mute"                   = "Silenciar";
+"menu.unmute"                 = "Activar sonido";
+"menu.shuffle"                = "Aleatorio";
+"menu.repeatAll"              = "Repetir todo";
+"menu.repeatOne"              = "Repetir una";
+"menu.repeatOff"              = "Desactivar repetición";
+"menu.keyboardShortcuts"      = "Funciones rápidas de teclado…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Funciones rápidas de teclado";
+"shortcuts.close"             = "Cerrar";
+"shortcuts.group.file"        = "Archivo";
+"shortcuts.group.edit"        = "Edición";
+"shortcuts.group.view"        = "Visualización";
+"shortcuts.group.controls"    = "Controles";
+"menu.playPause"              = "Reproducir / Pausa";
+"menu.toggleUpNext"           = "Mostrar/ocultar \"A continuación\"";
+"menu.toggleLyrics"           = "Mostrar/ocultar letra";
+"menu.toggleMute"             = "Silenciar / Activar sonido";
+"menu.repeat"                 = "Cambiar modo de repetición";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Expulsar iPod";

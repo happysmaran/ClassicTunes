@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Удалить плейлист";
+"menu.newPlaylist"            = "Новый плейлист…";
+"menu.importMusic"            = "Импортировать папку с музыкой…";
+"menu.importPlaylist"         = "Импортировать плейлист (M3U)…";
+"menu.exportPlaylist"         = "Экспортировать плейлист (M3U)…";
+"menu.find"                   = "Найти";
+"menu.showAsList"             = "списком";
+"menu.showAsAlbums"           = "альбомами";
+"menu.showAsCoverFlow"        = "в виде Cover Flow";
+"menu.showUpNext"             = "Показать «Далее»";
+"menu.hideUpNext"             = "Скрыть «Далее»";
+"menu.showLyrics"             = "Показать текст песни";
+"menu.hideLyrics"             = "Скрыть текст песни";
+"menu.switchToMiniPlayer"     = "Перейти в MiniPlayer";
+"menu.controls"               = "Управление";
+"menu.play"                   = "Воспроизвести";
+"menu.pause"                  = "Пауза";
+"menu.nextSong"                = "Следующая песня";
+"menu.previousSong"           = "Предыдущая песня";
+"menu.increaseVolume"         = "Увеличить громкость";
+"menu.decreaseVolume"         = "Уменьшить громкость";
+"menu.mute"                   = "Выключить звук";
+"menu.unmute"                 = "Включить звук";
+"menu.shuffle"                = "Перемешать";
+"menu.repeatAll"              = "Повторять все";
+"menu.repeatOne"              = "Повторять одну";
+"menu.repeatOff"              = "Выключить повторение";
+"menu.keyboardShortcuts"      = "Сочетания клавиш…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Сочетания клавиш";
+"shortcuts.close"             = "Закрыть";
+"shortcuts.group.file"        = "Файл";
+"shortcuts.group.edit"        = "Правка";
+"shortcuts.group.view"        = "Вид";
+"shortcuts.group.controls"    = "Управление";
+"menu.playPause"              = "Воспроизведение / Пауза";
+"menu.toggleUpNext"           = "Показать/скрыть «Далее»";
+"menu.toggleLyrics"           = "Показать/скрыть текст песни";
+"menu.toggleMute"             = "Включить/выключить звук";
+"menu.repeat"                 = "Переключить режим повтора";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Извлечь iPod";

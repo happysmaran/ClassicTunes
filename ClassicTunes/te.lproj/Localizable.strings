@@ -112,7 +112,47 @@
 "miniPlayer.openIn"           = "మినీ ప్లేయర్‌లో తెరవండి";
 
 // MARK: - Menu commands
-"menu.deletePlaylist"         = "ప్లేలిస్ట్ తొలగించు";
+"menu.deletePlaylist"         = "ప్లేలిస్ట్‌ని తొలగించు";
+"menu.newPlaylist"            = "కొత్త ప్లేలిస్ట్…";
+"menu.importMusic"            = "మ్యూజిక్ ఫోల్డర్‌ను ఇంపోర్ట్ చేయి…";
+"menu.importPlaylist"         = "ప్లేలిస్ట్‌ను ఇంపోర్ట్ చేయి (M3U)…";
+"menu.exportPlaylist"         = "ప్లేలిస్ట్‌ను ఎక్స్‌పోర్ట్ చేయి (M3U)…";
+"menu.find"                   = "వెతుకు";
+"menu.showAsList"             = "జాబితాగా చూపించు";
+"menu.showAsAlbums"           = "ఆల్బమ్‌లుగా చూపించు";
+"menu.showAsCoverFlow"        = "కవర్ ఫ్లోగా చూపించు";
+"menu.showUpNext"             = "తర్వాత రాబోయేవి చూపించు";
+"menu.hideUpNext"             = "తర్వాత రాబోయేవి దాచు";
+"menu.showLyrics"             = "సాహిత్యం చూపించు";
+"menu.hideLyrics"             = "సాహిత్యం దాచు";
+"menu.switchToMiniPlayer"     = "మినిప్లేయర్‌కి మారు";
+"menu.controls"               = "నియంత్రణలు";
+"menu.play"                   = "ప్లే చేయి";
+"menu.pause"                  = "పాజ్ చేయి";
+"menu.nextSong"                = "తర్వాతి పాట";
+"menu.previousSong"           = "మునుపటి పాట";
+"menu.increaseVolume"         = "వాల్యూమ్ పెంచు";
+"menu.decreaseVolume"         = "వాల్యూమ్ తగ్గించు";
+"menu.mute"                   = "మ్యూట్ చేయి";
+"menu.unmute"                 = "అన్‌మ్యూట్ చేయి";
+"menu.shuffle"                = "షఫుల్";
+"menu.repeatAll"              = "రిపీట్ చేయి";
+"menu.repeatOne"              = "ఒకదాన్ని రిపీట్ చేయి";
+"menu.repeatOff"              = "రిపీట్ ఆఫ్ చేయి";
+"menu.keyboardShortcuts"      = "కీబోర్డ్ షార్ట్‌కట్‌లు…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "キーボードショートカット";
+"shortcuts.close"             = "మూసివేయి";
+"shortcuts.group.file"        = "ఫైల్";
+"shortcuts.group.edit"        = "ఎడిట్";
+"shortcuts.group.view"        = "వ్యూ";
+"shortcuts.group.controls"    = "నియంత్రణలు";
+"menu.playPause"              = "ప్లే / పాజ్";
+"menu.toggleUpNext"           = "తర్వాత రాబోయేవి చూపించు/దాచు";
+"menu.toggleLyrics"           = "సాహిత్యం చూపించు/దాచు";
+"menu.toggleMute"             = "మ్యూట్ / అన్‌మ్యూట్";
+"menu.repeat"                 = "రిపీట్ మోడ్‌ను మార్చు";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPodని ఎజెక్ట్ చేయి";

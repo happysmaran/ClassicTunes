@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "プレイリストを削除";
+"menu.newPlaylist"            = "新規プレイリスト…";
+"menu.importMusic"            = "ミュージックフォルダを読み込み…";
+"menu.importPlaylist"         = "プレイリストを読み込み (M3U)…";
+"menu.exportPlaylist"         = "プレイリストを書き出し (M3U)…";
+"menu.find"                   = "検索";
+"menu.showAsList"             = "リストとして表示";
+"menu.showAsAlbums"           = "アルバムとして表示";
+"menu.showAsCoverFlow"        = "Cover Flowとして表示";
+"menu.showUpNext"             = "「次に再生」を表示";
+"menu.hideUpNext"             = "「次に再生」を非表示";
+"menu.showLyrics"             = "歌詞を表示";
+"menu.hideLyrics"             = "歌詞を非表示";
+"menu.switchToMiniPlayer"     = "MiniPlayerに切り替え";
+"menu.controls"               = "制御";
+"menu.play"                   = "再生";
+"menu.pause"                  = "一時停止";
+"menu.nextSong"                = "次の曲";
+"menu.previousSong"           = "前の曲";
+"menu.increaseVolume"         = "音量を上げる";
+"menu.decreaseVolume"         = "音量を下げる";
+"menu.mute"                   = "消音";
+"menu.unmute"                 = "消音を解除";
+"menu.shuffle"                = "シャッフル";
+"menu.repeatAll"              = "リピート";
+"menu.repeatOne"              = "1曲リピート";
+"menu.repeatOff"              = "リピート オフ";
+"menu.keyboardShortcuts"      = "キーボードショートカット…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "キーボードショートカット";
+"shortcuts.close"             = "閉じる";
+"shortcuts.group.file"        = "ファイル";
+"shortcuts.group.edit"        = "編集";
+"shortcuts.group.view"        = "表示";
+"shortcuts.group.controls"    = "制御";
+"menu.playPause"              = "再生 / 一時停止";
+"menu.toggleUpNext"           = "「次に再生」を表示/非表示";
+"menu.toggleLyrics"           = "歌詞を表示/非表示";
+"menu.toggleMute"             = "消音 / 消音解除";
+"menu.repeat"                 = "リピートモードを切り替え";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPodを取り出す";

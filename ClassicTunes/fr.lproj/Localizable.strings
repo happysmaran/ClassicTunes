@@ -112,7 +112,47 @@
 "miniPlayer.openIn"           = "Ouvrir dans le mini-lecteur";
 
 // MARK: - Menu commands
-"menu.deletePlaylist"         = "Supprimer la liste de lecture";
+"menu.deletePlaylist"         = "Supprimer la playlist";
+"menu.newPlaylist"            = "Nouvelle playlist…";
+"menu.importMusic"            = "Importer un dossier de musique…";
+"menu.importPlaylist"         = "Importer une playlist (M3U)…";
+"menu.exportPlaylist"         = "Exporter la playlist (M3U)…";
+"menu.find"                   = "Rechercher";
+"menu.showAsList"             = "par liste";
+"menu.showAsAlbums"           = "par albums";
+"menu.showAsCoverFlow"        = "par Cover Flow";
+"menu.showUpNext"             = "Afficher la file d’attente";
+"menu.hideUpNext"             = "Masquer la file d’attente";
+"menu.showLyrics"             = "Afficher les paroles";
+"menu.hideLyrics"             = "Masquer les paroles";
+"menu.switchToMiniPlayer"     = "Basculer vers le MiniPlayer";
+"menu.controls"               = "Commandes";
+"menu.play"                   = "Lire";
+"menu.pause"                  = "Pause";
+"menu.nextSong"                = "Morceau suivant";
+"menu.previousSong"           = "Morceau précédent";
+"menu.increaseVolume"         = "Augmenter le volume";
+"menu.decreaseVolume"         = "Diminuer le volume";
+"menu.mute"                   = "Couper le son";
+"menu.unmute"                 = "Activer le son";
+"menu.shuffle"                = "Aléatoire";
+"menu.repeatAll"              = "Tout répéter";
+"menu.repeatOne"              = "Répéter le morceau";
+"menu.repeatOff"              = "Désactiver la répétition";
+"menu.keyboardShortcuts"      = "Raccourcis clavier…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Raccourcis clavier";
+"shortcuts.close"             = "Fermer";
+"shortcuts.group.file"        = "Fichier";
+"shortcuts.group.edit"        = "Édition";
+"shortcuts.group.view"        = "Présentation";
+"shortcuts.group.controls"    = "Commandes";
+"menu.playPause"              = "Lecture / Pause";
+"menu.toggleUpNext"           = "Afficher/Masquer la file d’attente";
+"menu.toggleLyrics"           = "Afficher/Masquer les paroles";
+"menu.toggleMute"             = "Couper/Activer le son";
+"menu.repeat"                 = "Changer le mode de répétition";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Éjecter l’iPod";

@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "删除播放列表";
+"menu.newPlaylist"            = "新建播放列表…";
+"menu.importMusic"            = "导入音乐文件夹…";
+"menu.importPlaylist"         = "导入播放列表 (M3U)…";
+"menu.exportPlaylist"         = "导出播放列表 (M3U)…";
+"menu.find"                   = "查找";
+"menu.showAsList"             = "以列表方式";
+"menu.showAsAlbums"           = "以专辑方式";
+"menu.showAsCoverFlow"        = "以 Cover Flow 方式";
+"menu.showUpNext"             = "显示待播清单";
+"menu.hideUpNext"             = "隐藏待播清单";
+"menu.showLyrics"             = "显示歌词";
+"menu.hideLyrics"             = "隐藏歌词";
+"menu.switchToMiniPlayer"     = "切换到迷你播放器";
+"menu.controls"               = "控制";
+"menu.play"                   = "播放";
+"menu.pause"                  = "暂停";
+"menu.nextSong"                = "下一首歌曲";
+"menu.previousSong"           = "上一首歌曲";
+"menu.increaseVolume"         = "调高音量";
+"menu.decreaseVolume"         = "调低音量";
+"menu.mute"                   = "静音";
+"menu.unmute"                 = "取消静音";
+"menu.shuffle"                = "随机播放";
+"menu.repeatAll"              = "重复播放";
+"menu.repeatOne"              = "单曲循环";
+"menu.repeatOff"              = "关闭重复播放";
+"menu.keyboardShortcuts"      = "键盘快捷键…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "键盘快捷键";
+"shortcuts.close"             = "关闭";
+"shortcuts.group.file"        = "文件";
+"shortcuts.group.edit"        = "编辑";
+"shortcuts.group.view"        = "显示";
+"shortcuts.group.controls"    = "控制";
+"menu.playPause"              = "播放 / 暂停";
+"menu.toggleUpNext"           = "显示/隐藏待播清单";
+"menu.toggleLyrics"           = "显示/隐藏歌词";
+"menu.toggleMute"             = "静音 / 取消静音";
+"menu.repeat"                 = "切换重复播放模式";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "弹出 iPod";

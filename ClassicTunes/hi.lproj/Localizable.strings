@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "प्लेलिस्ट हटाएँ";
+"menu.newPlaylist"            = "नई प्लेलिस्ट…";
+"menu.importMusic"            = "संगीत फ़ोल्डर इम्पोर्ट करें…";
+"menu.importPlaylist"         = "प्लेलिस्ट इम्पोर्ट करें (M3U)…";
+"menu.exportPlaylist"         = "प्लेलिस्ट एक्सपोर्ट करें (M3U)…";
+"menu.find"                   = "खोजें";
+"menu.showAsList"             = "सूची के रूप में";
+"menu.showAsAlbums"           = "एल्बम के रूप में";
+"menu.showAsCoverFlow"        = "कवर फ़्लो के रूप में";
+"menu.showUpNext"             = "अगली कतार दिखाएँ";
+"menu.hideUpNext"             = "अगली कतार छिपाएँ";
+"menu.showLyrics"             = "बोल दिखाएँ";
+"menu.hideLyrics"             = "बोल छिपाएँ";
+"menu.switchToMiniPlayer"     = "मिनीप्लेयर पर जाएँ";
+"menu.controls"               = "नियंत्रण";
+"menu.play"                   = "बजाएँ";
+"menu.pause"                  = "रोकें";
+"menu.nextSong"                = "अगला गाना";
+"menu.previousSong"           = "पिछला गाना";
+"menu.increaseVolume"         = "आवाज़ बढ़ाएँ";
+"menu.decreaseVolume"         = "आवाज़ कम करें";
+"menu.mute"                   = "म्यूट करें";
+"menu.unmute"                 = "अनम्यूट करें";
+"menu.shuffle"                = "शफल";
+"menu.repeatAll"              = "दहराएँ";
+"menu.repeatOne"              = "एक गाना दोहराएँ";
+"menu.repeatOff"              = "दोहराना बंद करें";
+"menu.keyboardShortcuts"      = "कीबोर्ड शॉर्टकट…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "कीबोर्ड शॉर्टकट";
+"shortcuts.close"             = "बंद करें";
+"shortcuts.group.file"        = "फ़ाइल";
+"shortcuts.group.edit"        = "एडिट";
+"shortcuts.group.view"        = "व्यू";
+"shortcuts.group.controls"    = "नियंत्रण";
+"menu.playPause"              = "बजाएँ / रोकें";
+"menu.toggleUpNext"           = "अगली कतार दिखाएँ/छिपाएँ";
+"menu.toggleLyrics"           = "बोल दिखाएँ/छिपाएँ";
+"menu.toggleMute"             = "म्यूट / अनम्यूट";
+"menu.repeat"                 = "रिपीट मोड बदलें";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPod बाहर निकालें";

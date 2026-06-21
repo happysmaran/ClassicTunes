@@ -479,320 +479,234 @@ struct ContentView: View {
                 // Empty view when mini player is active
                 EmptyView()
             } else {
-                VStack(spacing: 0) {
-                    TopToolbarView(
-                        isAlbumView: $isAlbumView,
-                        showFileImporter: $showFileImporter,
-                        selectedSong: $selectedSong,
-                        isPlaying: Binding(
-                            get: { player?.rate != 0 },
-                            set: { shouldPlay in
-                                if shouldPlay {
-                                    player?.play()
-                                    updateNowPlayingInfo()
-                                } else {
-                                    player?.pause()
-                                }
-                            }
-                        ),
-                        playPrevious: playPrevious,
-                        playNext: playNext,
-                        volume: $volume,
-                        playbackPosition: $playbackPosition,
-                        playbackDuration: $playbackDuration,
-                        onSeek: handleSeek,
-                        isSeeking: $isSeeking,
-                        isShuffleEnabled: $isShuffleEnabled,
-                        isRepeatEnabled: $isRepeatEnabled,
-                        isRepeatOne: $isRepeatOne,
-                        isStopped: $isStopped,
-                        isCoverFlowActive: $isCoverFlowActive,
-                        onMiniPlayerToggle: toggleMiniPlayer,
-                        searchText: $searchText,
-                        searchFieldFocus: $isSearchFieldFocused
-                    )
-
-                    Divider()
-
-                    HStack(alignment: .top, spacing: 0) {
-                        HStack(spacing: 0) {
-                            SidebarView(
-                                playlists: playlists,
-                                userPlaylists: $playlistManager.userPlaylists,
-                                selectedPlaylistID: $selectedPlaylistID,
-                                showNewPlaylistSheet: $showNewPlaylistSheet,
-                                libraryActive: $libraryActive,
-                                showITunesStore: $showITunesStore,
-                                //connectedDevice: deviceMonitor.connectedDevice,
-                                isDeviceSelected: $isDeviceSelected
-                            )
-                            .frame(width: 220)
-                            .tint(.blue)
-                            .background(ITunesSidebarBackground())
-                            
-                            if let device = deviceMonitor.connectedDevice, isDeviceSelected {
-                                            iPodDeviceView(
-                                                device: device,
-                                                syncEngine: syncEngine,
-                                                allLibrarySongs: songs
-                                            )
-                            } else {
-                                mainContentArea()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .ignoresSafeArea()
-                            }
-                        }
-
-                        if showUpNext {
-                            Divider()
-                            UpNextView(
-                                currentSong: selectedSong,
-                                upcomingSongs: $upcomingSongs,
-                                isPlaying: (player?.rate ?? 0) > 0,
-                                onSongSelect: playSongFromUpNext,
-                                onMove: { from, to in
-                                    moveUpcomingSongs(from: from, to: to)
-                                },
-                                onDropSongs: { dropped in
-                                    addSongsNext(dropped)
-                                }
-                            )
-                            .frame(width: 300)
-                        }
-
-                        if showLyrics {
-                            Divider()
-                            LyricsView(
-                                currentSong: selectedSong,
-                                lyrics: lyricsText
-                            )
-                            .frame(width: 300)
-                        }
-                    }
-
-                    // Bottom bar
-                    Divider()
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            withAnimation {
-                                showLyrics.toggle()
-                                if showLyrics, let song = selectedSong {
-                                    loadLyrics(for: song)
-                                }
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "text.alignleft")
-                                Text("lyrics.title")
-                            }
-                        }
-                        .padding(.horizontal)
-                        .foregroundColor(.primary)
-                        .buttonStyle(PlainButtonStyle())
-
-                        Button(action: {
-                            withAnimation {
-                                showUpNext.toggle()
-                                if showUpNext {
-                                    updateUpcomingSongs()
-                                }
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "list.bullet")
-                                Text("bottomBar.upNext")
-                            }
-                        }
-                        .padding(.horizontal)
-                        .foregroundColor(.primary)
-                        .buttonStyle(PlainButtonStyle())
-
-                        Button(action: {
-                            withAnimation { showM3UImporter = true }
-                        }) {
-                            HStack {
-                                Image(systemName: "tray.and.arrow.down")
-                                Text("bottomBar.importM3U")
-                            }
-                        }
-                        .padding(.horizontal)
-                        .foregroundColor(.primary)
-                        .buttonStyle(PlainButtonStyle())
-
-                        Button(action: {
-                            exportSelectedPlaylist()
-                        }) {
-                            HStack {
-                                Image(systemName: "tray.and.arrow.up")
-                                Text("bottomBar.exportM3U")
-                            }
-                        }
-                        .padding(.horizontal)
-                        .foregroundColor(selectedPlaylistID == nil ? .secondary : .primary)
-                        .buttonStyle(PlainButtonStyle())
-                        .disabled(selectedPlaylistID == nil)
-                    }
-                    .frame(height: 40)
-                    .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
-                }
-                .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
-                .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.folder], allowsMultipleSelection: false) { result in
-                    handleFileImport(result)
-                }
-                .onChange(of: showFileImporter) { isPresented in
-                    guard isPresented else { return }
-                    let panel = NSOpenPanel()
-                    panel.canChooseFiles = false
-                    panel.canChooseDirectories = true
-                    panel.allowsMultipleSelection = false
-                    panel.canCreateDirectories = false
-                    panel.prompt = "Choose"
-                    panel.begin { response in
-                        defer { self.showFileImporter = false }
-                        if response == .OK, let url = panel.url {
-                            self.handleFileImport(.success([url]))
-                        }
-                    }
-                }
-                .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: true) { result in
-                    switch result {
-                    case .success(let urls):
-                        var lastImportedID: UUID? = nil
-                        for url in urls {
-                            importPlaylistFromM3U(url: url)
-                            // After importPlaylistFromM3U appends and selects, capture current selection
-                            lastImportedID = selectedPlaylistID
-                        }
-                        // Keep the last imported playlist selected
-                        if let last = lastImportedID {
-                            selectedPlaylistID = last
-                        }
-                    case .failure(let error):
-                        print("M3U import failed: \(error.localizedDescription)")
-                    }
-                }
-                .frame(minWidth: 900, minHeight: 600)
-                .onAppear {
-                    print("Running loadSongsOnce at launch")
-                    loadSongsOnce()
-                    loadUserPlaylists()
-                    setupRemoteCommands()
-                    
-                    restorePlaybackState()
-
-                    // Stop security-scoped access cleanly when the app quits
-                    NotificationCenter.default.addObserver(
-                        forName: NSApplication.willTerminateNotification,
-                        object: nil,
-                        queue: .main
-                    ) { _ in
-                        releaseFolderAccess()
-                    }
-                }
-                .onDisappear {
-                    // Clean up observers when window closes, but do not stop playback
-                    if let token = timeObserverToken {
-                        player?.removeTimeObserver(token)
-                        timeObserverToken = nil
-                    }
-                    if let token = playbackEndObserver {
-                        NotificationCenter.default.removeObserver(token)
-                        playbackEndObserver = nil
-                    }
-                }
-                .sheet(isPresented: $showNewPlaylistSheet) {
-                    NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
-                        .onDisappear { saveUserPlaylists() }
-                }
-                .sheet(item: $songToAddToPlaylist) { song in
-                    PlaylistSelectionView(song: song) { playlist in
-                        playlistManager.addSong(song, to: playlist)
-                        saveUserPlaylists()
-                        songToAddToPlaylist = nil
-                    }
-                    .environmentObject(playlistManager)
-                }
-                .onChange(of: selectedSong) { newSong in
-                    guard let song = newSong else { return }
-                    incrementPlayCount(for: song)
-                    refreshSongPlayCounts()
-                    generateSystemPlaylists()
-                    updateNowPlayingInfo()
-                    updateUpcomingSongs()
-
-                    // Load lyrics when song changes
-                    if showLyrics {
-                        loadLyrics(for: song)
-                    }
-                }
-                .onChange(of: volume) { _ in
-                    player?.volume = Float(volume)
-                    updateNowPlayingInfo()
-                }
-                .onChange(of: isShuffleEnabled) { enabled in
-                    if enabled {
-                        if let song = selectedSong {
-                            rebuildShuffleQueue(startingFrom: song)
-                        }
-                    } else {
-                        shuffleQueue.removeAll()
-                        playedShuffleSongs.removeAll()
-                    }
-                    updateUpcomingSongs()
-                }
-                .onChange(of: isRepeatOne) { _ in
-                    updateUpcomingSongs()
-                }
-                .onChange(of: appAppearance) { _ in
-                    updateMiniPlayerAppearance()
-                }
-                .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in
-                    saveUserPlaylists()
-                }
-                .onChange(of: deviceMonitor.connectedDevice) { device in
-                    if device == nil { isDeviceSelected = false }
-                }
-                .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext"))) { output in
-                    if let song = output.object as? Song {
-                        addSongsNext([song])
-                    }
-                }
-                .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
-                .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
-                .focusedSceneValue(\.newPlaylistAction, newPlaylistAction)
-                .focusedSceneValue(\.importMusicAction, importMusicAction)
-                .focusedSceneValue(\.importPlaylistAction, importPlaylistAction)
-                .focusedSceneValue(\.exportPlaylistAction, exportPlaylistMenuAction())
-                .focusedSceneValue(\.focusSearchFieldAction, focusSearchFieldAction)
-                .focusedSceneValue(\.showListViewAction, showListViewAction)
-                .focusedSceneValue(\.showAlbumGridAction, showAlbumGridAction)
-                .focusedSceneValue(\.showCoverFlowAction, showCoverFlowAction)
-                .focusedSceneValue(\.toggleUpNextAction, toggleUpNextMenuAction)
-                .focusedSceneValue(\.showUpNextValue, showUpNext)
-                .focusedSceneValue(\.toggleLyricsAction, toggleLyricsMenuAction)
-                .focusedSceneValue(\.showLyricsValue, showLyrics)
-                .focusedSceneValue(\.toggleMiniPlayerAction, toggleMiniPlayer)
-                .focusedSceneValue(\.togglePlayPauseAction, togglePlayPauseAction)
-                .focusedSceneValue(\.isPlayingValue, player?.rate != 0)
-                .focusedSceneValue(\.playNextAction, playNext)
-                .focusedSceneValue(\.playPreviousAction, playPrevious)
-                .focusedSceneValue(\.increaseVolumeAction, increaseVolumeAction)
-                .focusedSceneValue(\.decreaseVolumeAction, decreaseVolumeAction)
-                .focusedSceneValue(\.toggleMuteAction, toggleMuteAction)
-                .focusedSceneValue(\.isMutedValue, volume == 0)
-                .focusedSceneValue(\.toggleShuffleAction, toggleShuffleAction)
-                .focusedSceneValue(\.isShuffleValue, isShuffleEnabled)
-                .focusedSceneValue(\.cycleRepeatModeAction, cycleRepeatModeAction)
-                .focusedSceneValue(\.isRepeatAllValue, isRepeatEnabled)
-                .focusedSceneValue(\.isRepeatOneValue, isRepeatOne)
-                .focusedSceneValue(\.showKeyboardShortcutsAction, { showKeyboardShortcuts = true })
-                .sheet(isPresented: $showKeyboardShortcuts) {
-                    KeyboardShortcutsView()
-                }
+                fullPlayerView
             }
         }
         .tint(.iTunesBlue)
+    }
+
+    /// The full (non-mini-player) layout, with all modifiers applied in
+    /// separate chunks so the type checker solves each piece independently
+    /// instead of one enormous chained expression.
+    private var fullPlayerView: some View {
+        let base = mainPlayerLayout
+        let withImporters = applyImportersAndLifecycle(base)
+        let withSheetsAndChanges = applySheetsAndChanges(withImporters)
+        return applyFocusedSceneValues(withSheetsAndChanges)
+    }
+
+    private var mainPlayerLayout: some View {
+        VStack(spacing: 0) {
+            topToolbarSection
+            Divider()
+            middleContentSection
+            Divider()
+            bottomBarSection
+        }
+        .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
+    }
+
+    private var topToolbarSection: some View {
+        TopToolbarView(
+            isAlbumView: $isAlbumView,
+            showFileImporter: $showFileImporter,
+            selectedSong: $selectedSong,
+            isPlaying: isPlayingBinding,
+            playPrevious: playPrevious,
+            playNext: playNext,
+            volume: $volume,
+            playbackPosition: $playbackPosition,
+            playbackDuration: $playbackDuration,
+            onSeek: handleSeek,
+            isSeeking: $isSeeking,
+            isShuffleEnabled: $isShuffleEnabled,
+            isRepeatEnabled: $isRepeatEnabled,
+            isRepeatOne: $isRepeatOne,
+            isStopped: $isStopped,
+            isCoverFlowActive: $isCoverFlowActive,
+            onMiniPlayerToggle: toggleMiniPlayer,
+            searchText: $searchText,
+            searchFieldFocus: $isSearchFieldFocused
+        )
+    }
+
+    private var middleContentSection: some View {
+        HStack(alignment: .top, spacing: 0) {
+            HStack(spacing: 0) {
+                SidebarView(
+                    playlists: playlists,
+                    userPlaylists: $playlistManager.userPlaylists,
+                    selectedPlaylistID: $selectedPlaylistID,
+                    showNewPlaylistSheet: $showNewPlaylistSheet,
+                    libraryActive: $libraryActive,
+                    showITunesStore: $showITunesStore,
+                    //connectedDevice: deviceMonitor.connectedDevice,
+                    isDeviceSelected: $isDeviceSelected
+                )
+                .frame(width: 220)
+                .tint(.blue)
+                .background(ITunesSidebarBackground())
+
+                if let device = deviceMonitor.connectedDevice, isDeviceSelected {
+                    iPodDeviceView(
+                        device: device,
+                        syncEngine: syncEngine,
+                        allLibrarySongs: songs
+                    )
+                } else {
+                    mainContentArea()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                }
+            }
+
+            if showUpNext {
+                Divider()
+                UpNextView(
+                    currentSong: selectedSong,
+                    upcomingSongs: $upcomingSongs,
+                    isPlaying: (player?.rate ?? 0) > 0,
+                    onSongSelect: playSongFromUpNext,
+                    onMove: moveUpcomingSongs,
+                    onDropSongs: addSongsNext
+                )
+                .frame(width: 300)
+            }
+
+            if showLyrics {
+                Divider()
+                LyricsView(
+                    currentSong: selectedSong,
+                    lyrics: lyricsText
+                )
+                .frame(width: 300)
+            }
+        }
+    }
+
+    private var bottomBarSection: some View {
+        HStack {
+            Spacer()
+            Button(action: toggleLyricsButtonAction) {
+                HStack {
+                    Image(systemName: "text.alignleft")
+                    Text("lyrics.title")
+                }
+            }
+            .padding(.horizontal)
+            .foregroundColor(.primary)
+            .buttonStyle(PlainButtonStyle())
+
+            Button(action: toggleUpNextButtonAction) {
+                HStack {
+                    Image(systemName: "list.bullet")
+                    Text("bottomBar.upNext")
+                }
+            }
+            .padding(.horizontal)
+            .foregroundColor(.primary)
+            .buttonStyle(PlainButtonStyle())
+
+            Button(action: showM3UImporterAction) {
+                HStack {
+                    Image(systemName: "tray.and.arrow.down")
+                    Text("bottomBar.importM3U")
+                }
+            }
+            .padding(.horizontal)
+            .foregroundColor(.primary)
+            .buttonStyle(PlainButtonStyle())
+
+            Button(action: exportSelectedPlaylist) {
+                HStack {
+                    Image(systemName: "tray.and.arrow.up")
+                    Text("bottomBar.exportM3U")
+                }
+            }
+            .padding(.horizontal)
+            .foregroundColor(selectedPlaylistID == nil ? .secondary : .primary)
+            .buttonStyle(PlainButtonStyle())
+            .disabled(selectedPlaylistID == nil)
+        }
+        .frame(height: 40)
+        .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
+    }
+
+    private func showM3UImporterAction() {
+        withAnimation { showM3UImporter = true }
+    }
+
+    @ViewBuilder
+    private func applyImportersAndLifecycle<V: View>(_ content: V) -> some View {
+        content
+            .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.folder], allowsMultipleSelection: false, onCompletion: handleFileImport)
+            .onChange(of: showFileImporter, perform: handleShowFileImporterChange)
+            .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: true, onCompletion: handleM3UImportResult)
+            .frame(minWidth: 900, minHeight: 600)
+            .onAppear(perform: handleContentViewAppear)
+            .onDisappear(perform: handleContentViewDisappear)
+    }
+
+    @ViewBuilder
+    private func applySheetsAndChanges<V: View>(_ content: V) -> some View {
+        content
+            .sheet(isPresented: $showNewPlaylistSheet) {
+                NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
+                    .onDisappear(perform: saveUserPlaylists)
+            }
+            .sheet(item: $songToAddToPlaylist) { song in
+                PlaylistSelectionView(song: song) { playlist in
+                    self.handlePlaylistSelected(playlist, for: song)
+                }
+                .environmentObject(playlistManager)
+            }
+            .sheet(isPresented: $showKeyboardShortcuts) {
+                KeyboardShortcutsView()
+            }
+            .onChange(of: selectedSong, perform: handleSelectedSongChange)
+            .onChange(of: volume, perform: handleVolumeChange)
+            .onChange(of: isShuffleEnabled, perform: handleShuffleEnabledChange)
+            .onChange(of: isRepeatOne) { _ in updateUpcomingSongs() }
+            .onChange(of: appAppearance) { _ in updateMiniPlayerAppearance() }
+            .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in saveUserPlaylists() }
+            .onChange(of: deviceMonitor.connectedDevice) { device in
+                if device == nil { isDeviceSelected = false }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext")), perform: handleAddToUpNextNotification)
+            .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
+    }
+
+    @ViewBuilder
+    private func applyFocusedSceneValues<V: View>(_ content: V) -> some View {
+        content
+            .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
+            .focusedSceneValue(\.newPlaylistAction, newPlaylistAction)
+            .focusedSceneValue(\.importMusicAction, importMusicAction)
+            .focusedSceneValue(\.importPlaylistAction, importPlaylistAction)
+            .focusedSceneValue(\.exportPlaylistAction, exportPlaylistMenuAction())
+            .focusedSceneValue(\.focusSearchFieldAction, focusSearchFieldAction)
+            .focusedSceneValue(\.showListViewAction, showListViewAction)
+            .focusedSceneValue(\.showAlbumGridAction, showAlbumGridAction)
+            .focusedSceneValue(\.showCoverFlowAction, showCoverFlowAction)
+            .focusedSceneValue(\.toggleUpNextAction, toggleUpNextMenuAction)
+            .focusedSceneValue(\.showUpNextValue, showUpNext)
+            .focusedSceneValue(\.toggleLyricsAction, toggleLyricsMenuAction)
+            .focusedSceneValue(\.showLyricsValue, showLyrics)
+            .focusedSceneValue(\.toggleMiniPlayerAction, toggleMiniPlayer)
+            .focusedSceneValue(\.togglePlayPauseAction, togglePlayPauseAction)
+            .focusedSceneValue(\.isPlayingValue, player?.rate != 0)
+            .focusedSceneValue(\.playNextAction, playNext)
+            .focusedSceneValue(\.playPreviousAction, playPrevious)
+            .focusedSceneValue(\.increaseVolumeAction, increaseVolumeAction)
+            .focusedSceneValue(\.decreaseVolumeAction, decreaseVolumeAction)
+            .focusedSceneValue(\.toggleMuteAction, toggleMuteAction)
+            .focusedSceneValue(\.isMutedValue, volume == 0)
+            .focusedSceneValue(\.toggleShuffleAction, toggleShuffleAction)
+            .focusedSceneValue(\.isShuffleValue, isShuffleEnabled)
+            .focusedSceneValue(\.cycleRepeatModeAction, cycleRepeatModeAction)
+            .focusedSceneValue(\.isRepeatAllValue, isRepeatEnabled)
+            .focusedSceneValue(\.isRepeatOneValue, isRepeatOne)
+            .focusedSceneValue(\.showKeyboardShortcutsAction, showKeyboardShortcutsAction)
     }
 
     private func newPlaylistAction() {
@@ -913,6 +827,152 @@ struct ContentView: View {
     private func releaseFolderAccess() {
         musicFolderAccess?.stopAccessingSecurityScopedResource()
         musicFolderAccess = nil
+    }
+
+    private func handleContentViewAppear() {
+        print("Running loadSongsOnce at launch")
+        loadSongsOnce()
+        loadUserPlaylists()
+        setupRemoteCommands()
+
+        restorePlaybackState()
+
+        // Stop security-scoped access cleanly when the app quits
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main,
+            using: handleWillTerminate
+        )
+    }
+
+    private func handleContentViewDisappear() {
+        // Clean up observers when window closes, but do not stop playback
+        if let token = timeObserverToken {
+            player?.removeTimeObserver(token)
+            timeObserverToken = nil
+        }
+        if let token = playbackEndObserver {
+            NotificationCenter.default.removeObserver(token)
+            playbackEndObserver = nil
+        }
+    }
+
+    private func handleWillTerminate(_ notification: Notification) {
+        releaseFolderAccess()
+    }
+
+    private var isPlayingBinding: Binding<Bool> {
+        Binding(
+            get: { player?.rate != 0 },
+            set: { shouldPlay in
+                if shouldPlay {
+                    player?.play()
+                    updateNowPlayingInfo()
+                } else {
+                    player?.pause()
+                }
+            }
+        )
+    }
+
+    private func toggleLyricsButtonAction() {
+        withAnimation {
+            showLyrics.toggle()
+            if showLyrics, let song = selectedSong {
+                loadLyrics(for: song)
+            }
+        }
+    }
+
+    private func toggleUpNextButtonAction() {
+        withAnimation {
+            showUpNext.toggle()
+            if showUpNext {
+                updateUpcomingSongs()
+            }
+        }
+    }
+
+    private func handleShowFileImporterChange(_ isPresented: Bool) {
+        guard isPresented else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        panel.prompt = "Choose"
+        panel.begin { response in
+            defer { self.showFileImporter = false }
+            if response == .OK, let url = panel.url {
+                self.handleFileImport(.success([url]))
+            }
+        }
+    }
+
+    private func handlePlaylistSelected(_ playlist: Playlist, for song: Song) {
+        playlistManager.addSong(song, to: playlist)
+        saveUserPlaylists()
+        songToAddToPlaylist = nil
+    }
+
+    private func handleSelectedSongChange(_ newSong: Song?) {
+        guard let song = newSong else { return }
+        incrementPlayCount(for: song)
+        refreshSongPlayCounts()
+        generateSystemPlaylists()
+        updateNowPlayingInfo()
+        updateUpcomingSongs()
+
+        // Load lyrics when song changes
+        if showLyrics {
+            loadLyrics(for: song)
+        }
+    }
+
+    private func handleVolumeChange(_ newVolume: Double) {
+        player?.volume = Float(newVolume)
+        updateNowPlayingInfo()
+    }
+
+    private func handleShuffleEnabledChange(_ enabled: Bool) {
+        if enabled {
+            if let song = selectedSong {
+                rebuildShuffleQueue(startingFrom: song)
+            }
+        } else {
+            shuffleQueue.removeAll()
+            playedShuffleSongs.removeAll()
+        }
+        updateUpcomingSongs()
+    }
+
+    private func handleAddToUpNextNotification(_ output: Notification) {
+        if let song = output.object as? Song {
+            addSongsNext([song])
+        }
+    }
+
+    private func showKeyboardShortcutsAction() {
+        showKeyboardShortcuts = true
+    }
+
+    private func handleM3UImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            var lastImportedID: UUID? = nil
+            for url in urls {
+                importPlaylistFromM3U(url: url)
+                // After importPlaylistFromM3U appends and selects, capture current selection
+                lastImportedID = selectedPlaylistID
+            }
+            // Keep the last imported playlist selected
+            if let last = lastImportedID {
+                selectedPlaylistID = last
+            }
+        case .failure(let error):
+            print("M3U import failed: \(error.localizedDescription)")
+        }
     }
 
     private func handleFileImport(_ result: Result<[URL], Error>) {

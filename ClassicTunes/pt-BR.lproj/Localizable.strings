@@ -113,6 +113,46 @@
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Apagar Playlist";
+"menu.newPlaylist"            = "Nova Playlist…";
+"menu.importMusic"            = "Importar Pasta de Músicas…";
+"menu.importPlaylist"         = "Importar Playlist (M3U)…";
+"menu.exportPlaylist"         = "Exportar Playlist (M3U)…";
+"menu.find"                   = "Buscar";
+"menu.showAsList"             = "como Lista";
+"menu.showAsAlbums"           = "como Álbuns";
+"menu.showAsCoverFlow"        = "como Cover Flow";
+"menu.showUpNext"             = "Mostrar Seguintes";
+"menu.hideUpNext"             = "Ocultar Seguintes";
+"menu.showLyrics"             = "Mostrar Letra";
+"menu.hideLyrics"             = "Ocultar Letra";
+"menu.switchToMiniPlayer"     = "Alternar para MiniPlayer";
+"menu.controls"               = "Controles";
+"menu.play"                   = "Reproduzir";
+"menu.pause"                  = "Pausar";
+"menu.nextSong"                = "Próxima Música";
+"menu.previousSong"           = "Música Anterior";
+"menu.increaseVolume"         = "Aumentar Volume";
+"menu.decreaseVolume"         = "Diminuir Volume";
+"menu.mute"                   = "Silenciar";
+"menu.unmute"                 = "Ativar Som";
+"menu.shuffle"                = "Aleatório";
+"menu.repeatAll"              = "Repetir Tudo";
+"menu.repeatOne"              = "Repetir Uma";
+"menu.repeatOff"              = "Desativar Repetição";
+"menu.keyboardShortcuts"      = "Atalhos do Teclado…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Atalhos do Teclado";
+"shortcuts.close"             = "Fechar";
+"shortcuts.group.file"        = "Arquivo";
+"shortcuts.group.edit"        = "Editar";
+"shortcuts.group.view"        = "Visualizar";
+"shortcuts.group.controls"    = "Controles";
+"menu.playPause"              = "Reproduzir / Pausar";
+"menu.toggleUpNext"           = "Mostrar/Ocultar Seguintes";
+"menu.toggleLyrics"           = "Mostrar/Ocultar Letra";
+"menu.toggleMute"             = "Silenciar / Ativar Som";
+"menu.repeat"                 = "Alternar Modo de Repetição";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Ejetar iPod";

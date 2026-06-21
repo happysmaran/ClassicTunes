@@ -112,7 +112,47 @@
 "miniPlayer.openIn"           = "Im Mini-Player öffnen";
 
 // MARK: - Menu commands
-"menu.deletePlaylist"         = "Wiedergabeliste löschen";
+"menu.deletePlaylist"         = "Playlist löschen";
+"menu.newPlaylist"            = "Neue Playlist…";
+"menu.importMusic"            = "Musikordner importieren…";
+"menu.importPlaylist"         = "Playlist importieren (M3U)…";
+"menu.exportPlaylist"         = "Playlist exportieren (M3U)…";
+"menu.find"                   = "Suchen";
+"menu.showAsList"             = "als Liste";
+"menu.showAsAlbums"           = "als Alben";
+"menu.showAsCoverFlow"        = "als Cover Flow";
+"menu.showUpNext"             = "„Nächste Titel“ einblenden";
+"menu.hideUpNext"             = "„Nächste Titel“ ausblenden";
+"menu.showLyrics"             = "Songtext einblenden";
+"menu.hideLyrics"             = "Songtext ausblenden";
+"menu.switchToMiniPlayer"     = "Zum MiniPlayer wechseln";
+"menu.controls"               = "Steuerung";
+"menu.play"                   = "Wiedergabe";
+"menu.pause"                  = "Pause";
+"menu.nextSong"                = "Nächster Titel";
+"menu.previousSong"           = "Vorheriger Titel";
+"menu.increaseVolume"         = "Lautstärke erhöhen";
+"menu.decreaseVolume"         = "Lautstärke verringern";
+"menu.mute"                   = "Stummschalten";
+"menu.unmute"                 = "Ton einschalten";
+"menu.shuffle"                = "Zufällige Wiedergabe";
+"menu.repeatAll"              = "Wiederholen";
+"menu.repeatOne"              = "Titel wiederholen";
+"menu.repeatOff"              = "Wiederholen deaktivieren";
+"menu.keyboardShortcuts"      = "Tastaturkurzbefehle…";
+
+// MARK: - Keyboard shortcuts sheet
+"shortcuts.title"             = "Tastaturkurzbefehle";
+"shortcuts.close"             = "Schließen";
+"shortcuts.group.file"        = "Ablage";
+"shortcuts.group.edit"        = "Bearbeiten";
+"shortcuts.group.view"        = "Darstellung";
+"shortcuts.group.controls"    = "Steuerung";
+"menu.playPause"              = "Wiedergabe / Pause";
+"menu.toggleUpNext"           = "„Nächste Titel“ ein-/ausblenden";
+"menu.toggleLyrics"           = "Songtext ein-/ausblenden";
+"menu.toggleMute"             = "Stummschalten / Ton einschalten";
+"menu.repeat"                 = "Wiederholungsmodus wechseln";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPod auswerfen";
