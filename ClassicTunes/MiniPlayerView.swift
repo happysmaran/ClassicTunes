@@ -1,8 +1,6 @@
 import SwiftUI
-import AVKit
 
 struct MiniPlayerView: View {
-    let player: AVPlayer?
     @Binding var selectedSong: Song?
     @Binding var isPlaying: Bool
     @Binding var volume: Double
@@ -16,7 +14,6 @@ struct MiniPlayerView: View {
     let onClose: () -> Void
 
     init(
-        player: AVPlayer?,
         selectedSong: Binding<Song?>,
         isPlaying: Binding<Bool>,
         volume: Binding<Double>,
@@ -28,7 +25,6 @@ struct MiniPlayerView: View {
         onSeek: @escaping (Double) -> Void,
         onClose: @escaping () -> Void
     ) {
-        self.player = player
         _selectedSong = selectedSong
         _isPlaying = isPlaying
         _volume = volume
@@ -261,4 +257,3 @@ struct MiniPlayerView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 }
-

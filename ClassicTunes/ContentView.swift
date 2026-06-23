@@ -829,33 +829,43 @@ struct ContentView: View {
         musicFolderAccess = nil
     }
 
+    // Ensures setupRemoteCommands() only ever registers its targets once per
+    // process lifetime, no matter how many times the view appears (window
+    // close/reopen, entering/exiting the mini player, etc). Without this,
+    // MPRemoteCommandCenter accumulates duplicate targets across stale
+    // generations of view state, which is what caused the "two songs at
+    // once" / "can only pause via Control Center" erratic behavior.
+    private static var remoteCommandsConfigured = false
+
     private func handleContentViewAppear() {
         print("Running loadSongsOnce at launch")
         loadSongsOnce()
         loadUserPlaylists()
-        setupRemoteCommands()
+
+        if !Self.remoteCommandsConfigured {
+            setupRemoteCommands()
+            Self.remoteCommandsConfigured = true
+
+            // Stop security-scoped access cleanly when the app quits
+            NotificationCenter.default.addObserver(
+                forName: NSApplication.willTerminateNotification,
+                object: nil,
+                queue: .main,
+                using: handleWillTerminate
+            )
+        }
 
         restorePlaybackState()
-
-        // Stop security-scoped access cleanly when the app quits
-        NotificationCenter.default.addObserver(
-            forName: NSApplication.willTerminateNotification,
-            object: nil,
-            queue: .main,
-            using: handleWillTerminate
-        )
     }
 
     private func handleContentViewDisappear() {
-        // Clean up observers when window closes, but do not stop playback
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        if let token = playbackEndObserver {
-            NotificationCenter.default.removeObserver(token)
-            playbackEndObserver = nil
-        }
+        // Intentionally a no-op for playback bookkeeping: the time observer
+        // and end-of-song observer must keep running even while the window
+        // is hidden/closed (mini player, traffic-light close) so playback
+        // position keeps updating and the next song still starts
+        // automatically when the current one ends. They are only ever torn
+        // down in stopCurrentPlayback(), when we actually swap to a new
+        // AVPlayer/AVPlayerItem.
     }
 
     private func handleWillTerminate(_ notification: Notification) {
@@ -1136,6 +1146,10 @@ struct ContentView: View {
     }
 
     private func setupTimeObserver(for player: AVPlayer) {
+        if let token = timeObserverToken {
+            player.removeTimeObserver(token)
+            timeObserverToken = nil
+        }
         let interval = CMTime(seconds: 1.0, preferredTimescale: 1)
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
             let seconds = time.seconds
@@ -1721,7 +1735,6 @@ struct ContentView: View {
 
         // Create and show mini player window
         let miniPlayerView = MiniPlayerView(
-            player: player,
             selectedSong: $selectedSong,
             isPlaying: Binding(get: { (player?.rate ?? 0) != 0 }, set: { shouldPlay in
                 if shouldPlay { self.player?.play() } else { self.player?.pause() }
