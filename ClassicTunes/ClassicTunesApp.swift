@@ -262,12 +262,17 @@ struct FileCommands: Commands {
     @FocusedValue(\.importPlaylistAction) private var importPlaylistAction: (() -> Void)?
     @FocusedValue(\.exportPlaylistAction) private var exportPlaylistAction: (() -> Void)?
 
+    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
+    @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
+    @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
+    @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
+
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("menu.newPlaylist") {
                 newPlaylistAction?()
             }
-            .keyboardShortcut("n", modifiers: [.command])
+            .dynamicShortcut(shortcutNewPlaylist)
             .disabled(newPlaylistAction == nil)
 
             Divider()
@@ -275,19 +280,19 @@ struct FileCommands: Commands {
             Button("menu.importMusic") {
                 importMusicAction?()
             }
-            .keyboardShortcut("o", modifiers: [.command])
+            .dynamicShortcut(shortcutImportMusic)
             .disabled(importMusicAction == nil)
 
             Button("menu.importPlaylist") {
                 importPlaylistAction?()
             }
-            .keyboardShortcut("o", modifiers: [.command, .shift])
+            .dynamicShortcut(shortcutImportPlaylist)
             .disabled(importPlaylistAction == nil)
 
             Button("menu.exportPlaylist") {
                 exportPlaylistAction?()
             }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .dynamicShortcut(shortcutExportPlaylist)
             .disabled(exportPlaylistAction == nil)
         }
     }
@@ -299,6 +304,9 @@ struct EditCommands: Commands {
     @FocusedValue(\.deletePlaylistAction) private var deleteAction: (() -> Void)?
     @FocusedValue(\.focusSearchFieldAction) private var focusSearchFieldAction: (() -> Void)?
 
+    @AppStorage("shortcut.deletePlaylist") private var shortcutDeletePlaylist: String = "⌫"
+    @AppStorage("shortcut.find") private var shortcutFind: String = "⌘F"
+
     var body: some Commands {
         CommandGroup(after: .pasteboard) {
             Divider()
@@ -306,13 +314,13 @@ struct EditCommands: Commands {
             Button("menu.find") {
                 focusSearchFieldAction?()
             }
-            .keyboardShortcut("f", modifiers: [.command])
+            .dynamicShortcut(shortcutFind)
             .disabled(focusSearchFieldAction == nil)
 
             Button("menu.deletePlaylist") {
                 deleteAction?()
             }
-            .keyboardShortcut(.delete, modifiers: [])
+            .dynamicShortcut(shortcutDeletePlaylist)
             .disabled(deleteAction == nil)
         }
     }
@@ -330,24 +338,31 @@ struct ViewCommands: Commands {
     @FocusedValue(\.showLyricsValue) private var showLyricsValue: Bool?
     @FocusedValue(\.toggleMiniPlayerAction) private var toggleMiniPlayerAction: (() -> Void)?
 
+    @AppStorage("shortcut.showAsList") private var shortcutShowAsList: String = "⌘1"
+    @AppStorage("shortcut.showAsAlbums") private var shortcutShowAsAlbums: String = "⌘2"
+    @AppStorage("shortcut.showAsCoverFlow") private var shortcutShowAsCoverFlow: String = "⌘3"
+    @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
+    @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
+    @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
+
     var body: some Commands {
         CommandGroup(after: .sidebar) {
             Button("menu.showAsList") {
                 showListViewAction?()
             }
-            .keyboardShortcut("1", modifiers: [.command])
+            .dynamicShortcut(shortcutShowAsList)
             .disabled(showListViewAction == nil)
 
             Button("menu.showAsAlbums") {
                 showAlbumGridAction?()
             }
-            .keyboardShortcut("2", modifiers: [.command])
+            .dynamicShortcut(shortcutShowAsAlbums)
             .disabled(showAlbumGridAction == nil)
 
             Button("menu.showAsCoverFlow") {
                 showCoverFlowAction?()
             }
-            .keyboardShortcut("3", modifiers: [.command])
+            .dynamicShortcut(shortcutShowAsCoverFlow)
             .disabled(showCoverFlowAction == nil)
 
             Divider()
@@ -355,13 +370,13 @@ struct ViewCommands: Commands {
             Button((showUpNextValue ?? false) ? "menu.hideUpNext" : "menu.showUpNext") {
                 toggleUpNextAction?()
             }
-            .keyboardShortcut("u", modifiers: [.command])
+            .dynamicShortcut(shortcutToggleUpNext)
             .disabled(toggleUpNextAction == nil)
 
             Button((showLyricsValue ?? false) ? "menu.hideLyrics" : "menu.showLyrics") {
                 toggleLyricsAction?()
             }
-            .keyboardShortcut("l", modifiers: [.command])
+            .dynamicShortcut(shortcutToggleLyrics)
             .disabled(toggleLyricsAction == nil)
 
             Divider()
@@ -369,7 +384,7 @@ struct ViewCommands: Commands {
             Button("menu.switchToMiniPlayer") {
                 toggleMiniPlayerAction?()
             }
-            .keyboardShortcut("m", modifiers: [.command, .shift])
+            .dynamicShortcut(shortcutSwitchToMiniPlayer)
             .disabled(toggleMiniPlayerAction == nil)
         }
     }
@@ -392,6 +407,15 @@ struct ControlsCommands: Commands {
     @FocusedValue(\.isRepeatAllValue) private var isRepeatAllValue: Bool?
     @FocusedValue(\.isRepeatOneValue) private var isRepeatOneValue: Bool?
 
+    @AppStorage("shortcut.playPause") private var shortcutPlayPause: String = "Space"
+    @AppStorage("shortcut.nextSong") private var shortcutNextSong: String = "⌘→"
+    @AppStorage("shortcut.previousSong") private var shortcutPreviousSong: String = "⌘←"
+    @AppStorage("shortcut.increaseVolume") private var shortcutIncreaseVolume: String = "⌘↑"
+    @AppStorage("shortcut.decreaseVolume") private var shortcutDecreaseVolume: String = "⌘↓"
+    @AppStorage("shortcut.toggleMute") private var shortcutToggleMute: String = "⌘⇧↓"
+    @AppStorage("shortcut.shuffle") private var shortcutShuffle: String = "⌘S"
+    @AppStorage("shortcut.repeat") private var shortcutRepeat: String = "⌘R"
+
     private var repeatLabel: LocalizedStringKey {
         if isRepeatOneValue == true { return "menu.repeatOne" }
         if isRepeatAllValue == true { return "menu.repeatOff" }
@@ -403,7 +427,7 @@ struct ControlsCommands: Commands {
             Button((isPlayingValue ?? false) ? "menu.pause" : "menu.play") {
                 togglePlayPauseAction?()
             }
-            .keyboardShortcut(" ", modifiers: [])
+            .dynamicShortcut(shortcutPlayPause)
             .disabled(togglePlayPauseAction == nil)
 
             Divider()
@@ -411,13 +435,13 @@ struct ControlsCommands: Commands {
             Button("menu.nextSong") {
                 playNextAction?()
             }
-            .keyboardShortcut(.rightArrow, modifiers: [.command])
+            .dynamicShortcut(shortcutNextSong)
             .disabled(playNextAction == nil)
 
             Button("menu.previousSong") {
                 playPreviousAction?()
             }
-            .keyboardShortcut(.leftArrow, modifiers: [.command])
+            .dynamicShortcut(shortcutPreviousSong)
             .disabled(playPreviousAction == nil)
 
             Divider()
@@ -425,19 +449,19 @@ struct ControlsCommands: Commands {
             Button("menu.increaseVolume") {
                 increaseVolumeAction?()
             }
-            .keyboardShortcut(.upArrow, modifiers: [.command])
+            .dynamicShortcut(shortcutIncreaseVolume)
             .disabled(increaseVolumeAction == nil)
 
             Button("menu.decreaseVolume") {
                 decreaseVolumeAction?()
             }
-            .keyboardShortcut(.downArrow, modifiers: [.command])
+            .dynamicShortcut(shortcutDecreaseVolume)
             .disabled(decreaseVolumeAction == nil)
 
             Button((isMutedValue ?? false) ? "menu.unmute" : "menu.mute") {
                 toggleMuteAction?()
             }
-            .keyboardShortcut(.downArrow, modifiers: [.command, .shift])
+            .dynamicShortcut(shortcutToggleMute)
             .disabled(toggleMuteAction == nil)
 
             Divider()
@@ -445,13 +469,13 @@ struct ControlsCommands: Commands {
             Button("menu.shuffle") {
                 toggleShuffleAction?()
             }
-            .keyboardShortcut("s", modifiers: [.command])
+            .dynamicShortcut(shortcutShuffle)
             .disabled(toggleShuffleAction == nil)
 
             Button(repeatLabel) {
                 cycleRepeatModeAction?()
             }
-            .keyboardShortcut("r", modifiers: [.command])
+            .dynamicShortcut(shortcutRepeat)
             .disabled(cycleRepeatModeAction == nil)
         }
     }
@@ -471,5 +495,29 @@ struct HelpCommands: Commands {
             .keyboardShortcut("/", modifiers: [.command, .shift])
             .disabled(showKeyboardShortcutsAction == nil)
         }
+    }
+}
+
+// MARK: - Dynamic Conversion Helper
+extension View {
+    func dynamicShortcut(_ shortcutString: String) -> some View {
+        var modifiers: EventModifiers = []
+        if shortcutString.contains("⌘") { modifiers.insert(.command) }
+        if shortcutString.contains("⇧") { modifiers.insert(.shift) }
+        if shortcutString.contains("⌥") { modifiers.insert(.option) }
+        if shortcutString.contains("⌃") { modifiers.insert(.control) }
+        
+        var key: KeyEquivalent = " "
+        if shortcutString.contains("Space") { key = .space }
+        else if shortcutString.contains("⌫") { key = .delete }
+        else if shortcutString.contains("↑") { key = .upArrow }
+        else if shortcutString.contains("↓") { key = .downArrow }
+        else if shortcutString.contains("←") { key = .leftArrow }
+        else if shortcutString.contains("→") { key = .rightArrow }
+        else if let lastChar = shortcutString.last {
+            key = KeyEquivalent(lastChar.lowercased().first ?? lastChar)
+        }
+        
+        return self.keyboardShortcut(key, modifiers: modifiers)
     }
 }
