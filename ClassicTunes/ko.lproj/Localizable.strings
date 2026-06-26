@@ -24,7 +24,6 @@
 // MARK: - Top toolbar
 "toolbar.importMusic"         = "음악 가져오기";
 "toolbar.search"              = "검색";
-"contextMenu.findMusicVideo"  = "뮤직비디오 찾기";
 
 // MARK: - Bottom bar
 "bottomBar.lyrics"            = "가사";
@@ -37,10 +36,19 @@
 "column.artist"               = "아티스트";
 "column.album"                = "앨범";
 "column.genre"                = "장르";
+"column.time"                 = "시간";
+"column.track"                = "트랙 번호";
+"column.disc"                 = "디스크 번호";
+"column.year"                 = "연도";
+"column.composer"             = "작곡가";
+"column.plays"                = "재생 횟수";
+"column.comment"              = "설명";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "다음에 재생";
 "contextMenu.addToPlaylist"   = "재생 목록에 추가";
+"contextMenu.findMusicVideo"  = "뮤직비디오 찾기";
+"contextMenu.resetColumns"    = "열 재설정";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "재생";

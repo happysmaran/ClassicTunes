@@ -36,11 +36,19 @@
 "column.artist"               = "Исполнитель";
 "column.album"                = "Альбом";
 "column.genre"                = "Жанр";
+"column.time"                 = "Время";
+"column.track"                = "Номер трека";
+"column.disc"                 = "Номер диска";
+"column.year"                 = "Год";
+"column.composer"             = "Композитор";
+"column.plays"                = "Воспроизведения";
+"column.comment"              = "Комментарий";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Воспроизвести следующим";
 "contextMenu.addToPlaylist"   = "Добавить в плейлист";
 "contextMenu.findMusicVideo"  = "Найти музыкальный клип";
+"contextMenu.resetColumns"    = "Сбросить столбцы";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Воспроизвести";

@@ -36,11 +36,19 @@
 "column.artist"               = "कलाकार";
 "column.album"                = "एल्बम";
 "column.genre"                = "शैली";
+"column.time"                 = "अवधि";
+"column.track"                = "ट्रैक";
+"column.disc"                 = "डिस्क";
+"column.year"                 = "वर्ष";
+"column.composer"             = "संगीतकार";
+"column.plays"                = "प्ले संख्या";
+"column.comment"              = "टिप्पणी";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "अगला चलाएँ";
 "contextMenu.addToPlaylist"   = "प्लेलिस्ट में जोड़ें";
 "contextMenu.findMusicVideo"  = "म्यूज़िक वीडियो ढूंढें";
+"contextMenu.resetColumns"    = "कॉलम रीसेट करें";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "चलाएँ";

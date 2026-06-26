@@ -36,11 +36,19 @@
 "column.artist"               = "Artiste";
 "column.album"                = "Album";
 "column.genre"                = "Genre";
+"column.time"                 = "Durée";
+"column.track"                = "Piste";
+"column.disc"                 = "Disque";
+"column.year"                 = "Année";
+"column.composer"             = "Compositeur";
+"column.plays"                = "Lectures";
+"column.comment"              = "Commentaire";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Lire ensuite";
 "contextMenu.addToPlaylist"   = "Ajouter à une liste de lecture";
 "contextMenu.findMusicVideo"  = "Trouver un clip musical";
+"contextMenu.resetColumns"    = "Réinitialiser les colonnes";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Lire";

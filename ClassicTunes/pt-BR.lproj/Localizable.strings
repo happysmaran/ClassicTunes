@@ -36,11 +36,19 @@
 "column.artist"               = "Artista";
 "column.album"                = "Álbum";
 "column.genre"                = "Gênero";
+"column.time"                 = "Duração";
+"column.track"                = "Faixa";
+"column.disc"                 = "Disco";
+"column.year"                 = "Ano";
+"column.composer"             = "Compositor";
+"column.plays"                = "Reproduções";
+"column.comment"              = "Comentário";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Reproduzir a Seguir";
 "contextMenu.addToPlaylist"   = "Adicionar à Playlist";
 "contextMenu.findMusicVideo"  = "encontrar videoclipe";
+"contextMenu.resetColumns"    = "Redefinir Colunas";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Reproduzir";

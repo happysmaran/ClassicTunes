@@ -36,11 +36,19 @@
 "column.artist"               = "艺人";
 "column.album"                = "专辑";
 "column.genre"                = "风格";
+"column.time"                 = "时间";
+"column.track"                = "音轨号";
+"column.disc"                 = "光盘号";
+"column.year"                 = "年份";
+"column.composer"             = "作曲者";
+"column.plays"                = "播放次数";
+"column.comment"              = "注释";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "下一首播放";
 "contextMenu.addToPlaylist"   = "添加到播放列表";
 "contextMenu.findMusicVideo"  = "查找音乐视频";
+"contextMenu.resetColumns"    = "重置列";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "播放";

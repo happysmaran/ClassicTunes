@@ -36,11 +36,19 @@
 "column.artist"               = "కళాకారుడు";
 "column.album"                = "ఆల్బమ్";
 "column.genre"                = "శైలి";
+"column.time"                 = "వ్యవధి";
+"column.track"                = "ట్రాక్";
+"column.disc"                 = "డిస్క్";
+"column.year"                 = "సంవత్సరం";
+"column.composer"             = "స్వరకర్త";
+"column.plays"                = "ప్లేల సంఖ్య";
+"column.comment"              = "వ్యాఖ్య";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "తర్వాత ప్లే చేయి";
 "contextMenu.addToPlaylist"   = "ప్లేలిస్ట్‌కు జోడించు";
 "contextMenu.findMusicVideo"  = "మ్యూజిక్ వీడియోను కనుగొనండి";
+"contextMenu.resetColumns"    = "నిలువు వరుసలను రీసెట్ చేయండి";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "ప్లే చేయి";

@@ -1,5 +1,230 @@
 import SwiftUI
+import Combine
 import UniformTypeIdentifiers
+
+// MARK: - Column definition
+enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
+    case title, artist, album, genre, time, track, disc, year, composer, plays, comment
+
+    var id: String { rawValue }
+    
+    static let defaultOrder: [SongColumn] = [
+        .title, .artist, .album, .genre, .time, .track, .disc, .year, .composer, .plays, .comment
+    ]
+
+    static var defaultVisible: [SongColumn] {
+        defaultOrder.filter { $0.isVisibleByDefault }
+    }
+
+    var isVisibleByDefault: Bool {
+        switch self {
+        case .title, .artist, .album, .genre: return true
+        default: return false
+        }
+    }
+
+    var canHide: Bool { self != .title }
+
+    var localizationKey: String {
+        switch self {
+        case .title: return "column.title"
+        case .artist: return "column.artist"
+        case .album: return "column.album"
+        case .genre: return "column.genre"
+        case .time: return "column.time"
+        case .track: return "column.track"
+        case .disc: return "column.disc"
+        case .year: return "column.year"
+        case .composer: return "column.composer"
+        case .plays: return "column.plays"
+        case .comment: return "column.comment"
+        }
+    }
+
+    var localizedTitle: String {
+        NSLocalizedString(localizationKey, comment: rawValue)
+    }
+
+    var defaultFraction: CGFloat {
+        switch self {
+        case .title: return 0.26
+        case .artist: return 0.18
+        case .album: return 0.20
+        case .genre: return 0.12
+        case .time: return 0.06
+        case .track: return 0.05
+        case .disc: return 0.05
+        case .year: return 0.06
+        case .composer: return 0.14
+        case .plays: return 0.06
+        case .comment: return 0.14
+        }
+    }
+
+    var isNumeric: Bool {
+        switch self {
+        case .time, .track, .disc, .plays, .year: return true
+        default: return false
+        }
+    }
+
+    func displayValue(for song: Song) -> String {
+        switch self {
+        case .title: return song.title
+        case .artist: return song.artist
+        case .album: return song.album
+        case .genre: return song.genre
+        case .composer: return song.composer ?? ""
+        case .comment: return song.comment ?? ""
+        case .year: return song.year ?? ""
+        case .track:
+            guard let t = song.trackNumber else { return "" }
+            return "\(t)"
+        case .disc:
+            guard let d = song.discNumber else { return "" }
+            return "\(d)"
+        case .plays:
+            return song.playCount > 0 ? "\(song.playCount)" : ""
+        case .time:
+            guard let duration = song.duration, duration.isFinite, duration >= 0 else { return "" }
+            let total = Int(duration.rounded())
+            return String(format: "%d:%02d", total / 60, total % 60)
+        }
+    }
+
+    func compare(_ lhs: Song, _ rhs: Song) -> ComparisonResult {
+        switch self {
+        case .title:
+            return normalizedSortKey(lhs.title).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.title))
+        case .artist:
+            return normalizedSortKey(lhs.artist).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.artist))
+        case .album:
+            return normalizedSortKey(lhs.album).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.album))
+        case .genre:
+            return normalizedSortKey(lhs.genre).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.genre))
+        case .composer:
+            return normalizedSortKey(lhs.composer ?? "").localizedCaseInsensitiveCompare(normalizedSortKey(rhs.composer ?? ""))
+        case .comment:
+            return normalizedSortKey(lhs.comment ?? "").localizedCaseInsensitiveCompare(normalizedSortKey(rhs.comment ?? ""))
+        case .year:
+            return SongColumn.compareNumeric(Int(lhs.year ?? ""), Int(rhs.year ?? ""))
+        case .track:
+            return SongColumn.compareNumeric(lhs.trackNumber, rhs.trackNumber)
+        case .disc:
+            return SongColumn.compareNumeric(lhs.discNumber, rhs.discNumber)
+        case .plays:
+            return SongColumn.compareNumeric(lhs.playCount, rhs.playCount)
+        case .time:
+            return SongColumn.compareNumeric(lhs.duration, rhs.duration)
+        }
+    }
+
+    private static func compareNumeric<T: Comparable>(_ lhs: T?, _ rhs: T?) -> ComparisonResult {
+        switch (lhs, rhs) {
+        case (nil, nil): return .orderedSame
+        case (nil, _): return .orderedAscending
+        case (_, nil): return .orderedDescending
+        case let (l?, r?):
+            if l < r { return .orderedAscending }
+            if l > r { return .orderedDescending }
+            return .orderedSame
+        }
+    }
+}
+
+// MARK: - Persisted column preferences
+
+final class ColumnPreferencesStore: ObservableObject {
+    private static let visibleColumnsKey = "songList.visibleColumns.v1"
+    private static let widthsKey = "songList.columnWidths.v1"
+
+    @Published private(set) var visibleColumns: [SongColumn]
+    private var widths: [SongColumn: CGFloat]
+
+    init() {
+        visibleColumns = Self.loadVisibleColumns()
+        widths = Self.loadWidths()
+    }
+
+    private static func loadVisibleColumns() -> [SongColumn] {
+        guard
+            let data = UserDefaults.standard.data(forKey: visibleColumnsKey),
+            let raw = try? JSONDecoder().decode([String].self, from: data)
+        else {
+            return SongColumn.defaultVisible
+        }
+        let decoded = Set(raw.compactMap { SongColumn(rawValue: $0) })
+        return SongColumn.defaultOrder.filter { decoded.contains($0) || $0 == .title }
+    }
+
+    private static func loadWidths() -> [SongColumn: CGFloat] {
+        guard
+            let data = UserDefaults.standard.data(forKey: widthsKey),
+            let raw = try? JSONDecoder().decode([String: CGFloat].self, from: data)
+        else {
+            return [:]
+        }
+        var result: [SongColumn: CGFloat] = [:]
+        for (key, value) in raw {
+            if let column = SongColumn(rawValue: key) {
+                result[column] = value
+            }
+        }
+        return result
+    }
+
+    private func persistVisibleColumns() {
+        let raw = visibleColumns.map { $0.rawValue }
+        if let data = try? JSONEncoder().encode(raw) {
+            UserDefaults.standard.set(data, forKey: Self.visibleColumnsKey)
+        }
+    }
+
+    private func persistWidths() {
+        var raw: [String: CGFloat] = [:]
+        for (column, fraction) in widths {
+            raw[column.rawValue] = fraction
+        }
+        if let data = try? JSONEncoder().encode(raw) {
+            UserDefaults.standard.set(data, forKey: Self.widthsKey)
+        }
+    }
+
+    func isVisible(_ column: SongColumn) -> Bool {
+        visibleColumns.contains(column)
+    }
+
+    func toggle(_ column: SongColumn) {
+        guard column.canHide else { return }
+        if visibleColumns.contains(column) {
+            visibleColumns.removeAll { $0 == column }
+        } else {
+            let updated = Set(visibleColumns + [column])
+            visibleColumns = SongColumn.defaultOrder.filter { updated.contains($0) }
+        }
+        persistVisibleColumns()
+    }
+
+    func resetToDefaults() {
+        visibleColumns = SongColumn.defaultVisible
+        widths = [:]
+        persistVisibleColumns()
+        persistWidths()
+    }
+
+    func rawWidth(for column: SongColumn) -> CGFloat {
+        widths[column] ?? column.defaultFraction
+    }
+
+    func setWidths(_ updates: [SongColumn: CGFloat]) {
+        for (column, fraction) in updates {
+            widths[column] = fraction
+        }
+        persistWidths()
+    }
+}
+
+// MARK: - Song list view
 
 struct SongListView: View {
     var isAlbumView: Bool
@@ -9,152 +234,97 @@ struct SongListView: View {
     var onAlbumSelect: (String) -> Void = { _ in }
     var playlistSongs: [Song]?
     var onAddToPlaylist: (Song) -> Void
-    @State private var sortBy = "title"
+    @State private var sortBy: SongColumn = .title
     @State private var isAscending = true
     @EnvironmentObject var playlistManager: PlaylistManager
 
-    @State private var titleFraction: CGFloat = 0.33
-    @State private var artistFraction: CGFloat = 0.23
-    @State private var albumFraction: CGFloat = 0.24
-    @State private var genreFraction: CGFloat = 0.20
+    @StateObject private var columnStore = ColumnPreferencesStore()
 
-    private let minColumnWidth: CGFloat = 80
+    private let minColumnWidth: CGFloat = 50
     private let maxColumnFractionCap: CGFloat = 0.7
 
     private var sortedSongs: [Song] {
         let songsToSort = playlistSongs ?? songs
-        let sorted = songsToSort.sorted { lhs, rhs in
-            let comparison: ComparisonResult
-            switch sortBy {
-            case "title":
-                comparison = normalizedSortKey(lhs.title).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.title))
-            case "artist":
-                comparison = normalizedSortKey(lhs.artist).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.artist))
-            case "album":
-                comparison = normalizedSortKey(lhs.album).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.album))
-            case "genre":
-                comparison = normalizedSortKey(lhs.genre).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.genre))
-            default:
-                comparison = .orderedSame
-            }
+        return songsToSort.sorted { lhs, rhs in
+            let comparison = sortBy.compare(lhs, rhs)
             return isAscending ? (comparison == .orderedAscending) : (comparison == .orderedDescending)
         }
-        return sorted
     }
 
-    // Ensures all fractions are >= minF and sum to 1.0 by redistributing excess/deficit
-    private func normalizeAllFractions(totalWidth: CGFloat) {
-        let minF = minColumnWidth / max(totalWidth, 1)
-        let maxF = min(maxColumnFractionCap, 1 - 3 * minF) // ensure room for other three at minimums
+    private func layoutFractions(rawFractions: [CGFloat], totalWidth: CGFloat) -> [CGFloat] {
+        let count = rawFractions.count
+        guard count > 0, totalWidth > 0 else { return rawFractions }
 
-        // Clamp to min and max
-        titleFraction = min(max(titleFraction, minF), maxF)
-        artistFraction = min(max(artistFraction, minF), maxF)
-        albumFraction = min(max(albumFraction, minF), maxF)
-        genreFraction = min(max(genreFraction, minF), maxF)
+        let minF = minColumnWidth / totalWidth
+        let maxF = min(maxColumnFractionCap, max(minF, 1 - CGFloat(max(count - 1, 0)) * minF))
 
-        var sum = titleFraction + artistFraction + albumFraction + genreFraction
-        if sum == 1 { return }
+        var fractions = rawFractions.map { min(max($0, minF), maxF) }
 
-        // If sum > 1, reduce from columns above minF proportionally; if sum < 1, add proportionally
-        // Compute available positive space above min for each
-        let availTitle = max(0, titleFraction - minF)
-        let availArtist = max(0, artistFraction - minF)
-        let availAlbum = max(0, albumFraction - minF)
-        let availGenre = max(0, genreFraction - minF)
-        let totalAvail = availTitle + availArtist + availAlbum + availGenre
+        for _ in 0..<6 {
+            let sum = fractions.reduce(0, +)
+            if abs(sum - 1) < 0.0005 { break }
 
-        if sum > 1, totalAvail > 0 {
-            let excess = sum - 1
-            // Reduce proportionally based on availability above min
-            titleFraction -= excess * (availTitle / totalAvail)
-            artistFraction -= excess * (availArtist / totalAvail)
-            albumFraction -= excess * (availAlbum / totalAvail)
-            genreFraction -= excess * (availGenre / totalAvail)
-        } else if sum < 1 {
-            var deficit = 1 - sum
-            // Compute remaining capacity to grow before hitting maxF
-            var capTitle = max(0, maxF - titleFraction)
-            var capArtist = max(0, maxF - artistFraction)
-            var capAlbum = max(0, maxF - albumFraction)
-            var capGenre = max(0, maxF - genreFraction)
-            var totalCap = capTitle + capArtist + capAlbum + capGenre
-            // Distribute until deficit is gone or capacity is exhausted
-            while deficit > 0.0001 && totalCap > 0 {
-                let addTitle = deficit * (capTitle / totalCap)
-                let addArtist = deficit * (capArtist / totalCap)
-                let addAlbum = deficit * (capAlbum / totalCap)
-                let addGenre = deficit * (capGenre / totalCap)
-                let newTitle = min(titleFraction + addTitle, maxF)
-                let newArtist = min(artistFraction + addArtist, maxF)
-                let newAlbum = min(albumFraction + addAlbum, maxF)
-                let newGenre = min(genreFraction + addGenre, maxF)
-                let newDeficit = deficit - (newTitle - titleFraction) - (newArtist - artistFraction) - (newAlbum - albumFraction) - (newGenre - genreFraction)
-                titleFraction = newTitle; artistFraction = newArtist; albumFraction = newAlbum; genreFraction = newGenre
-                deficit = newDeficit
-                capTitle = max(0, maxF - titleFraction)
-                capArtist = max(0, maxF - artistFraction)
-                capAlbum = max(0, maxF - albumFraction)
-                capGenre = max(0, maxF - genreFraction)
-                totalCap = capTitle + capArtist + capAlbum + capGenre
-            }
-        }
-
-        // Final clamp to min and max and normalize residual into last column
-        let minClamp = minColumnWidth / max(totalWidth, 1)
-        let maxClamp = min(maxColumnFractionCap, 1 - 3 * minClamp)
-        titleFraction = min(max(titleFraction, minClamp), maxClamp)
-        artistFraction = min(max(artistFraction, minClamp), maxClamp)
-        albumFraction = min(max(albumFraction, minClamp), maxClamp)
-        genreFraction = min(max(genreFraction, minClamp), maxClamp)
-
-        sum = titleFraction + artistFraction + albumFraction + genreFraction
-        if sum != 1 {
-            let residual = 1 - sum
-            // Add residual to the column with the most remaining capacity to avoid exceeding max
-            let caps: [CGFloat] = [maxClamp - titleFraction, maxClamp - artistFraction, maxClamp - albumFraction, maxClamp - genreFraction]
-            if let idx = caps.enumerated().max(by: { $0.element < $1.element })?.offset {
-                switch idx {
-                case 0: titleFraction += residual
-                case 1: artistFraction += residual
-                case 2: albumFraction += residual
-                default: genreFraction += residual
+            if sum > 1 {
+                let excess = sum - 1
+                let avail = fractions.map { max(0, $0 - minF) }
+                let totalAvail = avail.reduce(0, +)
+                guard totalAvail > 0 else { break }
+                for i in fractions.indices {
+                    fractions[i] -= excess * (avail[i] / totalAvail)
                 }
             } else {
-                genreFraction += residual
+                let deficit = 1 - sum
+                let cap = fractions.map { max(0, maxF - $0) }
+                let totalCap = cap.reduce(0, +)
+                guard totalCap > 0 else { break }
+                for i in fractions.indices {
+                    fractions[i] += deficit * (cap[i] / totalCap)
+                }
             }
+            fractions = fractions.map { min(max($0, minF), maxF) }
         }
+
+        let sum = fractions.reduce(0, +)
+        if abs(sum - 1) > 0.0001, let idx = fractions.indices.max(by: { (maxF - fractions[$0]) < (maxF - fractions[$1]) }) {
+            fractions[idx] = min(max(fractions[idx] + (1 - sum), minF), maxF)
+        }
+        return fractions
     }
 
-    private func adjustPairAndNormalize(current: inout CGFloat, next: inout CGFloat, deltaPixels: CGFloat, totalWidth: CGFloat) {
-        let minF = minColumnWidth / max(totalWidth, 1)
-        let maxF = min(maxColumnFractionCap, 1 - 3 * minF)
+    private func adjustBoundary(columns: [SongColumn], currentFractions: [CGFloat], currentIndex: Int, nextIndex: Int, deltaPixels: CGFloat, totalWidth: CGFloat) {
+        guard totalWidth > 0,
+              currentFractions.indices.contains(currentIndex),
+              currentFractions.indices.contains(nextIndex) else { return }
 
-        // Convert pixel delta to fraction
-        var delta = deltaPixels / max(totalWidth, 1)
+        let minF = minColumnWidth / totalWidth
+        let maxF = min(maxColumnFractionCap, max(minF, 1 - CGFloat(max(columns.count - 1, 0)) * minF))
 
-        // Compute allowable delta so neither column crosses [minF, maxF]
-        let maxIncreaseForCurrent = maxF - current
-        let maxDecreaseForCurrent = current - minF
-        let maxIncreaseForNext = maxF - next
-        let maxDecreaseForNext = next - minF
+        var current = currentFractions[currentIndex]
+        var next = currentFractions[nextIndex]
+        var delta = deltaPixels / totalWidth
 
         if delta > 0 {
-            // current grows, next shrinks
-            delta = min(delta, maxIncreaseForCurrent)
-            delta = min(delta, maxDecreaseForNext)
+            delta = min(delta, maxF - current)
+            delta = min(delta, next - minF)
         } else if delta < 0 {
-            // current shrinks, next grows
-            let posDelta = -delta
-            let clampedPos = min(posDelta, maxDecreaseForCurrent)
-            delta = -min(clampedPos, maxIncreaseForNext)
+            let positive = -delta
+            let clamped = min(positive, current - minF)
+            delta = -min(clamped, maxF - next)
         }
 
         current += delta
         next -= delta
 
-        // Final cleanup to keep total exactly 1.0
-        normalizeAllFractions(totalWidth: totalWidth)
+        var updatedFractions = currentFractions
+        updatedFractions[currentIndex] = current
+        updatedFractions[nextIndex] = next
+        updatedFractions = layoutFractions(rawFractions: updatedFractions, totalWidth: totalWidth)
+
+        var updates: [SongColumn: CGFloat] = [:]
+        for (column, fraction) in zip(columns, updatedFractions) {
+            updates[column] = fraction
+        }
+        columnStore.setWidths(updates)
     }
 
     var body: some View {
@@ -174,8 +344,7 @@ struct SongListView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
     }
-    
-    // Did you really expect something more bespoke? Naaaaah
+
     private func openYouTubeSearch(for song: Song) {
         let query = "\(song.artist) \(song.title) official music video"
         var components = URLComponents(string: "https://www.youtube.com/results")!
@@ -185,145 +354,100 @@ struct SongListView: View {
     }
 
     private var listView: some View {
-        VStack(spacing: 0) {
-            columnHeaders
+        let columns = columnStore.visibleColumns
 
-            GeometryReader { rowsProxy in
-                let total = rowsProxy.size.width
-                let titleW = titleFraction * total
-                let artistW = artistFraction * total
-                let albumW = albumFraction * total
-                let genreW = genreFraction * total
+        return GeometryReader { proxy in
+            let availableWidth = proxy.size.width
+            
+            let minWidthPerColumn: CGFloat = 85
+            let totalMinWidth = CGFloat(columns.count) * minWidthPerColumn
+            let tableWidth = max(availableWidth, totalMinWidth)
 
-                List {
-                    ForEach(sortedSongs) { song in
-                        songRow(song, titleW: titleW, artistW: artistW, albumW: albumW, genreW: genreW)
+            let fractions = layoutFractions(
+                rawFractions: columns.map { columnStore.rawWidth(for: $0) },
+                totalWidth: tableWidth
+            )
+            let widths = fractions.map { $0 * tableWidth }
+
+            ScrollView(.horizontal, showsIndicators: true) {
+                VStack(spacing: 0) {
+                    columnHeaders(columns: columns, widths: widths, fractions: fractions, totalWidth: tableWidth)
+
+                    List {
+                        ForEach(sortedSongs) { song in
+                            songRow(song, columns: columns, widths: widths)
+                        }
                     }
+                    .listStyle(.plain)
+                    .listRowInsets(EdgeInsets())
+                    .frame(width: tableWidth)
+                    .frame(maxHeight: .infinity)
                 }
-                .listStyle(.plain)
-                .listRowInsets(EdgeInsets())
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: tableWidth)
+                .frame(maxHeight: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var columnHeaders: some View {
-        GeometryReader { proxy in
-            let total = proxy.size.width
-            let titleWidth = titleFraction * total
-            let artistWidth = artistFraction * total
-            let albumWidth = albumFraction * total
-            let genreWidth = genreFraction * total
-
-            HStack(spacing: 0) {
-                ResizableHeader(
-                    title: NSLocalizedString("column.title", comment: "title"),
-                    sort: "title",
-                    width: .constant(titleWidth),
-                    currentSort: sortBy,
-                    isAscending: isAscending,
-                    onSort: { key in
-                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
-                    },
-                    showsHandle: true,
-                    onDrag: { delta in
-                        var a = titleFraction
-                        var b = artistFraction
-                        adjustPairAndNormalize(current: &a, next: &b, deltaPixels: delta, totalWidth: total)
-                        titleFraction = a
-                        artistFraction = b
-                    }
-                )
-
-                ResizableHeader(
-                    title: NSLocalizedString("column.artist", comment:"artist"),
-                    sort: "artist",
-                    width: .constant(artistWidth),
-                    currentSort: sortBy,
-                    isAscending: isAscending,
-                    onSort: { key in
-                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
-                    },
-                    showsHandle: true,
-                    onDrag: { delta in
-                        var a = artistFraction
-                        var b = albumFraction
-                        adjustPairAndNormalize(current: &a, next: &b, deltaPixels: delta, totalWidth: total)
-                        artistFraction = a
-                        albumFraction = b
-                    }
-                )
-
-                ResizableHeader(
-                    title: NSLocalizedString("column.album", comment: "album"),
-                    sort: "album",
-                    width: .constant(albumWidth),
-                    currentSort: sortBy,
-                    isAscending: isAscending,
-                    onSort: { key in
-                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
-                    },
-                    showsHandle: true,
-                    onDrag: { delta in
-                        var a = albumFraction
-                        var b = genreFraction
-                        adjustPairAndNormalize(current: &a, next: &b, deltaPixels: delta, totalWidth: total)
-                        albumFraction = a
-                        genreFraction = b
-                    }
-                )
-
-                ResizableHeader(
-                    title: NSLocalizedString("column.genre", comment: "genre"),
-                    sort: "genre",
-                    width: .constant(genreWidth),
-                    currentSort: sortBy,
-                    isAscending: isAscending,
-                    onSort: { key in
-                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
-                    },
-                    showsHandle: true,
-                    onDrag: { delta in
-                        var a = albumFraction
-                        var b = genreFraction
-                        // Dragging the right edge increases genre and decreases album when dragging right
-                        adjustPairAndNormalize(current: &b, next: &a, deltaPixels: delta, totalWidth: total)
-                        albumFraction = a
-                        genreFraction = b
-                    }
-                )
-            }
-            .padding(.vertical, 4)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(height: 24 + 8) // header height + vertical padding
-    }
-
-    private func songRow(_ song: Song, titleW: CGFloat, artistW: CGFloat, albumW: CGFloat, genreW: CGFloat) -> some View {
+    private func columnHeaders(columns: [SongColumn], widths: [CGFloat], fractions: [CGFloat], totalWidth: CGFloat) -> some View {
         HStack(spacing: 0) {
-            Text(song.title)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(width: titleW, alignment: .leading)
-                .padding(.leading, 12)
+            ForEach(Array(columns.enumerated()), id: \.element) { index, column in
+                ResizableHeader(
+                    title: column.localizedTitle,
+                    sort: column,
+                    width: .constant(widths[index]),
+                    currentSort: sortBy,
+                    isAscending: isAscending,
+                    alignTrailing: column.isNumeric,
+                    isLast: index == columns.count - 1,
+                    onSort: { key in
+                        if sortBy == key { isAscending.toggle() } else { sortBy = key; isAscending = true }
+                    },
+                    showsHandle: columns.count > 1,
+                    onDrag: { delta in
+                        if index == columns.count - 1 {
+                            adjustBoundary(columns: columns, currentFractions: fractions, currentIndex: index, nextIndex: index - 1, deltaPixels: delta, totalWidth: totalWidth)
+                        } else {
+                            adjustBoundary(columns: columns, currentFractions: fractions, currentIndex: index, nextIndex: index + 1, deltaPixels: delta, totalWidth: totalWidth)
+                        }
+                    }
+                )
+            }
+        }
+        .padding(.vertical, 4)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .frame(width: totalWidth, height: 32, alignment: .leading)
+        .contextMenu {
+            columnVisibilityMenu
+        }
+    }
 
-            Text(song.artist)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(width: artistW, alignment: .leading)
+    @ViewBuilder
+    private var columnVisibilityMenu: some View {
+        ForEach(SongColumn.defaultOrder.filter { $0.canHide }) { column in
+            Toggle(isOn: Binding(
+                get: { columnStore.isVisible(column) },
+                set: { _ in columnStore.toggle(column) }
+            )) {
+                Text(column.localizedTitle)
+            }
+        }
+        Divider()
+        Button(NSLocalizedString("contextMenu.resetColumns", comment: "Reset Columns")) {
+            columnStore.resetToDefaults()
+        }
+    }
 
-            Text(song.album)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(width: albumW, alignment: .leading)
-
-            Text(song.genre)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(width: genreW, alignment: .leading)
-                .padding(.trailing, 12)
+    private func songRow(_ song: Song, columns: [SongColumn], widths: [CGFloat]) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(columns.enumerated()), id: \.element) { index, column in
+                Text(column.displayValue(for: song))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.leading, index == 0 ? 12 : (column.isNumeric ? 0 : 6))
+                    .padding(.trailing, index == columns.count - 1 ? 12 : (column.isNumeric ? 6 : 0))
+                    .frame(width: widths[index], alignment: column.isNumeric ? .trailing : .leading)
+            }
         }
         .font(.system(size: 11))
         .background(
@@ -359,11 +483,13 @@ struct SongListView: View {
 
 struct ResizableHeader: View {
     let title: String
-    let sort: String
+    let sort: SongColumn
     @Binding var width: CGFloat
-    let currentSort: String
+    let currentSort: SongColumn
     let isAscending: Bool
-    let onSort: (String) -> Void
+    var alignTrailing: Bool = false
+    var isLast: Bool = false
+    let onSort: (SongColumn) -> Void
     var showsHandle: Bool = true
     var onDrag: ((CGFloat) -> Void)? = nil
 
@@ -371,10 +497,10 @@ struct ResizableHeader: View {
     private let handleWidth: CGFloat = 6
 
     var body: some View {
-        // The header occupies exactly 'width' so the left edge of content stays aligned with rows
         ZStack(alignment: .trailing) {
-            // Label area fills the column width and is clipped to avoid overdraw/glitches
             HStack(spacing: 4) {
+                if alignTrailing { Spacer(minLength: 0) }
+
                 Text(title)
                     .fontWeight(.bold)
                     .lineLimit(1)
@@ -385,9 +511,12 @@ struct ResizableHeader: View {
                     Image(systemName: isAscending ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
                 }
+
+                if !alignTrailing { Spacer(minLength: 0) }
             }
-            .padding(.leading, 12)
-            .frame(width: max(width - handleWidth, 0), alignment: .leading)
+            .padding(.leading, alignTrailing ? 6 : 12)
+            .padding(.trailing, isLast ? 12 : (alignTrailing ? 6 : 0))
+            .frame(width: max(width - handleWidth, 0), alignment: alignTrailing ? .trailing : .leading)
             .clipped()
             .contentShape(Rectangle())
             .onTapGesture { onSort(sort) }
@@ -416,8 +545,7 @@ struct ResizableHeader: View {
                     )
             }
         }
-        .frame(width: width, height: 24, alignment: .leading)
+        .frame(width: width, height: 24, alignment: alignTrailing ? .trailing : .leading)
         .background(Color.clear)
     }
 }
-

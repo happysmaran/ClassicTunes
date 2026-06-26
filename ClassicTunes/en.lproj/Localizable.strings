@@ -36,11 +36,19 @@
 "column.artist"               = "Artist";
 "column.album"                = "Album";
 "column.genre"                = "Genre";
+"column.time"                 = "Time";
+"column.track"                = "Track";
+"column.disc"                 = "Disc";
+"column.year"                 = "Year";
+"column.composer"             = "Composer";
+"column.plays"                = "Plays";
+"column.comment"              = "Comment";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "Play Next";
 "contextMenu.addToPlaylist"   = "Add to Playlist";
 "contextMenu.findMusicVideo"  = "Find Music Video";
+"contextMenu.resetColumns"    = "Reset Columns";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Play";
@@ -160,7 +168,7 @@
 "device.trackCount"         = "%d songs on iPod";
 "device.empty"              = "No songs on this iPod.";
 "sync.addSongs"             = "Add Songs…";
-"sync.dragHere"             = "Add songs from your library\nto sync to this iPod.";
+"sync.dragHere"             = "Add songs from your library\into sync to this iPod.";
 "sync.syncNow"              = "Sync";
 "sync.cancel"               = "Cancel";
 "sync.writing"              = "Writing database…";

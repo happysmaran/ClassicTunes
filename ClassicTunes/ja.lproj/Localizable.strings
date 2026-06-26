@@ -36,11 +36,19 @@
 "column.artist"               = "アーティスト";
 "column.album"                = "アルバム";
 "column.genre"                = "ジャンル";
+"column.time"                 = "時間";
+"column.track"                = "トラック番号";
+"column.disc"                 = "ディスク番号";
+"column.year"                 = "年";
+"column.composer"             = "作曲者";
+"column.plays"                = "再生回数";
+"column.comment"              = "コメント";
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "次に再生";
 "contextMenu.addToPlaylist"   = "プレイリストに追加";
 "contextMenu.findMusicVideo"  = "ミュージックビデオを探す";
+"contextMenu.resetColumns"    = "列をリセット";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "再生";
