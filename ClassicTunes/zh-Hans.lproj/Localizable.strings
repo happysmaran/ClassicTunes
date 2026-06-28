@@ -11,15 +11,13 @@
 "sidebar.tvShows"             = "电视节目";
 "sidebar.podcasts"            = "播客";
 "sidebar.radio"               = "广播";
-"sidebar.purchased"           = "已购项目";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "新建播放列表";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "即将推出";
-"alert.comingSoon.message"    = "%@ 即将推出。";
-"alert.ok"                    = "好";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "不可用";
+"alert.comingSoon.message"    = "%@不可用。";
+"alert.ok"                    = "确定";
 
 // MARK: - Top toolbar
 "toolbar.importMusic"         = "导入音乐";

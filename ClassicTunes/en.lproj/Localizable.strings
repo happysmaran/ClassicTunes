@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "TV Shows";
 "sidebar.podcasts"            = "Podcasts";
 "sidebar.radio"               = "Radio";
-"sidebar.purchased"           = "Purchased";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "New Playlist";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "Coming Soon";
-"alert.comingSoon.message"    = "%@ is coming soon.";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "Unavailable";
+"alert.comingSoon.message"    = "%@ is unavailable.";
 "alert.ok"                    = "OK";
 
 // MARK: - Top toolbar

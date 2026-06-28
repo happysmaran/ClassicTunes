@@ -5,6 +5,7 @@ import Combine
 import AVFoundation
 
 // MARK: - iPod Device Model
+// This file is hella cursed enough you can peruse around here to your liking
 
 struct iPodDevice: Identifiable, Equatable {
     let id: UUID = UUID()
@@ -29,7 +30,7 @@ enum iPodGeneration: String {
 
 // MARK: - Device Monitor (DiskArbitration)
 
-/// Watches for USB volume mounts and identifies iPod Shuffles by filesystem fingerprint.
+// Watches for USB volume mounts and identifies iPod Shuffles by filesystem fingerprint.
 final class iPodDeviceMonitor: ObservableObject {
     @Published var connectedDevice: iPodDevice? = nil
 
@@ -112,7 +113,7 @@ final class iPodDeviceMonitor: ObservableObject {
 
     // MARK: iPod Identification
 
-    /// Returns an iPodDevice if the volume looks like an iPod Shuffle, nil otherwise.
+    // Returns an iPodDevice if the volume looks like an iPod Shuffle, nil otherwise.
     private func identifyiPodShuffle(at url: URL, description: [String: Any]) -> iPodDevice? {
         let fm = FileManager.default
 
@@ -213,7 +214,7 @@ final class iPodDeviceMonitor: ObservableObject {
 
 // MARK: - Sync Engine
 
-/// Handles the actual file copy + database write operations.
+// Handles the actual file copy + database write operations.
 final class iPodSyncEngine: ObservableObject {
     var grantedVolumeURL: URL? = nil
     // MARK: Progress reporting
@@ -252,8 +253,8 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: Music folder on device
 
-    /// Returns (or creates) the /iPod_Control/Music/F00/ folder.
-    /// Gen 1/2 Shuffle only uses a single flat subdirectory.
+    // Returns (or creates) the /iPod_Control/Music/F00/ folder.
+    // Gen 1/2 Shuffle only uses a single flat subdirectory.
     private func musicFolder(on device: iPodDevice) throws -> URL {
         let base = grantedVolumeURL ?? device.volumeURL
         let folder = base.appendingPathComponent("iPod_Control/Music/F00", isDirectory: true)
@@ -261,7 +262,7 @@ final class iPodSyncEngine: ObservableObject {
         return folder
     }
 
-    /// Returns (or creates) the /iPod_Control/iTunes/ folder.
+    // Returns (or creates) the /iPod_Control/iTunes/ folder.
     private func iTunesFolder(on device: iPodDevice) throws -> URL {
         let base = grantedVolumeURL ?? device.volumeURL
         let folder = base.appendingPathComponent("iPod_Control/iTunes", isDirectory: true)
@@ -284,10 +285,10 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: Full sync
 
-    /// Syncs `songs` to the device, replacing all existing tracks.
-    /// - Parameters:
-    ///   - songs: Songs to write (in desired playback order).
-    ///   - device: The mounted iPod Shuffle.
+    // Syncs `songs` to the device, replacing all existing tracks.
+    // - Parameters:
+    //   - songs: Songs to write (in desired playback order).
+    //   - device: The mounted iPod Shuffle.
     func sync(songs: [Song], to device: iPodDevice) async {
         let accessURL: URL? = await MainActor.run {
             let panel = NSOpenPanel()
@@ -428,7 +429,7 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: Add / Remove individual tracks
 
-    /// Appends a single song without disturbing existing tracks.
+    // Appends a single song without disturbing existing tracks.
     func addTrack(_ song: Song, to device: iPodDevice) async throws {
         var db = try readDatabase(from: device)
 
@@ -464,7 +465,7 @@ final class iPodSyncEngine: ObservableObject {
         try? fm.removeItem(at: tmpDB)
     }
 
-    /// Removes a track by index and compacts the database.
+    // Removes a track by index and compacts the database.
     func removeTrack(at trackIndex: Int, from device: iPodDevice) async throws {
         var db = try readDatabase(from: device)
         guard trackIndex < db.tracks.count else { return }
@@ -515,13 +516,13 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: iTunesStats
 
-    /// iTunesStats layout (Gen 1/2 Shuffle):
-    ///   Header: 18 bytes (same structure as iTunesSD header — track count + 0x0100 + zeros)
-    ///   Per track: 18 bytes
-    ///     Bytes 0–2:  bookmarkPositionMS (uint24 BE) — write 0
-    ///     Bytes 3–5:  skipCount          (uint24 BE) — write 0
-    ///     Bytes 6–8:  playCount          (uint24 BE) — write 0
-    ///     Bytes 9–17: padding            (zeros)
+    // iTunesStats layout (Gen 1/2 Shuffle):
+    //   Header: 18 bytes (same structure as iTunesSD header — track count + 0x0100 + zeros)
+    //   Per track: 18 bytes
+    //     Bytes 0–2:  bookmarkPositionMS (uint24 BE) — write 0
+    //     Bytes 3–5:  skipCount          (uint24 BE) — write 0
+    //     Bytes 6–8:  playCount          (uint24 BE) — write 0
+    //     Bytes 9–17: padding            (zeros)
     private func writeEmptyiTunesStats(trackCount: Int, to url: URL) {
         let perTrackSize = 18
         var data = Data(capacity: 18 + trackCount * perTrackSize)

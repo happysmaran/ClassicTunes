@@ -4,7 +4,7 @@ import Combine
 import MediaPlayer
 import UniformTypeIdentifiers
 
-// the playlist code is a mess
+// Main Application Manager
 
 class PersistentPlayer {
     static let shared = PersistentPlayer()
@@ -485,9 +485,9 @@ struct ContentView: View {
         .tint(.iTunesBlue)
     }
 
-    /// The full (non-mini-player) layout, with all modifiers applied in
-    /// separate chunks so the type checker solves each piece independently
-    /// instead of one enormous chained expression.
+    // The full (non-mini-player) layout, with all modifiers applied in
+    // separate chunks so the type checker solves each piece independently
+    // instead of one enormous chained expression.
     private var fullPlayerView: some View {
         let base = mainPlayerLayout
         let withImporters = applyImportersAndLifecycle(base)
@@ -1892,7 +1892,7 @@ struct ContentView: View {
         return components.joined(separator: " ")
     }
     
-    /// Parse M3U content into entries with optional EXTINF metadata
+    // Parse M3U content into entries with optional EXTINF metadata
     private func parseM3UEntries(text: String, baseDirectory: URL) -> [(path: String, title: String?, artist: String?)] {
         // Normalize line endings and strip BOM
         var content = text.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
@@ -2183,51 +2183,6 @@ struct ContentView: View {
         } catch {
             print("Failed to read M3U: \(error)")
         }
-    }
-
-    private func parseM3U(text: String, baseDirectory: URL) -> [String] {
-        var result: [String] = []
-        var content = text
-        // Normalize common line endings
-        content = content.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
-        // Strip UTF-8 BOM if present
-        if content.hasPrefix("\u{FEFF}") {
-            content.removeFirst()
-        }
-
-        for rawLine in content.components(separatedBy: .newlines) {
-            var line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
-            if line.isEmpty { continue }
-            if line.hasPrefix("#") { continue } // skip comments and #EXTINF
-
-            // Remove optional surrounding quotes
-            if line.hasPrefix("\"") && line.hasSuffix("\"") && line.count >= 2 {
-                line = String(line.dropFirst().dropLast())
-            }
-
-            // Convert Windows backslashes to POSIX style
-            line = line.replacingOccurrences(of: "\\", with: "/")
-
-            // Decode percent-encoding if present
-            if let decoded = line.removingPercentEncoding {
-                line = decoded
-            } else if let url = URL(string: line), let decoded = url.path.removingPercentEncoding {
-                line = decoded
-            }
-
-            // Normalize Unicode composition for the path text
-            line = line.precomposedStringWithCanonicalMapping
-            // Avoid over-collapsing slashes; only reduce sequences of 3+ to 2, preserve scheme parts
-            let slashPattern = #"/{3,}"#
-            if let regex = try? NSRegularExpression(pattern: slashPattern) {
-                let ns = line as NSString
-                let range = NSRange(location: 0, length: ns.length)
-                line = regex.stringByReplacingMatches(in: line, options: [], range: range, withTemplate: "//")
-            }
-
-            result.append(line)
-        }
-        return result
     }
 
     private func suggestUniquePlaylistName(basedOn base: String) -> String {

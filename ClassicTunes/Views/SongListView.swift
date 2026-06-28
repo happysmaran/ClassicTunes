@@ -3,19 +3,24 @@ import Combine
 import UniformTypeIdentifiers
 
 // MARK: - Column definition
+
+// A descriptive matrix mapping available metadata column keys to discrete structural spreadsheet entities.
 enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
     case title, artist, album, genre, time, track, disc, year, composer, plays, comment
 
     var id: String { rawValue }
     
+    // The canonical fallback ordering scheme mapping columns from left to right.
     static let defaultOrder: [SongColumn] = [
         .title, .artist, .album, .genre, .time, .track, .disc, .year, .composer, .plays, .comment
     ]
 
+    // Resolves the default selection subset flagged for immediate visibility upon new installs.
     static var defaultVisible: [SongColumn] {
         defaultOrder.filter { $0.isVisibleByDefault }
     }
 
+    // Evaluates structural relevance thresholds to verify if a column loads by default.
     var isVisibleByDefault: Bool {
         switch self {
         case .title, .artist, .album, .genre: return true
@@ -23,8 +28,10 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Primary lock preventing critical keys from being toggled off by users.
     var canHide: Bool { self != .title }
 
+    // The string identifier key matching backend dictionary catalog structures.
     var localizationKey: String {
         switch self {
         case .title: return "column.title"
@@ -41,10 +48,12 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Resolves structural lookup symbols to produce clean, localized display title words.
     var localizedTitle: String {
         NSLocalizedString(localizationKey, comment: rawValue)
     }
 
+    // The base percentage share of table width allocated to a column prior to user resizing.
     var defaultFraction: CGFloat {
         switch self {
         case .title: return 0.26
@@ -61,6 +70,7 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Tracks whether data values align right (numeric) or left (textual).
     var isNumeric: Bool {
         switch self {
         case .time, .track, .disc, .plays, .year: return true
@@ -68,6 +78,10 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Unboxes data components from a song instance and formats them into display-ready strings.
+    //
+    // - Parameter song: The underlying track data structure to query.
+    // - Returns: A formatted textual representation of the property value.
     func displayValue(for song: Song) -> String {
         switch self {
         case .title: return song.title
@@ -92,6 +106,12 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Orchestrates comparison logic between two songs to drive active column sorting.
+    //
+    // - Parameters:
+    //   - lhs: The baseline song structure to evaluate.
+    //   - rhs: The comparison song structure to evaluate against.
+    // - Returns: A standard comparison result token.
     func compare(_ lhs: Song, _ rhs: Song) -> ComparisonResult {
         switch self {
         case .title:
@@ -119,6 +139,7 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
         }
     }
 
+    // Compares optional, unboxed sequential types to keep nil values accurately at the bottom of indices.
     private static func compareNumeric<T: Comparable>(_ lhs: T?, _ rhs: T?) -> ComparisonResult {
         switch (lhs, rhs) {
         case (nil, nil): return .orderedSame
@@ -134,18 +155,22 @@ enum SongColumn: String, CaseIterable, Codable, Identifiable, Hashable {
 
 // MARK: - Persisted column preferences
 
+// A local storage model managing visibility toggles and individual cell widths inside long-term registries.
 final class ColumnPreferencesStore: ObservableObject {
     private static let visibleColumnsKey = "songList.visibleColumns.v1"
     private static let widthsKey = "songList.columnWidths.v1"
 
+    // The active array collection representing columns flagged to populate spreadsheet frames.
     @Published private(set) var visibleColumns: [SongColumn]
     private var widths: [SongColumn: CGFloat]
 
+    // Initializes a preferences store and loads saved visibility layouts and custom cell sizes.
     init() {
         visibleColumns = Self.loadVisibleColumns()
         widths = Self.loadWidths()
     }
 
+    // Pulls saved visibility states from persistent storage arrays.
     private static func loadVisibleColumns() -> [SongColumn] {
         guard
             let data = UserDefaults.standard.data(forKey: visibleColumnsKey),
@@ -157,6 +182,7 @@ final class ColumnPreferencesStore: ObservableObject {
         return SongColumn.defaultOrder.filter { decoded.contains($0) || $0 == .title }
     }
 
+    // Pulls custom-stretched column fractions from persistent preferences.
     private static func loadWidths() -> [SongColumn: CGFloat] {
         guard
             let data = UserDefaults.standard.data(forKey: widthsKey),
@@ -173,6 +199,7 @@ final class ColumnPreferencesStore: ObservableObject {
         return result
     }
 
+    // Commits visible column definitions to system preferences.
     private func persistVisibleColumns() {
         let raw = visibleColumns.map { $0.rawValue }
         if let data = try? JSONEncoder().encode(raw) {
@@ -180,6 +207,7 @@ final class ColumnPreferencesStore: ObservableObject {
         }
     }
 
+    // Commits tracking column dimension configurations to system preferences.
     private func persistWidths() {
         var raw: [String: CGFloat] = [:]
         for (column, fraction) in widths {
@@ -190,10 +218,12 @@ final class ColumnPreferencesStore: ObservableObject {
         }
     }
 
+    // Checks if a specified column is flagged for inclusion inside table view structures.
     func isVisible(_ column: SongColumn) -> Bool {
         visibleColumns.contains(column)
     }
 
+    // Inverts visibility metrics for a specified column, saving updates to system preferences.
     func toggle(_ column: SongColumn) {
         guard column.canHide else { return }
         if visibleColumns.contains(column) {
@@ -205,6 +235,7 @@ final class ColumnPreferencesStore: ObservableObject {
         persistVisibleColumns()
     }
 
+    // Clears preference data stores, resetting widths and visibility metrics back to shipping benchmarks.
     func resetToDefaults() {
         visibleColumns = SongColumn.defaultVisible
         widths = [:]
@@ -212,10 +243,12 @@ final class ColumnPreferencesStore: ObservableObject {
         persistWidths()
     }
 
+    // Resolves custom track width metrics or falls back to standard enum fraction indices.
     func rawWidth(for column: SongColumn) -> CGFloat {
         widths[column] ?? column.defaultFraction
     }
 
+    // Overwrites width layout definitions and commits changes to persistent system files.
     func setWidths(_ updates: [SongColumn: CGFloat]) {
         for (column, fraction) in updates {
             widths[column] = fraction
@@ -226,14 +259,29 @@ final class ColumnPreferencesStore: ObservableObject {
 
 // MARK: - Song list view
 
+// A desktop database view displaying music libraries as an interactive, multi-column grid list.
 struct SongListView: View {
+    // Toggle controlling whether this layout displays structured cover grids or spreadsheet files.
     var isAlbumView: Bool
+    
+    // The global music library source track repository map.
     var songs: [Song]
+    
+    // Callback action triggered to map active music streaming vectors on song selections.
     var onSongSelect: (Song) -> Void
+    
+    // Two-way binding identifying the currently highlighted focus item inside rows.
     @Binding var selectedSong: Song?
+    
+    // Explicit routing handler triggered on selection drops inside cover-grid views.
     var onAlbumSelect: (String) -> Void = { _ in }
+    
+    // Optional context track selection array representing a filtered list or folder collection.
     var playlistSongs: [Song]?
+    
+    // Closure hook running modifications to add tracks into secondary user lists.
     var onAddToPlaylist: (Song) -> Void
+    
     @State private var sortBy: SongColumn = .title
     @State private var isAscending = true
     @EnvironmentObject var playlistManager: PlaylistManager
@@ -243,6 +291,7 @@ struct SongListView: View {
     private let minColumnWidth: CGFloat = 50
     private let maxColumnFractionCap: CGFloat = 0.7
 
+    // Computes and returns sorted track models matching active filter states and key column signatures.
     private var sortedSongs: [Song] {
         let songsToSort = playlistSongs ?? songs
         return songsToSort.sorted { lhs, rhs in
@@ -251,6 +300,7 @@ struct SongListView: View {
         }
     }
 
+    // A normalization layout pass that scales column fractions to sum exactly to 1.0 within bounding constraints.
     private func layoutFractions(rawFractions: [CGFloat], totalWidth: CGFloat) -> [CGFloat] {
         let count = rawFractions.count
         guard count > 0, totalWidth > 0 else { return rawFractions }
@@ -260,6 +310,7 @@ struct SongListView: View {
 
         var fractions = rawFractions.map { min(max($0, minF), maxF) }
 
+        // Iteratively balance proportional shares to distribute excess or deficit
         for _ in 0..<6 {
             let sum = fractions.reduce(0, +)
             if abs(sum - 1) < 0.0005 { break }
@@ -291,6 +342,7 @@ struct SongListView: View {
         return fractions
     }
 
+    // Adjusts column widths based on drag handles, borrowing space from neighboring columns.
     private func adjustBoundary(columns: [SongColumn], currentFractions: [CGFloat], currentIndex: Int, nextIndex: Int, deltaPixels: CGFloat, totalWidth: CGFloat) {
         guard totalWidth > 0,
               currentFractions.indices.contains(currentIndex),
@@ -345,6 +397,7 @@ struct SongListView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
+    // Assembles an explicit search query and dispatches an NSWorkspace event to open a YouTube search in the default web browser.
     private func openYouTubeSearch(for song: Song) {
         let query = "\(song.artist) \(song.title) official music video"
         var components = URLComponents(string: "https://www.youtube.com/results")!
@@ -353,6 +406,7 @@ struct SongListView: View {
         NSWorkspace.shared.open(url)
     }
 
+    // Renders the multi-column song table inside a horizontal scroll view.
     private var listView: some View {
         let columns = columnStore.visibleColumns
 
@@ -389,6 +443,7 @@ struct SongListView: View {
         }
     }
 
+    // Generates the header row, providing a context menu to toggle column visibility.
     private func columnHeaders(columns: [SongColumn], widths: [CGFloat], fractions: [CGFloat], totalWidth: CGFloat) -> some View {
         HStack(spacing: 0) {
             ForEach(Array(columns.enumerated()), id: \.element) { index, column in
@@ -422,6 +477,7 @@ struct SongListView: View {
         }
     }
 
+    // Renders contextual options inside headers to show or hide target columns.
     @ViewBuilder
     private var columnVisibilityMenu: some View {
         ForEach(SongColumn.defaultOrder.filter { $0.canHide }) { column in
@@ -438,6 +494,7 @@ struct SongListView: View {
         }
     }
 
+    // Maps song items into tabular row objects that register tap actions, context selections, and item drag data.
     private func songRow(_ song: Song, columns: [SongColumn], widths: [CGFloat]) -> some View {
         HStack(spacing: 0) {
             ForEach(Array(columns.enumerated()), id: \.element) { index, column in
@@ -481,6 +538,7 @@ struct SongListView: View {
     }
 }
 
+// An interactive divider component that updates column widths based on drag gesture offsets.
 struct ResizableHeader: View {
     let title: String
     let sort: SongColumn

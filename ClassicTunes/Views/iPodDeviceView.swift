@@ -5,11 +5,16 @@ import AVKit
 // MARK: - Root iPod Panel
 // Drop this into ContentView when connectedDevice != nil.
 
+// Main panel shown when an iPod Shuffle is connected. Two-column layout:
+// a left "Music to Sync" staging list the user builds up from the library,
+// and a right "On iPod" list showing what's currently on the device — plus
+// a storage usage bar and an action bar with Sync/Cancel buttons.
 struct iPodDeviceView: View {
     let device: iPodDevice
     @ObservedObject var syncEngine: iPodSyncEngine
     var allLibrarySongs: [Song]                         // Full library to pick from
 
+    // Tracks currently stored on the connected device, parsed from its iTunesSD database.
     @State private var deviceTracks:   [iTunesSDTrack] = []
     @State private var selectedSongs:  Set<UUID>       = []
     @State private var showSongPicker  = false
@@ -25,9 +30,11 @@ struct iPodDeviceView: View {
 
     // MARK: Computed
 
+    // Bytes currently occupied on the device (capacity minus free space).
     private var usedBytes: Int64 {
         device.capacity - device.freeSpace
     }
+    // Fraction of total capacity that's used, for the storage bar's fill width.
     private var usedFraction: Double {
         guard device.capacity > 0 else { return 0 }
         return Double(usedBytes) / Double(device.capacity)
@@ -51,6 +58,8 @@ struct iPodDeviceView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear(perform: loadDeviceTracks)
         .sheet(isPresented: $showSongPicker) {
+            // Modal sheet for choosing additional songs from the library to
+            // add to the sync staging list, merging without duplicates.
             SongPickerSheet(
                 allSongs: allLibrarySongs,
                 alreadySelected: syncList,
@@ -79,6 +88,7 @@ struct iPodDeviceView: View {
 
     // MARK: Header
 
+    // Top banner: iPod icon, volume name/generation/capacity summary, and an eject button.
     private var deviceHeader: some View {
         HStack(spacing: 16) {
             // iPod Shuffle icon
@@ -127,6 +137,8 @@ struct iPodDeviceView: View {
         .background(headerBackground)
     }
 
+    // Subtle background behind the header — flat in dark mode, a soft
+    // vertical gradient in light mode.
     private var headerBackground: some View {
         colorScheme == .dark
             ? AnyView(Color(nsColor: .controlBackgroundColor))
@@ -138,6 +150,9 @@ struct iPodDeviceView: View {
 
     // MARK: Content (two-column: sync list + device tracks)
 
+    // The main two-column body: left panel for staging songs to sync, right
+    // panel showing what's already on the device (with a loading spinner
+    // while the on-device database is being read/resolved).
     private var contentArea: some View {
         HStack(spacing: 0) {
             // Left: songs queued to sync
@@ -189,6 +204,8 @@ struct iPodDeviceView: View {
 
     // MARK: Sync list (left panel)
 
+    // Empty-state placeholder shown in the left panel before any songs have
+    // been added to the sync staging list.
     private var emptyDropTarget: some View {
         VStack(spacing: 12) {
             Image(systemName: "arrow.down.circle.dotted")
@@ -203,6 +220,7 @@ struct iPodDeviceView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // Reorderable, removable list of songs staged for the next sync.
     private var syncListTable: some View {
         List(selection: $selectedSongs) {
             ForEach(syncList) { song in
@@ -220,6 +238,9 @@ struct iPodDeviceView: View {
 
     // MARK: Device track list (right panel)
 
+    // List of tracks currently present on the connected device, each with a
+    // "remove from device" button that deletes the file and updates the
+    // on-device database via the sync engine.
     private var deviceTrackList: some View {
         List {
             ForEach(Array(deviceTracks.enumerated()), id: \.offset) { index, track in
@@ -255,6 +276,8 @@ struct iPodDeviceView: View {
 
     // MARK: Storage bar (iTunes-style coloured breakdown)
 
+    // Horizontal bar visualizing used vs. free space on the device, plus a
+    // text legend with the exact byte amounts.
     private var storageBar: some View {
         VStack(alignment: .leading, spacing: 6) {
             // Coloured bar
@@ -289,6 +312,7 @@ struct iPodDeviceView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
+    // Small colored-square + label combo used in the storage bar legend.
     private func storageLabel(color: Color, text: String) -> some View {
         HStack(spacing: 4) {
             RoundedRectangle(cornerRadius: 2)
@@ -301,6 +325,9 @@ struct iPodDeviceView: View {
 
     // MARK: Action bar
 
+    // Bottom bar: track count summary plus Cancel (clears the staging list)
+    // and Sync Now (triggers the confirmation alert) buttons. Both buttons
+    // are disabled while a sync is already in progress or the list is empty.
     private var actionBar: some View {
         HStack {
             Text(String(format: NSLocalizedString("device.trackCount", comment: "trackCount"), deviceTracks.count))
@@ -329,6 +356,9 @@ struct iPodDeviceView: View {
 
     // MARK: Sync overlay (progress)
 
+    // Full-screen overlay shown while a sync is active (copying/writing/
+    // ejecting phases with a progress bar/spinner), or briefly afterward to
+    // show a "done" success toast or a "failed" error toast that auto-dismiss.
     @ViewBuilder
     private var syncOverlay: some View {
         if syncEngine.progress.isActive {
@@ -386,6 +416,8 @@ struct iPodDeviceView: View {
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .onAppear {
+                // Re-request/confirm volume access (now that files were just
+                // written) and refresh the on-device track list shortly after.
                 requestVolumeAccess(for: device)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     syncEngine.progress = .init()
@@ -393,6 +425,7 @@ struct iPodDeviceView: View {
                 }
             }
         } else if case let .failed(msg) = syncEngine.progress.phase {
+            // Error toast shown if the sync failed, auto-dismissing after 4s.
             VStack {
                 Spacer()
                 HStack {
@@ -420,6 +453,8 @@ struct iPodDeviceView: View {
 
     // MARK: Helpers
 
+    // Reusable section title bar ("Music to Sync (3)" etc.) with an optional
+    // trailing accessory view (e.g. an add button).
     private func sectionHeader<Accessory: View>(title: String, count: Int, @ViewBuilder accessory: () -> Accessory) -> some View {
         HStack {
             Text(title)
@@ -435,43 +470,52 @@ struct iPodDeviceView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
+    // Kicks off the async track-loading routine on a Task.
     private func loadDeviceTracks() {
         Task {
             await loadDeviceTracksAsync()
         }
     }
 
+    // Reads and parses the device's iTunesSD database, then asynchronously
+    // resolves a display name (title — artist, falling back to the file
+    // name) for every track in parallel via AVAsset metadata lookups.
     private func loadDeviceTracksAsync() async {
         await MainActor.run { isLoadingTracks = true }
-        
+
+        // Lazily re-resolve previously granted security-scoped access if we
+        // don't already have an active URL for this session.
         if syncEngine.grantedVolumeURL == nil {
             syncEngine.grantedVolumeURL = syncEngine.loadPersistedAccess(for: device.bsdName)
         }
-        
+
         let baseURL = syncEngine.grantedVolumeURL ?? device.volumeURL
         let dbURL = baseURL.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
-        
+
         guard FileManager.default.fileExists(atPath: dbURL.path) else {
             await MainActor.run { self.deviceTracks = [] }
             return
         }
-        
+
+        // Bracket the metadata reads with security-scoped resource access.
         let accessGranted = baseURL.startAccessingSecurityScopedResource()
         defer {
             if accessGranted { baseURL.stopAccessingSecurityScopedResource() }
         }
-        
+
         do {
             let fileData = try Data(contentsOf: dbURL)
             let parsedDB = try iPodShuffleDatabase.parse(from: fileData)
             var tracks = parsedDB.tracks
 
+            // Resolve a friendly display name for every track concurrently
+            // (one child task per track), then write results back in order.
             await withTaskGroup(of: (Int, String).self) { group in
                 for i in tracks.indices {
                     let relativePath = String(tracks[i].filePath.drop(while: { $0 == "/" }))
                     let fileURL = baseURL.appendingPathComponent(relativePath)
                     let index = i
-                    
+
                     group.addTask {
                         let asset = AVAsset(url: fileURL)
                         let metadata = try? await asset.load(.commonMetadata)
@@ -481,18 +525,18 @@ struct iPodDeviceView: View {
                         return (index, display.isEmpty ? (tracks[index].filePath as NSString).lastPathComponent : display)
                     }
                 }
-                
+
                 for await (index, displayName) in group {
                     tracks[index].displayName = displayName
                 }
             }
-            
+
             //print("Setting \(tracks.count) tracks")
             await MainActor.run {
                 self.deviceTracks = tracks
                 isLoadingTracks = false
             }
-            
+
         } catch {
             await MainActor.run {
                 self.loadError = error.localizedDescription
@@ -501,16 +545,21 @@ struct iPodDeviceView: View {
         }
     }
 
+    // Hands off the staged sync list and device to the sync engine.
     private func doSync() {
         Task {
             await syncEngine.sync(songs: syncList, to: device)
         }
     }
 
+    // Delegates ejecting the device to the sync engine.
     private func doEject() {
         syncEngine.eject(device: device) { _ in }
     }
-    
+
+    // Ensures we have (and persist) security-scoped access to the device
+    // volume, prompting the user with an NSOpenPanel if no saved bookmark
+    // exists yet, then reloads the device's track list.
     private func requestVolumeAccess(for device: iPodDevice) {
         if let savedURL = syncEngine.loadPersistedAccess(for: device.bsdName) {
             syncEngine.grantedVolumeURL = savedURL
@@ -526,7 +575,7 @@ struct iPodDeviceView: View {
         panel.directoryURL = device.volumeURL
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            
+
             _ = url.startAccessingSecurityScopedResource()
             syncEngine.persistAccess(for: url, bsdName: device.bsdName)
             loadDeviceTracks()
@@ -536,6 +585,8 @@ struct iPodDeviceView: View {
 
 // MARK: - Sync Song Row
 
+// Single row in the "Music to Sync" staging list: artwork thumbnail,
+// title/artist, duration, and a remove button.
 private struct SyncSongRow: View {
     let song: Song
     let onRemove: () -> Void
@@ -589,6 +640,7 @@ private struct SyncSongRow: View {
         .padding(.vertical, 2)
     }
 
+    // Formats a duration in seconds as "M:SS".
     private func formatDuration(_ t: TimeInterval) -> String {
         let m = Int(t) / 60, s = Int(t) % 60
         return String(format: "%d:%02d", m, s)
@@ -597,6 +649,9 @@ private struct SyncSongRow: View {
 
 // MARK: - Song Picker Sheet
 
+// Modal sheet for browsing the full library and multi-selecting songs to
+// add to the device sync staging list. Supports live text search across
+// title/artist/album, and flags songs already queued for sync.
 struct SongPickerSheet: View {
     let allSongs: [Song]
     let alreadySelected: [Song]
@@ -606,6 +661,9 @@ struct SongPickerSheet: View {
     @State private var searchText = ""
     @State private var selected: Set<UUID> = []
 
+    // Songs matching the current search text (case-insensitive substring
+    // match against title, artist, or album); returns everything if the
+    // search field is empty.
     private var filtered: [Song] {
         guard !searchText.isEmpty else { return allSongs }
         let q = searchText.lowercased()
@@ -651,6 +709,8 @@ struct SongPickerSheet: View {
             Divider()
 
             // Song list
+            // Multi-selectable list; each row shows artwork, title/artist —
+            // album, a "queued" badge if already in the sync list, and duration.
             List(filtered, selection: $selected) { song in
                 HStack(spacing: 10) {
                     Group {
@@ -706,6 +766,7 @@ struct SongPickerSheet: View {
         .frame(minWidth: 560, minHeight: 500)
     }
 
+    // Formats a duration in seconds as "M:SS".
     private func formatDuration(_ t: TimeInterval) -> String {
         let m = Int(t) / 60, s = Int(t) % 60
         return String(format: "%d:%02d", m, s)
@@ -715,6 +776,8 @@ struct SongPickerSheet: View {
 // MARK: - Sidebar device entry
 // Add this inside SidebarView's Section("sidebar.library") when a device is connected.
 
+// Small sidebar row representing the connected iPod, used to navigate into
+// the device view from the app's main sidebar.
 struct SidebarDeviceEntry: View {
     let device: iPodDevice
     let isSelected: Bool
@@ -731,6 +794,8 @@ struct SidebarDeviceEntry: View {
 
 // MARK: - Byte formatter
 
+// Formats a byte count as a human-readable string, preferring GB, then MB,
+// then falling back to raw bytes for very small values.
 private func formatBytes(_ bytes: Int64) -> String {
     let gb = Double(bytes) / 1_073_741_824
     if gb >= 1.0 { return String(format: "%.1f GB", gb) }

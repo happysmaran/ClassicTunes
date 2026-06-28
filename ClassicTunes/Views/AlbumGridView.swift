@@ -1,17 +1,38 @@
 import SwiftUI
 import AppKit
 
+// A responsive collection view component that arranges library songs into discrete, resizable album covers[span_2](start_span)[span_2](end_span).
+//
+// Features an interactive custom size control slider and inline dropdown detailed track disclosures[span_3](start_span)[span_3](end_span).
 struct AlbumGridView: View {
+    // The comprehensive repository of audio tracks to map into albums[span_4](start_span)[span_4](end_span).
     var songs: [Song]
+    
+    // The currently active selected album name string, if any[span_5](start_span)[span_5](end_span).
     var selectedAlbum: String?
+    
+    // Callback closure triggered upon selecting an entire album cell[span_6](start_span)[span_6](end_span).
     var onAlbumSelect: (String) -> Void
-    var onSongSelect: (Song) -> Void = { _ in } // Caller may override; we also provide a default fallback via handleSongSelect(_:)
+    
+    // Callback closure passing a single specific track selection back up the view tree[span_7](start_span)[span_7](end_span).
+    var onSongSelect: (Song) -> Void = { _ in }
+    
+    // State variable controlling the uniform side length dimension of album art preview cells[span_8](start_span)[span_8](end_span).
     @State private var coverSize: CGFloat = 120
+    
+    // Tracking state holding the identifier of the album currently expanded inline to reveal tracks[span_9](start_span)[span_9](end_span).
     @State private var expandedAlbum: String? = nil
+    
+    // Persistent app setting defining user aesthetic preferences for grid environments[span_10](start_span)[span_10](end_span).
     @AppStorage("albumGridBackgroundStyle") private var albumGridBackgroundStyle: String = "light"
+    
+    // The system illumination context environment property[span_11](start_span)[span_11](end_span).
     @Environment(\.colorScheme) private var colorScheme
+    
+    // The application-wide window theme and color preference coordinator[span_12](start_span)[span_12](end_span).
     @EnvironmentObject private var appearanceManager: AppearanceManager
 
+    // Determines if the contextual render pass requires a dark color signature[span_13](start_span)[span_13](end_span).
     private var isAppDark: Bool {
         if let forced = appearanceManager.currentColorScheme() {
             return forced == .dark
@@ -20,10 +41,12 @@ struct AlbumGridView: View {
         }
     }
 
+    // Dictates the target style sheet environment constraints passed downstream[span_14](start_span)[span_14](end_span).
     private var gridColorScheme: ColorScheme {
         (isAppDark || albumGridBackgroundStyle == "dark") ? .dark : .light
     }
 
+    // Evaluates environmental contexts to establish the underlying frame fill color[span_15](start_span)[span_15](end_span).
     private var effectiveBackgroundColor: Color {
         if isAppDark {
             return Color.itunesWindowBG
@@ -46,6 +69,7 @@ struct AlbumGridView: View {
         .environment(\.colorScheme, gridColorScheme)
     }
     
+    // An custom geometric slider tracking drag interactions to alter cell bounds interactively[span_16](start_span)[span_16](end_span).
     private var sizeSlider: some View {
         HStack {
             Spacer()
@@ -75,6 +99,7 @@ struct AlbumGridView: View {
         .padding(.top, 8)
     }
     
+    // Calculates optimal dynamic rows to distribute albums across fluid geometric columns safely[span_17](start_span)[span_17](end_span).
     private var albumGrid: some View {
         let groupedAlbums = Dictionary(grouping: songs) { $0.album }
         let sortedAlbums = groupedAlbums.keys.sorted { lhs, rhs in
@@ -128,15 +153,14 @@ struct AlbumGridView: View {
         }
     }
     
+    // Handles explicit track user selection actions, notifications, and visual list resetting[span_18](start_span)[span_18](end_span).
     private func handleSongSelect(_ song: Song) {
-        // Always call the provided closure first.
         onSongSelect(song)
-        // Also post a notification so a global player can respond by default.
         NotificationCenter.default.post(name: .PlaybackDidRequestSong, object: song)
-        // Collapse the expanded album for better UX.
         withAnimation { expandedAlbum = nil }
     }
 
+    // Renders a basic vertical thumbnail cell that handles click interactions to reveal detailed songs[span_19](start_span)[span_19](end_span).
     private func albumCellWithDetailCollapsedOnly(album: String) -> some View {
         VStack {
             if let artworkData = songs.first(where: { $0.album == album })?.artworkData,
@@ -169,6 +193,7 @@ struct AlbumGridView: View {
         }
     }
 
+    // Alternative structure parsing individual component alignment grids[span_20](start_span)[span_20](end_span).
     private func albumCellWithDetail(album: String) -> some View {
         VStack(spacing: 0) {
             VStack {
@@ -202,6 +227,7 @@ struct AlbumGridView: View {
         }
     }
     
+    // The default image symbol placeholder structure rendered when embedded file artwork is completely missing[span_21](start_span)[span_21](end_span).
     private var fallbackArtwork: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8)
@@ -216,11 +242,20 @@ struct AlbumGridView: View {
     }
 }
 
+// An embedded row subview displaying comprehensive track arrays, titles, and stats for a specific album[span_22](start_span)[span_22](end_span).
 struct AlbumDetailView: View {
+    // The name string describing the focused album item[span_23](start_span)[span_23](end_span).
     let albumName: String
+    
+    // The array collection representing tracks filtered into this discrete record view[span_24](start_span)[span_24](end_span).
     let songs: [Song]
+    
+    // The background hue assigned to match parent container configurations[span_25](start_span)[span_25](end_span).
     var backgroundColor: Color = Color(nsColor: .windowBackgroundColor)
+    
+    // Callback action triggered upon selecting an individual child row track entry[span_26](start_span)[span_26](end_span).
     let onSongSelect: (Song) -> Void
+    
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appearanceManager: AppearanceManager
     
@@ -256,7 +291,6 @@ struct AlbumDetailView: View {
                 }
             }
             
-            // Album info and songs
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(albumName)
@@ -277,7 +311,6 @@ struct AlbumDetailView: View {
                 
                 Divider()
                 
-                // Songs list with vertical scrollbar
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading, spacing: 4) {
                         let sortedSongs = songs.sorted {
@@ -339,6 +372,9 @@ struct AlbumDetailView: View {
     }
 }
 
+// MARK: - Notification Extensions
+
 extension Notification.Name {
+    // Dispatched globally across system notification pipelines whenever a standalone album grid cell requests immediate track playback routing[span_27](start_span)[span_27](end_span).
     static let PlaybackDidRequestSong = Notification.Name("PlaybackDidRequestSong")
 }

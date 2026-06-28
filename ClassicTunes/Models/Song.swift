@@ -2,22 +2,52 @@ import Foundation
 import AVFoundation
 import AppKit
 
+// Represents a single audio track within the application along with its associated metadata and artwork.
 struct Song: Identifiable, Codable, Hashable {
+    
+    // The unique identifier for the song instance.
     let id: UUID
+    
+    // The local file system URL pointing to the audio file.
     let url: URL
+    
+    // The title of the track. Defaults to the filename if metadata is missing.
     let title: String
+    
+    // The artist who performed the track.
     let artist: String
+    
+    // The album name the track belongs to.
     let album: String
+    
+    // The musical genre of the track.
     let genre: String
+    
+    // The position of the track within its album or disc sequence.
     var trackNumber: Int? = nil
+    
+    // The disc index if the track belongs to a multi-disc set.
     var discNumber: Int? = nil
+    
+    // The release or recording year.
     var year: String? = nil
+    
+    // The composer of the piece.
     var composer: String? = nil
+    
+    // An optional user or encoder comment stored in the metadata.
     var comment: String? = nil
+    
+    // The total duration of the track in seconds.
     var duration: TimeInterval? = nil
+    
+    // The number of times this song has been fully played back.
     var playCount: Int = 0
+    
+    // Raw data container for the embedded album artwork image.
     var artworkData: Data? = nil
 
+    // Initializes a new Song instance with full control over metadata parameters.
     init(
         id: UUID = UUID(),
         url: URL,
@@ -52,14 +82,22 @@ struct Song: Identifiable, Codable, Hashable {
 }
 
 extension Song {
+    // Constructs an `NSImage` representation of the embedded album artwork, if available.
     var artworkImage: NSImage? {
         guard let data = artworkData else { return nil }
         return NSImage(data: data)
     }
 }
 
-
 extension Song {
+    // Asynchronously extracts embedded metadata from an audio file URL to construct a new `Song` entry.
+    //
+    // This utilizes modern `AVFoundation` async asset loading APIs to pull both tag-format-agnostic
+    // common metadata and raw file format specific tags (such as ID3 and MP4 atoms) concurrently.
+    //
+    // - Parameter url: The file system path to the audio track.
+    // - Returns: A fully-populated `Song` structural model.
+    // - Throws: An error if the asset cannot read structural metadata property states.
     static func load(from url: URL) async throws -> Song {
         let asset = AVURLAsset(url: url)
 
@@ -201,13 +239,14 @@ extension Song {
     }
 }
 
+// Extracts a leading integer from formatted tag strings, discarding total metrics (e.g., handles "03/12" to yield 3).
 private func parseLeadingInt(_ string: String?) -> Int? {
     guard let s = string?.trimmingCharacters(in: .whitespaces), !s.isEmpty else { return nil }
-    // Take only the part before a "/" (e.g. "3/12" → "3")
     let base = s.components(separatedBy: "/").first ?? s
     return Int(base.trimmingCharacters(in: .whitespaces))
 }
 
+// Decodes sequential MP4 atom binary payloads to parse position index numbers from raw data structures.
 private func parseMP4Pair(_ data: Data?) -> (Int, Int)? {
     guard let data = data, data.count >= 4 else { return nil }
     // Bytes 0-1 are padding; bytes 2-3 = track/disc number; bytes 4-5 = total (if present)
@@ -215,6 +254,7 @@ private func parseMP4Pair(_ data: Data?) -> (Int, Int)? {
     return number > 0 ? (number, data.count >= 6 ? Int(data[4]) << 8 | Int(data[5]) : 0) : nil
 }
 
+// Resolves legacy ID3 numeric or grouped genre specifications into structural mapping identifiers.
 private func parseID3Genre(_ raw: String) -> String {
     // Strip surrounding parentheses from numeric codes, e.g. "(17)" → "Rock"
     if raw.hasPrefix("("), let close = raw.firstIndex(of: ")") {
@@ -230,7 +270,7 @@ private func parseID3Genre(_ raw: String) -> String {
     return raw
 }
 
-// this is a good idea
+// Index mapping definition for legacy ID3 tag genre designations.
 private let id3Genres: [String] = [
     "Blues","Classic Rock","Country","Dance","Disco","Funk","Grunge","Hip-Hop",
     "Jazz","Metal","New Age","Oldies","Other","Pop","R&B","Rap","Reggae","Rock",

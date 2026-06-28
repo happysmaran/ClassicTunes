@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "ТВ-программы";
 "sidebar.podcasts"            = "Подкасты";
 "sidebar.radio"               = "Радио";
-"sidebar.purchased"           = "Купленное";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "Новый плейлист";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "Скоро";
-"alert.comingSoon.message"    = "%@ скоро появится.";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "Недоступно";
+"alert.comingSoon.message"    = "%@ недоступно.";
 "alert.ok"                    = "OK";
 
 // MARK: - Top toolbar

@@ -1,8 +1,6 @@
 import SwiftUI
 
 // MARK: - Focused values used to wire menu commands to whichever window/scene is focused.
-// Each action is published from ContentView via `.focusedSceneValue(...)` and consumed
-// by the Commands structs below.
 // Help taken with Claude (and also in fixing type-check errors)
 
 private struct DeletePlaylistActionKey: FocusedValueKey {

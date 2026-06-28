@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "टीवी शो";
 "sidebar.podcasts"            = "पॉडकास्ट";
 "sidebar.radio"               = "रेडियो";
-"sidebar.purchased"           = "ख़रीदा गया";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "नई प्लेलिस्ट";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "जल्द आ रहा है";
-"alert.comingSoon.message"    = "%@ जल्द आ रहा है।";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "अनुपलब्ध";
+"alert.comingSoon.message"    = "%@ उपलब्ध नहीं है।";
 "alert.ok"                    = "ठीक है";
 
 // MARK: - Top toolbar

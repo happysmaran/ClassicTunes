@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "టీవీ షోలు";
 "sidebar.podcasts"            = "పాడ్‌కాస్ట్‌లు";
 "sidebar.radio"               = "రేడియో";
-"sidebar.purchased"           = "కొనుగోలు చేసినవి";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "కొత్త ప్లేలిస్ట్";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "త్వరలో వస్తోంది";
-"alert.comingSoon.message"    = "%@ త్వరలో వస్తోంది.";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "అందుబాటులో లేదు";
+"alert.comingSoon.message"    = "%@ అందుబాటులో లేదు.";
 "alert.ok"                    = "సరే";
 
 // MARK: - Top toolbar

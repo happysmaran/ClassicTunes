@@ -11,15 +11,13 @@
 "sidebar.tvShows"             = "Series de TV";
 "sidebar.podcasts"            = "Podcasts";
 "sidebar.radio"               = "Radio";
-"sidebar.purchased"           = "Comprado";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "Nueva lista de reproducción";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "Próximamente";
-"alert.comingSoon.message"    = "%@ estará disponible próximamente.";
-"alert.ok"                    = "OK";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "No disponible";
+"alert.comingSoon.message"    = "%@ no está disponible.";
+"alert.ok"                    = "Aceptar";
 
 // MARK: - Top toolbar
 "toolbar.importMusic"         = "Importar música";

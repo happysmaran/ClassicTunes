@@ -1,18 +1,26 @@
 import SwiftUI
 
+// A small floating "mini player" window/panel: shows the current song's
+// artwork, title/artist, transport controls (prev/play-pause/next), a close
+// button, and a scrub bar with elapsed/remaining time labels.
 struct MiniPlayerView: View {
+    // Currently playing song (nil shows a placeholder Apple logo state).
     @Binding var selectedSong: Song?
     @Binding var isPlaying: Bool
     @Binding var volume: Double
+    // Playback position is expressed as a 0...1 fraction of playbackDuration.
     @Binding var playbackPosition: Double
     @Binding var playbackDuration: Double
 
+    // Action callbacks wired up by the parent/owner of this view.
     let onPlayPause: () -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
     let onSeek: (Double) -> Void
     let onClose: () -> Void
 
+    // Custom initializer needed because the bindings are declared with
+    // underscored backing storage (_selectedSong, etc.) for explicit wiring.
     init(
         selectedSong: Binding<Song?>,
         isPlaying: Binding<Bool>,
@@ -37,6 +45,8 @@ struct MiniPlayerView: View {
         self.onClose = onClose
     }
 
+    // True while the user is actively dragging the scrub slider; used to
+    // avoid fighting with external playback-position updates mid-drag.
     @State private var isSeeking = false
     @Environment(\.colorScheme) private var colorScheme
 
@@ -45,6 +55,8 @@ struct MiniPlayerView: View {
             HStack {
                 // Song info capsule
                 ZStack {
+                    // Rounded "pill" background behind the song info/controls,
+                    // styled with a soft green gradient reminiscent of classic iTunes.
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(LinearGradient(
                             gradient: Gradient(colors: [
@@ -62,6 +74,7 @@ struct MiniPlayerView: View {
                         .frame(height: 60)
 
                     if let song = selectedSong {
+                        // Song is selected: show artwork, title/artist, and controls.
                         HStack(spacing: 12) {
                             // Album art
                             if let image = song.artworkImage {
@@ -71,6 +84,7 @@ struct MiniPlayerView: View {
                                     .frame(width: 50, height: 50)
                                     .clipShape(RoundedRectangle(cornerRadius: 4))
                             } else {
+                                // Fallback placeholder when there's no artwork.
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(Color.gray)
                                     .frame(width: 50, height: 50)
@@ -97,6 +111,9 @@ struct MiniPlayerView: View {
                             Spacer()
 
                             // Controls
+                            // Transport controls: previous / play-pause / next.
+                            // Each button shares the same "glassy" circular
+                            // background styling, varying only by icon/action.
                             HStack(spacing: 8) {
                                 Button(action: onPrevious) {
                                     Image(systemName: "backward.fill")
@@ -125,6 +142,7 @@ struct MiniPlayerView: View {
                                 }
                                 .buttonStyle(PlainButtonStyle())
 
+                                // Play/pause button — icon swaps based on isPlaying.
                                 Button(action: onPlayPause) {
                                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                                         .padding(6)
@@ -190,6 +208,7 @@ struct MiniPlayerView: View {
                         }
                         .padding(.horizontal)
                     } else {
+                        // No song selected: show a simple placeholder Apple logo.
                         HStack {
                             Spacer()
                             Image(systemName: "applelogo")
@@ -203,18 +222,22 @@ struct MiniPlayerView: View {
             .padding(.horizontal)
 
             // Progress bar
+            // Only show the scrub bar / time labels once a song is loaded.
             if selectedSong != nil {
                 VStack(spacing: 4) {
                     Slider(
                         value: Binding(
                             get: { playbackPosition },
                             set: { newValue in
+                                // Mark as seeking while the user drags, and
+                                // optimistically update the displayed position.
                                 isSeeking = true
                                 playbackPosition = newValue
                             }
                         ),
                         in: 0...1,
                         onEditingChanged: { editing in
+                            // When the drag ends, commit the seek via the callback.
                             if !editing {
                                 onSeek(playbackPosition)
                                 isSeeking = false
@@ -231,6 +254,7 @@ struct MiniPlayerView: View {
                     .frame(height: 4)
 
                     // Time labels
+                    // Elapsed time (left) and total duration (right).
                     HStack {
                         Text(timeString(from: playbackPosition * playbackDuration))
                             .font(.caption2)
@@ -250,6 +274,7 @@ struct MiniPlayerView: View {
         .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
     }
 
+    // Formats a duration in seconds as "M:SS" for display.
     private func timeString(from seconds: Double) -> String {
         let totalSeconds = Int(seconds)
         let minutes = totalSeconds / 60

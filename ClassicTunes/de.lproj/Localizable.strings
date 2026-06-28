@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "TV-Sendungen";
 "sidebar.podcasts"            = "Podcasts";
 "sidebar.radio"               = "Radio";
-"sidebar.purchased"           = "Käufe";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "Neue Wiedergabeliste";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "Demnächst verfügbar";
-"alert.comingSoon.message"    = "%@ kommt bald.";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "Nicht verfügbar";
+"alert.comingSoon.message"    = "%@ ist nicht verfügbar.";
 "alert.ok"                    = "OK";
 
 // MARK: - Top toolbar

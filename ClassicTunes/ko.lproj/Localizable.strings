@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "TV 프로그램";
 "sidebar.podcasts"            = "팟캐스트";
 "sidebar.radio"               = "라디오";
-"sidebar.purchased"           = "구입한 항목";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "새로운 재생 목록";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "곧 출시 예정";
-"alert.comingSoon.message"    = "%@이(가) 곧 출시됩니다.";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "사용 불가";
+"alert.comingSoon.message"    = "%@은(는) 사용할 수 없습니다.";
 "alert.ok"                    = "확인";
 
 // MARK: - Top toolbar

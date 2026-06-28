@@ -70,12 +70,6 @@ struct SidebarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
-
-                Button(action: { comingSoonSection = "Purchased"; showComingSoon = true }) {
-                    Label("sidebar.purchased", systemImage: "purchased")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(ITunesSidebarButtonStyle(selected: false))
             }
             
             Section("sidebar.store") {
@@ -91,12 +85,6 @@ struct SidebarView: View {
             }
             
             Section("sidebar.playlists") {
-                Button(action: { comingSoonSection = "Genius"; showComingSoon = true }) {
-                    Label("sidebar.genius", systemImage: "atom")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(ITunesSidebarButtonStyle(selected: false))
-
                 ForEach(allPlaylists) { playlist in
                     Button(action: {
                         selectedPlaylistID = playlist.id

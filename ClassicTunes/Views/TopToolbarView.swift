@@ -1,24 +1,39 @@
 import SwiftUI
 import AVKit
 
+// A master controller utility bar containing playback management, hardware status tracking, and interface viewport toggles.
 struct TopToolbarView: View {
+    // MARK: - Navigation & View Binding Mappings
     @Binding var isAlbumView: Bool
     @Binding var showFileImporter: Bool
     @Binding var selectedSong: Song?
     @Binding var isPlaying: Bool
+    
+    // Trigger action running back-channel track operations to pull up the previous playlist entry.
     var playPrevious: () -> Void
+    // Trigger action running forward-channel track operations to skip onto the upcoming queue entry.
     var playNext: () -> Void
+    
+    // MARK: - Audio Properties
     @Binding var volume: Double
     @Binding var playbackPosition: Double
     @Binding var playbackDuration: Double
+    
+    // Dynamic adjustment worker syncing position seek changes directly into core player lines.
     var onSeek: (Double) -> Void
     @Binding var isSeeking: Bool
+    
+    // MARK: - Queue Modification Flags
     @Binding var isShuffleEnabled: Bool
     @Binding var isRepeatEnabled: Bool
     @Binding var isRepeatOne: Bool
     @Binding var isStopped: Bool
     @Binding var isCoverFlowActive: Bool
+    
+    // Secondary container callback used to pop open detached lightweight desktop widget layouts.
     var onMiniPlayerToggle: (() -> Void)? = nil
+    
+    // MARK: - Input Utilities
     @Binding var searchText: String
     var searchFieldFocus: FocusState<Bool>.Binding
 
@@ -40,6 +55,7 @@ struct TopToolbarView: View {
         .foregroundColor(.primary)
     }
 
+    // MARK: - Transport Control Subviews
     private var playbackControlsGroup: some View {
         HStack(spacing: 8) {
             playbackButton(icon: "backward.fill", action: playPrevious)
@@ -60,11 +76,13 @@ struct TopToolbarView: View {
             set: { volume = $0 }
         ), in: 0...1)
             .frame(width: 100)
-            .onChange(of: volume) { newVolume in
+            .onChange(of: volume) { _ in
+                // Magic-number indicator downstream notifying active audio pipelines to recalibrate decibel rails
                 onSeek(-1)
             }
     }
 
+    // MARK: - Center LCD Display Frame
     private var nowPlayingView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -150,6 +168,7 @@ struct TopToolbarView: View {
         .padding(.horizontal)
     }
 
+    // MARK: - View Mode & Utility Subviews
     private var viewToggleButtons: some View {
         HStack(spacing: 6) {
             toggleButton(icon: "list.bullet", isActive: !isAlbumView && !isCoverFlowActive) {
@@ -182,24 +201,28 @@ struct TopToolbarView: View {
         }
     }
 
+    // MARK: - Styling & Button Builders
+    @ViewBuilder
     private var toolbarBackground: some View {
-        colorScheme == .dark ?
-        AnyView(LinearGradient(
-            gradient: Gradient(colors: [
-                Color(nsColor: .windowBackgroundColor),
-                Color(nsColor: .controlBackgroundColor)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )) :
-        AnyView(LinearGradient(
-            gradient: Gradient(colors: [
-                Color(nsColor: .windowBackgroundColor),
-                Color(nsColor: .underPageBackgroundColor)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        ))
+        if colorScheme == .dark {
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(nsColor: .windowBackgroundColor),
+                    Color(nsColor: .controlBackgroundColor)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        } else {
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(nsColor: .windowBackgroundColor),
+                    Color(nsColor: .underPageBackgroundColor)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
     }
 
     private func playbackButton(icon: String, action: @escaping () -> Void) -> some View {
@@ -222,16 +245,18 @@ struct TopToolbarView: View {
     }
 
     private var buttonBackground: AnyShapeStyle {
-        colorScheme == .dark ?
-        AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
-        AnyShapeStyle(LinearGradient(
-            gradient: Gradient(colors: [
-                Color(nsColor: .controlBackgroundColor).opacity(0.95),
-                Color(nsColor: .separatorColor).opacity(0.25)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        ))
+        if colorScheme == .dark {
+            return AnyShapeStyle(Color(nsColor: .controlBackgroundColor))
+        } else {
+            return AnyShapeStyle(LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(nsColor: .controlBackgroundColor).opacity(0.95),
+                    Color(nsColor: .separatorColor).opacity(0.25)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            ))
+        }
     }
 
     private func toggleButton(icon: String, isActive: Bool, action: @escaping () -> Void) -> some View {
@@ -243,6 +268,9 @@ struct TopToolbarView: View {
     }
 }
 
+// MARK: - Companion Controls
+
+// A standalone interface button designed to cycle state parameters seamlessly through unified repeating audio paradigms.
 struct RepeatButton: View {
     @Binding var isRepeatAll: Bool
     @Binding var isRepeatOne: Bool
@@ -271,6 +299,7 @@ struct RepeatButton: View {
         .buttonStyle(.borderless)
     }
 
+    // Progresses loop patterns sequentially between Off, Loop All, and Loop Single Item track constraints.
     private func cycleRepeatMode() {
         if !isRepeatAll && !isRepeatOne {
             isRepeatAll = true

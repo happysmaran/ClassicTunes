@@ -2,6 +2,8 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+// Persists custom playlist cover artwork to disk (Application Support),
+// keyed by playlist UUID. Images are written as JPEG to keep file sizes small.
 // Keyed by playlist UUID string. Images are written as JPEG to Application Support.
 final class PlaylistArtworkStore {
     static let shared = PlaylistArtworkStore()
@@ -9,6 +11,8 @@ final class PlaylistArtworkStore {
 
     private let fm = FileManager.default
 
+    // Resolves (and creates if needed) the app-specific directory under
+    // Application Support where playlist artwork JPEGs are stored.
     private var artworkDir: URL? {
         guard let appSupport = try? fm.url(
             for: .applicationSupportDirectory,
@@ -26,6 +30,7 @@ final class PlaylistArtworkStore {
         return dir
     }
 
+    // Builds the on-disk file URL for a given playlist's artwork file.
     private func fileURL(for playlistID: UUID) -> URL? {
         artworkDir?.appendingPathComponent("\(playlistID.uuidString).jpg")
     }
@@ -61,16 +66,22 @@ final class PlaylistArtworkStore {
 }
 
 // The iTunes-style header shown at the top.
+// Displays the playlist's artwork (custom photo or a mosaic of song
+// artworks), its name, play/shuffle buttons, and a song count + duration
+// summary line — mirroring the classic iTunes playlist header layout.
 struct PlaylistHeaderView: View {
     let playlist: Playlist
     let onPlay: () -> Void
     let onShuffle: () -> Void
 
+    // User-chosen custom artwork for this playlist, loaded from PlaylistArtworkStore.
     @State private var customImage: NSImage? = nil
     @State private var isHoveringArtwork = false
     @Environment(\.colorScheme) private var colorScheme
 
     // Duration sum derived from parsed metadata (Song.duration)
+    // Formats the playlist's total duration as "<h> hour(s), <m> minute(s)"
+    // or just "<m> minute(s)" when under an hour.
     private var durationString: String {
         let total = playlist.songs.reduce(0.0) { acc, song in
             let secs = song.duration ?? 0
@@ -85,6 +96,7 @@ struct PlaylistHeaderView: View {
         }
     }
 
+    // Formats the playlist's song count with correct singular/plural wording.
     private var songCountString: String {
         let count = playlist.songs.count
         return "\(count) song\(count == 1 ? "" : "s")"
@@ -131,9 +143,12 @@ struct PlaylistHeaderView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 110)
         .onAppear {
+            // Load any previously saved custom artwork when the view first appears.
             customImage = PlaylistArtworkStore.shared.load(for: playlist.id)
         }
         .onChange(of: playlist.id) { _ in
+            // If the displayed playlist changes (e.g. user picks a different
+            // playlist in the sidebar), reset and reload artwork for the new one.
             customImage = nil
             customImage = PlaylistArtworkStore.shared.load(for: playlist.id)
         }
@@ -141,6 +156,9 @@ struct PlaylistHeaderView: View {
 
     // Artwork thumbnail
 
+    // Renders the clickable artwork square: either the custom saved image or
+    // a generated mosaic, plus a camera-icon overlay shown on hover, and a
+    // context menu for changing/removing the custom photo.
     @ViewBuilder
     private func artworkThumbnail() -> some View {
         ZStack {
@@ -183,6 +201,9 @@ struct PlaylistHeaderView: View {
         .help("artwork.help")
     }
 
+    // Builds a 2x2 mosaic from up to the first four songs' artwork (or a
+    // single image, or a fallback music-note icon if no artwork exists),
+    // matching the classic iTunes "auto-generated playlist cover" look.
     @ViewBuilder
     private func mosaicThumbnail() -> some View {
         let artworks: [NSImage] = playlist.songs
@@ -232,6 +253,7 @@ struct PlaylistHeaderView: View {
     }
 
     // Header button helper
+    // Shared pill-shaped button style used for the play/shuffle controls.
     @ViewBuilder
     private func headerButton(systemImage: String,
                                accessibilityLabel: String,
@@ -254,6 +276,8 @@ struct PlaylistHeaderView: View {
     }
 
     // Photo picker
+    // Presents an NSOpenPanel for choosing a new custom artwork image, then
+    // persists it via PlaylistArtworkStore and updates the on-screen thumbnail.
     private func pickArtwork() {
         let panel = NSOpenPanel()
         panel.title = "artwork.changePhoto"
@@ -270,4 +294,3 @@ struct PlaylistHeaderView: View {
         }
     }
 }
-

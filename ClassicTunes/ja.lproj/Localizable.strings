@@ -11,14 +11,12 @@
 "sidebar.tvShows"             = "テレビ番組";
 "sidebar.podcasts"            = "ポッドキャスト";
 "sidebar.radio"               = "ラジオ";
-"sidebar.purchased"           = "購入済み";
 "sidebar.iTunesStore"         = "iTunes Store";
-"sidebar.genius"              = "Genius";
 "sidebar.newPlaylist"         = "新規プレイリスト";
 
-// MARK: - Coming-soon alert
-"alert.comingSoon.title"      = "近日公開";
-"alert.comingSoon.message"    = "%@ は近日公開予定です。";
+// MARK: - Unavailable alert
+"alert.comingSoon.title"      = "利用不可";
+"alert.comingSoon.message"    = "%@は利用できません。";
 "alert.ok"                    = "OK";
 
 // MARK: - Top toolbar

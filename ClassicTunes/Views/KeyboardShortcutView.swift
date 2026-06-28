@@ -1,16 +1,21 @@
 import SwiftUI
 
+// A centralized preference panel providing an overview of system-wide interactive desktop hotkey mappings[span_2](start_span)[span_2](end_span).
 struct KeyboardShortcutsView: View {
+    // The structural dismissal action used to close the sheet overlay from the active window view tree[span_3](start_span)[span_3](end_span).
     @Environment(\.dismiss) private var dismiss
 
+    // MARK: - File Key Backing Storage
     @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
     
+    // MARK: - Edit Key Backing Storage
     @AppStorage("shortcut.deletePlaylist") private var shortcutDeletePlaylist: String = "⌫"
     @AppStorage("shortcut.find") private var shortcutFind: String = "⌘F"
     
+    // MARK: - View Key Backing Storage
     @AppStorage("shortcut.showAsList") private var shortcutShowAsList: String = "⌘1"
     @AppStorage("shortcut.showAsAlbums") private var shortcutShowAsAlbums: String = "⌘2"
     @AppStorage("shortcut.showAsCoverFlow") private var shortcutShowAsCoverFlow: String = "⌘3"
@@ -18,6 +23,7 @@ struct KeyboardShortcutsView: View {
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
     
+    // MARK: - Control Key Backing Storage
     @AppStorage("shortcut.playPause") private var shortcutPlayPause: String = "Space"
     @AppStorage("shortcut.nextSong") private var shortcutNextSong: String = "⌘→"
     @AppStorage("shortcut.previousSong") private var shortcutPreviousSong: String = "⌘←"
@@ -27,11 +33,13 @@ struct KeyboardShortcutsView: View {
     @AppStorage("shortcut.shuffle") private var shortcutShuffle: String = "⌘S"
     @AppStorage("shortcut.repeat") private var shortcutRepeat: String = "⌘R"
 
+    // An internal wrapper mapping localized section grouping titles to their nested operational hotkey representations[span_4](start_span)[span_4](end_span).
     private struct ShortcutGroup {
         let title: LocalizedStringKey
         let items: [(LocalizedStringKey, String)]
     }
 
+    // Evaluates preference storage states to organize hotkey properties into scannable categorized blocks[span_5](start_span)[span_5](end_span).
     private var groups: [ShortcutGroup] {
         [
             ShortcutGroup(title: "shortcuts.group.file", items: [

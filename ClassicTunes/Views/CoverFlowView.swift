@@ -1,6 +1,10 @@
 import SwiftUI
 import ImageIO
 
+// Recreates the classic iTunes "Cover Flow" browsing mode: a horizontally
+// scrubbable 3D carousel of album covers (with reflections), backed by a
+// slider, album name/artist caption, and a song list below that can show
+// either all songs or just the songs of the currently centered album.
 struct CoverFlowView: View {
     let albums: [AlbumInfo]
     @Binding var selectedAlbum: String?
@@ -16,6 +20,8 @@ struct CoverFlowView: View {
     @Binding var isRepeatOne: Bool
     @Binding var isRepeatEnabled: Bool
 
+    // Index of the album currently centered/highlighted in the carousel
+    // (updates live while dragging the slider or tapping a cover).
     @State private var currentIndex: Int = 0
     @State private var committedIndex: Int = 0 // Index committed after interaction ends
     @State private var sliderValue: Double = 0.0
@@ -23,6 +29,8 @@ struct CoverFlowView: View {
     @State private var isInteracting = false // Track interaction to defer playback and commit index
     @StateObject private var playlistManager = PlaylistManager()
 
+    // Size of the carousel's container, captured via GeometryReader, used to
+    // compute a responsive cover size.
     @State private var containerSize: CGSize = .zero
     private var coverSize: CGFloat {
         // Base on height so covers fill the stage; cap so they don't overflow on wide windows
@@ -32,6 +40,9 @@ struct CoverFlowView: View {
     }
 
     // Only render a window of items around the current index
+    // Rendering every album cover at once would be wasteful (and most are
+    // off-screen anyway), so only a window of `visibleRange` items on each
+    // side of the current index gets built into the view tree.
     private let visibleRange: Int = 6 // number of items to show on each side
     private var visibleAlbums: [(globalIndex: Int, album: AlbumInfo)] {
         guard !sortedAlbums.isEmpty else { return [] }
@@ -40,6 +51,8 @@ struct CoverFlowView: View {
         return (start...end).map { ($0, sortedAlbums[$0]) }
     }
 
+    // Albums sorted alphabetically (using a normalized sort key, e.g. to
+    // ignore leading articles/case) for stable carousel ordering.
     private var sortedAlbums: [AlbumInfo] {
         albums.sorted { a, b in
             normalizedSortKey(a.name) < normalizedSortKey(b.name)
@@ -47,6 +60,8 @@ struct CoverFlowView: View {
     }
 
     // Get songs for the committed album (prevents list churn while sliding)
+    // Uses `committedIndex` rather than the live `currentIndex` so the song
+    // list below doesn't flicker/reload while the user is still scrubbing.
     private var albumSongs: [Song] {
         guard !sortedAlbums.isEmpty && committedIndex < sortedAlbums.count else { return [] }
         let currentAlbum = sortedAlbums[committedIndex]
@@ -64,6 +79,8 @@ struct CoverFlowView: View {
         VStack(spacing: 0) {
             ZStack(alignment: .top) {
                 // The Backgrounds (Back)
+                // Background layer: a dark gradient behind the carousel,
+                // fading to solid black further down behind the text/slider.
                 VStack(spacing: 0) {
                     backgroundColor
                         .frame(maxWidth: .infinity, maxHeight: 280)
@@ -71,6 +88,7 @@ struct CoverFlowView: View {
                 }
 
                 // CoverFlow & Reflections (Middle)
+                // The actual 3D carousel content, sized from the available geometry.
                 GeometryReader { geometry in
                     coverFlowContent(geometry: geometry)
                         .onAppear { containerSize = geometry.size }
@@ -81,10 +99,12 @@ struct CoverFlowView: View {
                 .frame(maxWidth: .infinity, maxHeight: 280)
 
                 // Text & Slider (Front)
+                // Foreground layer: album name/artist caption plus the scrub slider,
+                // positioned below the carousel area (Color.clear reserves that space).
                 VStack(spacing: 0) {
                     Color.clear
                         .frame(height: 280)
-                    
+
                     albumInfoSection
                     sliderSection
                 }
@@ -92,7 +112,9 @@ struct CoverFlowView: View {
             .contentShape(Rectangle())
 
             controlsSection
-            
+
+            // Song list beneath the carousel — either every song in the
+            // library or just the centered album's songs, depending on the toggle.
             SongListView(
                 isAlbumView: false,
                 songs: songs,
@@ -124,12 +146,16 @@ struct CoverFlowView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(Rectangle())
         .onChange(of: committedIndex) { newValue in
+            // Whenever the committed (settled) index changes, propagate the
+            // newly centered album out via the `selectedAlbum` binding.
             if newValue < sortedAlbums.count {
                 selectedAlbum = sortedAlbums[newValue].name
                 // sliderValue follows currentIndex during interaction
             }
         }
         .onAppear {
+            // On first appearance, jump straight to whichever album is
+            // already selected (if any), otherwise default to the first album.
             if let selected = selectedAlbum,
                let index = sortedAlbums.firstIndex(where: { $0.name == selected }) {
                 currentIndex = index
@@ -145,12 +171,15 @@ struct CoverFlowView: View {
             updateCoverFlowIndexIfNeeded()
         }
         .onChange(of: selectedSong) { _ in
+            // Keep the carousel in sync if a song gets selected elsewhere in
+            // the app (e.g. from a different view), by jumping to its album.
             updateCoverFlowIndexIfNeeded()
         }
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
     }
 
+    // Dark vertical gradient used behind the carousel stage.
     private var backgroundColor: some View {
         LinearGradient(
             gradient: Gradient(stops: [
@@ -163,6 +192,7 @@ struct CoverFlowView: View {
         )
     }
 
+    // Caption showing the centered album's name and artist, shown above the slider.
     private var albumInfoSection: some View {
         Group {
             if !sortedAlbums.isEmpty && currentIndex < sortedAlbums.count {
@@ -180,6 +210,8 @@ struct CoverFlowView: View {
         }
     }
 
+    // The "1 ... N" scrub bar beneath the album caption, used to quickly
+    // jump to any album by index. Hidden when there's only one album.
     private var sliderSection: some View {
         Group {
             if sortedAlbums.count > 1 {
@@ -204,6 +236,9 @@ struct CoverFlowView: View {
                         onEditingChanged: { isEditing in
                             isInteracting = isEditing
                             if !isEditing {
+                                // Once the user releases the slider, commit
+                                // the index and (after a short delay so the
+                                // settle animation can finish) start playback.
                                 committedIndex = currentIndex
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                     playCurrentAlbum()
@@ -227,6 +262,8 @@ struct CoverFlowView: View {
         }
     }
 
+    // Row beneath the carousel/slider holding the "All Songs" / "Album
+    // Songs" toggle button that controls which songs the list below shows.
     private var controlsSection: some View {
         HStack {
             Spacer()
@@ -255,6 +292,9 @@ struct CoverFlowView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
+    // Builds the carousel's ZStack of CoverFlowItemView covers, positioning
+    // each visible album cover horizontally based on its distance from the
+    // current center index, and wiring up tap-to-select behavior.
     private func coverFlowContent(geometry: GeometryProxy) -> some View {
         let size = geometry.size
         let coverWidth = coverSize
@@ -295,6 +335,8 @@ struct CoverFlowView: View {
                 .position(x: xPosition, y: size.height / 2 + 100)
                 .zIndex(Double(sortedAlbums.count) - abs(Double(index - currentIndex)))
                 .onTapGesture {
+                    // Tapping a cover animates it to the center, then commits
+                    // the index and starts playback after the animation settles.
                     isInteracting = true
                     withAnimation(.easeInOut(duration: 0.3)) {
                         currentIndex = index
@@ -315,6 +357,11 @@ struct CoverFlowView: View {
         }
     }
 
+    // Computes the horizontal screen position for a cover at `index`,
+    // relative to `currentIndex`. The centered cover sits at `centerX`;
+    // covers to either side are packed closer together as they get farther
+    // from center (an "eased" spacing), and are clamped so they never
+    // render past the carousel's left/right edges.
     private func calculateXPosition(
         for index: Int,
         currentIndex: Int,
@@ -349,11 +396,14 @@ struct CoverFlowView: View {
         }
     }
 
+    // Marks `album` as selected and notifies the parent via onAlbumSelect.
     private func selectAndPlay(album: AlbumInfo) {
         selectedAlbum = album.name
         onAlbumSelect(album.name)
     }
 
+    // Plays the album currently sitting at `committedIndex` (used after the
+    // slider settles on a new position).
     private func playCurrentAlbum() {
         guard committedIndex < sortedAlbums.count else { return }
         let album = sortedAlbums[committedIndex]
@@ -361,6 +411,8 @@ struct CoverFlowView: View {
     }
 
     // Update CoverFlow index when selected song changes
+    // If the externally-selected song belongs to a different album than the
+    // one currently centered, animate the carousel over to that album.
     private func updateCoverFlowIndexIfNeeded() {
         guard let song = selectedSong,
               let albumIndex = sortedAlbums.firstIndex(where: { $0.name == song.album }) else {
@@ -377,6 +429,9 @@ struct CoverFlowView: View {
     }
 }
 
+// Lightweight, identifiable model representing one album in the carousel:
+// its name, artist, and a pre-downsampled artwork image (to avoid decoding
+// full-resolution artwork during animation, which would cause hitches).
 struct AlbumInfo: Identifiable {
     let id = UUID()
     let name: String
@@ -394,6 +449,9 @@ struct AlbumInfo: Identifiable {
         }
     }
 
+    // Uses ImageIO's thumbnail generation to decode and downsample artwork
+    // data directly to a target pixel size (scaled for the screen's backing
+    // scale factor), which is far cheaper than decoding full-size then resizing.
     private static func downsampleImage(data: Data, maxDimension: CGFloat, scale: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0) -> NSImage? {
         let options: [CFString: Any] = [
             kCGImageSourceShouldCache: false
@@ -412,6 +470,9 @@ struct AlbumInfo: Identifiable {
     }
 }
 
+// Renders a single album cover + its reflection in the carousel, applying
+// 3D rotation, saturation/brightness falloff, and shadow based on how far
+// the item is from the centered index.
 struct CoverFlowItemView: View {
     let album: AlbumInfo
     let index: Int
@@ -419,14 +480,17 @@ struct CoverFlowItemView: View {
     let geometry: GeometryProxy
     let isInteracting: Bool
 
+    // Whether this is the cover currently centered in the carousel.
     private var isCenterItem: Bool {
         index == currentIndex
     }
 
+    // How many positions away from center this item is.
     private var distanceFromCenter: Int {
         abs(index - currentIndex)
     }
 
+    // Center item is fully saturated; side items get progressively desaturated.
     private var itemSaturation: Double {
         return isCenterItem ? 1.0 : max(0.5, 1.0 - (Double(distanceFromCenter) * 0.2))
     }
@@ -441,6 +505,7 @@ struct CoverFlowItemView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main cover
+            // The cover artwork, tilted in 3D away from the camera unless centered.
             coverImage
                 .rotation3DEffect(
                     .degrees(rotationAngle),
@@ -450,6 +515,8 @@ struct CoverFlowItemView: View {
                 )
 
             // Reflection
+            // A second copy of the same cover, flipped vertically and faded
+            // out via a gradient mask, to simulate a glossy reflective surface.
             coverImage
                 .rotation3DEffect(
                     .degrees(rotationAngle),
@@ -477,6 +544,9 @@ struct CoverFlowItemView: View {
         .buttonStyle(PlainButtonStyle())
     }
 
+    // The actual cover artwork view: the album's artwork image if available,
+    // otherwise a generated gradient placeholder with a music-note icon and
+    // album name. Shadow intensity/blur increases for the centered item.
     @ViewBuilder
     private var coverImage: some View {
         if let image = album.artwork {
@@ -521,11 +591,17 @@ struct CoverFlowItemView: View {
         }
     }
 
+    // Side covers shrink slightly the farther they are from center
+    // (currently computed but not applied anywhere in body — see usage notes).
     private var scaleEffect: CGFloat {
         guard !isCenterItem else { return 1.0 }
         return max(0.65, 1.0 - CGFloat(distanceFromCenter) * 0.1)
     }
 
+    // 3D rotation angle for this cover: 0° when centered, otherwise a base
+    // rotation (~65°) plus a small extra amount that grows with distance
+    // from center (capped at +8°), flipped in sign depending on which side
+    // of the center the cover is on.
     private var rotationAngle: Double {
         guard !isCenterItem else { return 0 }
         let baseRotation = 65.0
@@ -534,6 +610,9 @@ struct CoverFlowItemView: View {
         return index < currentIndex ? rotation : -rotation
     }
 
+    // The anchor point the 3D rotation pivots around: centered covers pivot
+    // around their own center, while side covers pivot from their inner edge
+    // (the edge facing the center) so they appear to "fan out".
     private var rotationAnchor: UnitPoint {
         guard !isCenterItem else { return .center }
         let diff = index - currentIndex
@@ -541,6 +620,9 @@ struct CoverFlowItemView: View {
     }
 }
 
+// Custom-drawn slider used beneath the Cover Flow carousel, styled to look
+// like the classic iTunes scrub bar (dark capsule track + an oval thumb with
+// a gradient/highlight), driven by a raw DragGesture rather than the system Slider.
 struct ClassicCoverFlowSlider: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -551,16 +633,16 @@ struct ClassicCoverFlowSlider: View {
             let trackHeight: CGFloat = 10
             let thumbWidth: CGFloat = 36
             let thumbHeight: CGFloat = 16
-            
+
             // Calculate usable width so the thumb doesn't slide out of bounds
             let usableWidth = geo.size.width - thumbWidth
             // Normalize value between 0.0 and 1.0
             let percentage = (usableWidth > 0) ? (value - range.lowerBound) / (range.upperBound - range.lowerBound) : 0
-            
+
             // Calculate positions
             let thumbX = (thumbWidth / 2) + (usableWidth * CGFloat(percentage))
             let centerY = geo.size.height / 2
-            
+
             ZStack {
                 // Track: Uniform dark grey with an inner shadow/border look
                 Capsule()
@@ -570,7 +652,7 @@ struct ClassicCoverFlowSlider: View {
                     )
                     .frame(height: trackHeight)
                     .position(x: geo.size.width / 2, y: centerY)
-                
+
                 // Thumb: Wide oval, dark gradient, bright top highlight
                 Capsule()
                     .fill(
@@ -590,6 +672,9 @@ struct ClassicCoverFlowSlider: View {
                     .position(x: thumbX, y: centerY)
                     .shadow(color: .black.opacity(0.6), radius: 2, x: 0, y: 2)
                     .gesture(
+                        // Drag the thumb directly (rather than relying on a
+                        // system Slider) so the track/thumb can be fully
+                        // custom-styled while still updating `value` live.
                         DragGesture(minimumDistance: 0)
                             .onChanged { drag in
                                 onEditingChanged(true)
@@ -608,4 +693,3 @@ struct ClassicCoverFlowSlider: View {
         .frame(height: 24) // Comfortable hit target height
     }
 }
-

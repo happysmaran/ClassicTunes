@@ -5,11 +5,15 @@ import AppKit
 import MediaPlayer
 import Combine
 
+// A data transport container mapping out top-level response payloads returned from the iTunes Search API web endpoint[span_3](start_span)[span_3](end_span).
 struct iTunesSearchResponse: Codable {
+    // The absolute cardinality count describing items contained within the server's return envelope[span_4](start_span)[span_4](end_span).
     let resultCount: Int
+    // The structural array matrix holding discrete result item models populated by the response[span_5](start_span)[span_5](end_span).
     let results: [iTunesItem]
 }
 
+// A flexible, decodable model representation mapping out unified store entity properties from the iTunes Store catalog[span_6](start_span)[span_6](end_span).
 struct iTunesItem: Codable, Identifiable {
     let trackId: Int?
     let collectionId: Int?
@@ -19,17 +23,20 @@ struct iTunesItem: Codable, Identifiable {
     let collectionName: String?
     let artistName: String?
     
-    let kind: String? // "song", "album", "music-video", "movie", "tv-episode", etc.
+    // Categorization label identifying asset types such as "song", "album", "music-video", etc[span_7](start_span)[span_7](end_span).
+    let kind: String?
     let trackNumber: Int?
     let trackCount: Int?
     let discNumber: Int?
     let discCount: Int?
     
-    let previewUrl: String? // 30-second preview for songs/music videos
-    let artworkUrl100: String? // 100x100 artwork
-    let artworkUrl600: String? // Sometimes available for larger size
+    // Remote address locator supplying temporary 30-second audio stream segments[span_8](start_span)[span_8](end_span).
+    let previewUrl: String?
+    let artworkUrl100: String?
+    let artworkUrl600: String?
     
-    let trackViewUrl: String? // Link to open in native iTunes Store / Music / TV app
+    // Direct deeper link context to access assets within Apple's first-party environment applications[span_9](start_span)[span_9](end_span).
+    let trackViewUrl: String?
     let collectionViewUrl: String?
     
     let trackPrice: Double?
@@ -39,17 +46,17 @@ struct iTunesItem: Codable, Identifiable {
     let primaryGenreName: String?
     let releaseDate: String?
     
-    // Computed ID for Identifiable
+    // Evaluates structural identities to establish a unique identification signature for the view layer[span_10](start_span)[span_10](end_span).
     var id: String {
         "\(trackId ?? collectionId ?? artistId ?? 0)_\(trackName ?? "")"
     }
     
-    // Helper to get best artwork URL (prefer larger if available)
+    // Inspects resolution definitions to return the largest dimensional asset available[span_11](start_span)[span_11](end_span).
     var bestArtworkURL: String? {
         artworkUrl600 ?? artworkUrl100
     }
     
-    // Helper to decide what to display as title
+    // Normalizes descriptive strings depending on underlying media types to display clear view values[span_12](start_span)[span_12](end_span).
     var displayTitle: String {
         if kind == "album" || kind?.contains("album") == true {
             return collectionName ?? trackName ?? "Unknown"
@@ -57,17 +64,20 @@ struct iTunesItem: Codable, Identifiable {
         return trackName ?? collectionName ?? "Unknown"
     }
     
+    // Exposes fallback creator tags assigned to the localized record[span_13](start_span)[span_13](end_span).
     var displaySubtitle: String {
         artistName ?? ""
     }
 }
 
+// A comprehensive workspace viewport that implements asynchronous network lookups against Apple Store assets[span_14](start_span)[span_14](end_span).
 struct iTunesStoreView: View {
     @State private var searchText: String = ""
     @State private var results: [iTunesItem] = []
     @State private var isLoading: Bool = false
-    @State private var selectedMedia: String = "music"  // music, movie, tvShow, etc.
+    @State private var selectedMedia: String = "music"
     
+    // Translatable localized mapping vectors defining query category targets passed down to endpoint query items[span_15](start_span)[span_15](end_span).
     let mediaOptions = [
         (NSLocalizedString("store.media.music", comment: "music"), "music"),
         (NSLocalizedString("store.media.movies", comment: "movies"), "movie"),
@@ -159,6 +169,7 @@ struct iTunesStoreView: View {
         }
     }
     
+    // Assembles an asynchronous HTTP transport worker that dispatches query streams directly to Apple servers[span_16](start_span)[span_16](end_span).
     private func performSearch() {
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             results = []
@@ -195,8 +206,11 @@ struct iTunesStoreView: View {
     }
 }
 
+// A specialized audio stream singleton engine engineered to buffer, broadcast, and toggle digital preview tracks[span_17](start_span)[span_17](end_span).
 final class PreviewAudioPlayer: ObservableObject {
+    // Global unified environment access hook matching software instance design structures[span_18](start_span)[span_18](end_span).
     static let shared = PreviewAudioPlayer()
+    
     private var player: AVPlayer?
     private var currentlyPlayingURLString: String?
 
@@ -204,17 +218,19 @@ final class PreviewAudioPlayer: ObservableObject {
 
     private init() {}
 
+    // Binds an online streaming source onto hardware playback lines while resetting structural system audio cards[span_19](start_span)[span_19](end_span).
+    //
+    // - Parameters:
+    //   - url: The formatted resource target locator reference targeting binary assets[span_20](start_span)[span_20](end_span).
+    //   - urlString: The flat string variant utilized to index state evaluations uniquely[span_21](start_span)[span_21](end_span).
     func play(url: URL, urlString: String) {
-        // If the same URL is playing, stop it
         if currentlyPlayingURLString == urlString {
             stop()
             return
         }
         
-        // Stop any existing playback
         player?.pause()
 
-        // Create new player item
         let item = AVPlayerItem(url: url)
         let newPlayer = AVPlayer(playerItem: item)
         self.player = newPlayer
@@ -227,10 +243,10 @@ final class PreviewAudioPlayer: ObservableObject {
         info[MPNowPlayingInfoPropertyIsLiveStream] = false
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
 
-        // Start playback
         newPlayer.play()
     }
 
+    // Explicitly commands active hardware audio channel lines to hold operations and frees operating system system hooks[span_22](start_span)[span_22](end_span).
     func stop() {
         player?.pause()
         player = nil
@@ -239,13 +255,17 @@ final class PreviewAudioPlayer: ObservableObject {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
     
+    // Evaluates if a specified resource sequence string is currently active within the engine core[span_23](start_span)[span_23](end_span).
     func isPlaying(urlString: String) -> Bool {
         return playingURLString == urlString
     }
 }
 
+// A graphical interface component mapping layout cells, text items, artwork items, and buttons for store data[span_24](start_span)[span_24](end_span).
 struct StoreItemView: View {
+    // The structural information source map containing server metadata[span_25](start_span)[span_25](end_span).
     let item: iTunesItem
+    
     @StateObject private var previewPlayer = PreviewAudioPlayer.shared
     
     var body: some View {
@@ -268,7 +288,6 @@ struct StoreItemView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .shadow(radius: 4)
             
-            // Title & Subtitle
             Text(item.displayTitle)
                 .font(.headline)
                 .lineLimit(2)
@@ -279,7 +298,6 @@ struct StoreItemView: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
             
-            // Price or "Free"
             if let price = item.trackPrice ?? item.collectionPrice, price > 0 {
                 Text("\(item.currency ?? "$")\(price, specifier: "%.2f")")
                     .font(.subheadline)
@@ -290,13 +308,12 @@ struct StoreItemView: View {
                     .foregroundColor(.green)
             }
             
-            // Preview / Buy button
             HStack {
                 if let preview = item.previewUrl, (item.kind == "song" || item.kind == "music-video") {
                     Button(action: {
                         playPreview(urlString: preview)
                     }) {
-                        Label(previewPlayer.isPlaying(urlString: preview) ? "Stop" : "Preview", 
+                        Label(previewPlayer.isPlaying(urlString: preview) ? "Stop" : "Preview",
                               systemImage: previewPlayer.isPlaying(urlString: preview) ? "stop.fill" : "play.fill")
                             .font(.caption)
                     }
@@ -308,7 +325,6 @@ struct StoreItemView: View {
                 if let storeURLString = item.trackViewUrl ?? item.collectionViewUrl,
                    let url = URL(string: storeURLString) {
                     Button("store.viewInStore") {
-                        // Opens in native Apple apps, if possible
                         NSWorkspace.shared.open(url)
                     }
                     .buttonStyle(.borderedProminent)
@@ -321,6 +337,7 @@ struct StoreItemView: View {
         .cornerRadius(12)
     }
     
+    // Dispatches state validations to safely mount streaming resources on the audio singleton pipeline[span_26](start_span)[span_26](end_span).
     private func playPreview(urlString: String) {
         guard let url = URL(string: urlString) else { return }
         
