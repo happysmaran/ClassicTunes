@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7–10 的外观和体验。">
+    <meta name="description" content="ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7-10 的外观和体验。">
+    <meta name="robots" content="index, follow">
+    <meta name="keywords" content="ClassicTunes, iTunes remake, macOS app, SwiftUI, Apple Silicon, classic iTunes, iTunes 7, iTunes 8, iTunes 9, iTunes 10">
+    <meta name="author" content="Smaran Vallabhaneni">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ClassicTunes: 使用 SwiftUI 构建的经典 iTunes 重制版">
+    <meta property="og:description" content="ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7-10 的外观和体验。">
+    <meta property="og:url" content="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
+    <meta property="og:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
+    <meta property="og:site_name" content="ClassicTunes">
+    <meta property="og:locale" content="zh_CN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ClassicTunes: 使用 SwiftUI 构建的经典 iTunes 重制版">
+    <meta name="twitter:description" content="ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7-10 的外观和体验。">
+    <meta name="twitter:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
     <title>ClassicTunes: 使用 SwiftUI 构建的经典 iTunes 重制版</title>
     <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
     
@@ -52,7 +66,7 @@
     <section class="about">
         <h2>关于</h2>
         <p>
-            ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7–10 的外观和体验。
+            ClassicTunes 是一款从零开始使用 Swift 和 SwiftUI 构建的现代 macOS 应用程序，在现代 Apple Silicon Mac 上忠实再现了 iTunes 7-10 的外观和体验。
         </p>
 
         <ul class="features">
@@ -61,19 +75,20 @@
             <li>播放列表（支持智能 m3u）</li>
             <li>iTunes Store 集成</li>
             <li>歌词支持（使用 lrclib 或元数据）</li>
+            <li>iPod 同步 (1st-2nd gen Shuffles)</li>
             <li>Discord Rich Presence (集成 MusicPresence)</li>
-            <li>经典的 iTunes 7–10 美学</li>
+            <li>经典的 iTunes 7-10 美学</li>
         </ul>
         
         <p>
             系统要求：macOS 13 Ventura 或更高版本，Apple Silicon (M1 及更高版本)。
         </p>
 
-        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.2/ClassicTunes.zip">
+        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.3/ClassicTunes.zip">
             下载 ClassicTunes
         </a>
         <br/>
-        <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank">
+        <a class="github-btn" href="https://github.com/happysmaran/ClassicTunes" target="_blank" rel="noopener noreferrer">
             在 GitHub 上查看
         </a>
     </section>
@@ -113,6 +128,11 @@
             </figure>
 
             <figure>
+                <img src="../assets/ipo_syncing.png" alt="iPod 同步">
+                <figcaption>iPod 同步 (1st-2nd gen Shuffles)</figcaption>
+            </figure>
+
+            <figure>
                 <img src="../assets/itunes_store.png" alt="iTunes Store 集成">
                 <figcaption>iTunes Store 集成</figcaption>
             </figure>
@@ -134,7 +154,7 @@
 
             <figure>
                 <img src="../assets/discord_rpc.png" alt="Discord Rich Presence">
-                <figcaption>Discord Rich Presence (集成 <a href="https://musicpresence.app/" target="_blank">MusicPresence</a>)</figcaption>
+                <figcaption>Discord Rich Presence (集成 <a href="https://musicpresence.app/" target="_blank" rel="noopener noreferrer">MusicPresence</a>)</figcaption>
             </figure>
         </div>
     </section>
@@ -154,7 +174,7 @@
         </div>
 
         <div class="lightbox-body">
-            <img id="lightbox-image" src="" alt="">
+            <img id="lightbox-image" src="" alt="Screenshot preview">
             <p class="lightbox-caption" id="lightbox-caption"></p>
         </div>
     </div>
