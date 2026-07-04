@@ -6,13 +6,6 @@ import UniformTypeIdentifiers
 
 // Main Application Manager
 
-class PersistentPlayer {
-    static let shared = PersistentPlayer()
-    var player: AVPlayer?
-    var selectedSong: Song?
-    private init() {}
-}
-
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -38,19 +31,8 @@ struct ContentView: View {
     @State private var isCoverFlowActive = false
     @State private var showFileImporter = false
     @State private var songs: [Song] = []
-    @State private var selectedSong: Song?
-    @State private var player: AVPlayer?
-    @State private var playerItem: AVPlayerItem?
-    @AppStorage("playerVolume") private var volume: Double = 0.5
+    @ObservedObject private var engine = PlayerEngine.shared
     @AppStorage("appAppearance") private var appAppearance: String = "system" // "system", "light", or "dark"
-    @State private var playbackPosition: Double = 0.0
-    @State private var playbackDuration: Double = 1.0
-    @State private var timeObserverToken: Any?
-    @State private var isSeeking = false
-    @State private var currentPlaybackSongs: [Song] = []
-    @AppStorage("isShuffleEnabled") private var isShuffleEnabled = false
-    @AppStorage("isRepeatEnabled") private var isRepeatEnabled = false
-    @AppStorage("isRepeatOne") private var isRepeatOne = false
     @State private var isStopped = false
     @State private var systemPlaylists: [Playlist] = []
     @State private var selectedPlaylistID: UUID?
@@ -64,7 +46,7 @@ struct ContentView: View {
     // Persistence keys
     private let userPlaylistsKey = "userPlaylists.v1"
 
-    // New states for playlist selection
+    // Playlist selection
     @State private var showPlaylistSelectionSheet = false
     @State private var songToAddToPlaylist: Song?
 
@@ -72,18 +54,11 @@ struct ContentView: View {
     @AppStorage("isMiniPlayerActive") private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
 
-    // Added observer tokens
-    @State private var playbackEndObserver: NSObjectProtocol?
+    // Observer tokens
     @State private var miniPlayerCloseObserver: NSObjectProtocol?
 
     // Up Next states
     @State private var showUpNext = false
-    @State private var upcomingSongs: [Song] = []
-    // Songs explicitly queued by user (Play Next / drag-drop). Prepended by updateUpcomingSongs.
-    @State private var manualQueue: [Song] = []
-    @State private var shuffleQueue: [Song] = []
-    @State private var playedShuffleSongs: [Song] = []
-    @State private var isNavigatingBackward = false
     @State private var dropTargetIndex: Int? = nil
 
     // Lyrics states
@@ -96,7 +71,7 @@ struct ContentView: View {
     
     @State private var isDeviceSelected = false
 
-    // Menu command support (File/Edit/View/Controls/Help)
+    // Menu command support
     @FocusState private var isSearchFieldFocused: Bool
     @State private var volumeBeforeMute: Double = 0.5
     @State private var showKeyboardShortcuts = false
@@ -108,7 +83,6 @@ struct ContentView: View {
         playlistManager.userPlaylists + systemPlaylists
     }
 
-    // Store large playlist data on disk instead of UserDefaults
     private func playlistsFileURL() -> URL? {
         do {
             let fm = FileManager.default
@@ -180,43 +154,6 @@ struct ContentView: View {
         }
     }
     
-    private func restorePlaybackState() {
-        guard let persistentSong = PersistentPlayer.shared.selectedSong,
-              let persistentPlayer = PersistentPlayer.shared.player else { return }
-
-        selectedSong = persistentSong
-        player = persistentPlayer
-
-        if let currentItem = persistentPlayer.currentItem {
-            if let d = selectedSong?.duration {
-                playbackDuration = d
-                playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
-            } else {
-                Task {
-                    let seconds = (try? await currentItem.asset.load(.duration).seconds) ?? 0
-                    await MainActor.run {
-                        playbackDuration = seconds
-                        playbackPosition = persistentPlayer.currentTime().seconds / max(playbackDuration, 0.1)
-                    }
-                }
-            }
-        }
-
-        setupTimeObserver(for: persistentPlayer)
-        if let item = persistentPlayer.currentItem {
-            setupPlaybackCompletionHandler(for: item)
-        }
-
-        currentPlaybackSongs = playbackContext(for: persistentSong)
-        updateUpcomingSongs()
-        updateNowPlayingInfo()
-
-        // Rebuild shuffle queue if shuffle was on
-        if isShuffleEnabled {
-            rebuildShuffleQueue(startingFrom: persistentSong)
-        }
-    }
-
     private var displayedSongs: [Song] {
         // Build base list depending on selected playlist or full library
         let baseUnfiltered: [Song]
@@ -318,64 +255,6 @@ struct ContentView: View {
         return list.firstIndex { $0.id == song.id }
     }
 
-    private func rebuildShuffleQueue(startingFrom current: Song) {
-        let context = playbackContext(for: current)
-        let pool = context.filter { $0.id != current.id }
-        shuffleQueue = pool.shuffled()
-
-        // Clear the played songs history when rebuilding the queue
-        playedShuffleSongs.removeAll()
-
-        // Add the current song to the played history
-        playedShuffleSongs.append(current)
-    }
-
-    // Insert one or more songs to play next
-    private func addSongsNext(_ newSongs: [Song]) {
-        // Prevent adding songs if Repeat One is active
-        guard !isRepeatOne else { return }
-        
-        // Defer heavy array manipulation to let the UI (like context menus) dismiss smoothly
-        DispatchQueue.main.async {
-            let currentID = self.selectedSong?.id
-            var seen = Set<UUID>()
-            let filtered = newSongs.filter { s in
-                guard s.id != currentID else { return false }
-                if seen.contains(s.id) { return false }
-                seen.insert(s.id)
-                return true
-            }
-            guard !filtered.isEmpty else { return }
-
-            if self.isShuffleEnabled {
-                let ids = Set(filtered.map { $0.id })
-                self.shuffleQueue.removeAll { ids.contains($0.id) }
-                self.shuffleQueue.insert(contentsOf: filtered, at: 0)
-            } else {
-                // Store in manualQueue so updateUpcomingSongs() prepends them persistently
-                let ids = Set(filtered.map { $0.id })
-                self.manualQueue.removeAll { ids.contains($0.id) }
-                self.manualQueue.insert(contentsOf: filtered, at: 0)
-            }
-            self.updateUpcomingSongs()
-        }
-    }
-    
-    // Called by UpNextView after it has already mutated upcomingSongs via the binding.
-    // Mirror the reorder back into the authoritative queue (manualQueue or shuffleQueue).
-    private func moveUpcomingSongs(from source: IndexSet, to destination: Int) {
-        if isShuffleEnabled {
-            // upcomingSongs == shuffleQueue.prefix(25); mirror the full reorder into shuffleQueue
-            // Rebuild: take the reordered visible slice and splice it back into shuffleQueue
-            let tail = shuffleQueue.count > upcomingSongs.count
-                ? Array(shuffleQueue[upcomingSongs.count...])
-                : []
-            shuffleQueue = upcomingSongs + tail
-        } else {
-            manualQueue = upcomingSongs
-        }
-    }
-
     private func decodeSongs(from providers: [NSItemProvider], completion: @escaping ([Song]) -> Void) {
         let type = UTType.json.identifier
         var collected: [Song] = []
@@ -410,22 +289,21 @@ struct ContentView: View {
             } else if isCoverFlowActive {
                 CoverFlowView(
                     albums: albumsForCoverFlow,
-                    selectedAlbum: .constant(selectedSong?.album ?? ""),
+                    selectedAlbum: .constant(engine.selectedSong?.album ?? ""),
                     isCoverFlowActive: $isCoverFlowActive,
                     onAlbumSelect: { albumName in
                         let albumSongs = displayedSongs.filter { $0.album == albumName }
                         if let firstSong = albumSongs.first {
-                            currentPlaybackSongs = albumSongs
                             playSong(firstSong)
                         }
                     },
                     songs: displayedSongs,
-                    selectedSong: $selectedSong,
-                    currentPlaybackSongs: $currentPlaybackSongs,
-                    shuffleQueue: $shuffleQueue,
-                    isShuffleEnabled: $isShuffleEnabled,
-                    isRepeatOne: $isRepeatOne,
-                    isRepeatEnabled: $isRepeatEnabled
+                    selectedSong: $engine.selectedSong,
+                    currentPlaybackSongs: $engine.currentPlaybackSongs,
+                    shuffleQueue: $engine.shuffleQueue,
+                    isShuffleEnabled: $engine.isShuffleEnabled,
+                    isRepeatOne: $engine.isRepeatOne,
+                    isRepeatEnabled: $engine.isRepeatEnabled
                 )
             } else {
                 VStack(spacing: 0) {
@@ -439,7 +317,7 @@ struct ContentView: View {
                                 if let first = displayedSongs.first { playSong(first) }
                             },
                             onShuffle: {
-                                isShuffleEnabled = true
+                                engine.isShuffleEnabled = true
                                 if let random = displayedSongs.randomElement() { playSong(random) }
                             }
                         )
@@ -450,12 +328,11 @@ struct ContentView: View {
                     SongListView(
                         isAlbumView: isAlbumView,
                         songs: displayedSongs,
-                        onSongSelect: playSong,
-                        selectedSong: $selectedSong,
+                        onSongSelect: engine.playSong,
+                        selectedSong: $engine.selectedSong,
                         onAlbumSelect: { album in
                             let albumSongs = songs.filter { $0.album == album }
                             if let firstSong = albumSongs.first {
-                                currentPlaybackSongs = albumSongs
                                 playSong(firstSong)
                             }
                         },
@@ -510,18 +387,18 @@ struct ContentView: View {
         TopToolbarView(
             isAlbumView: $isAlbumView,
             showFileImporter: $showFileImporter,
-            selectedSong: $selectedSong,
+            selectedSong: $engine.selectedSong,
             isPlaying: isPlayingBinding,
-            playPrevious: playPrevious,
-            playNext: playNext,
-            volume: $volume,
-            playbackPosition: $playbackPosition,
-            playbackDuration: $playbackDuration,
-            onSeek: handleSeek,
-            isSeeking: $isSeeking,
-            isShuffleEnabled: $isShuffleEnabled,
-            isRepeatEnabled: $isRepeatEnabled,
-            isRepeatOne: $isRepeatOne,
+            playPrevious: engine.playPrevious,
+            playNext: engine.playNext,
+            volume: $engine.volume,
+            playbackPosition: $engine.playbackPosition,
+            playbackDuration: $engine.playbackDuration,
+            onSeek: engine.handleSeek,
+            isSeeking: $engine.isSeeking,
+            isShuffleEnabled: $engine.isShuffleEnabled,
+            isRepeatEnabled: $engine.isRepeatEnabled,
+            isRepeatOne: $engine.isRepeatOne,
             isStopped: $isStopped,
             isCoverFlowActive: $isCoverFlowActive,
             onMiniPlayerToggle: toggleMiniPlayer,
@@ -563,12 +440,12 @@ struct ContentView: View {
             if showUpNext {
                 Divider()
                 UpNextView(
-                    currentSong: selectedSong,
-                    upcomingSongs: $upcomingSongs,
-                    isPlaying: (player?.rate ?? 0) > 0,
-                    onSongSelect: playSongFromUpNext,
-                    onMove: moveUpcomingSongs,
-                    onDropSongs: addSongsNext
+                    currentSong: engine.selectedSong,
+                    upcomingSongs: $engine.upcomingSongs,
+                    isPlaying: (engine.player?.rate ?? 0) > 0,
+                    onSongSelect: engine.playSongFromUpNext,
+                    onMove: engine.moveUpcomingSongs,
+                    onDropSongs: engine.addSongsNext
                 )
                 .frame(width: 300)
             }
@@ -576,7 +453,7 @@ struct ContentView: View {
             if showLyrics {
                 Divider()
                 LyricsView(
-                    currentSong: selectedSong,
+                    currentSong: engine.selectedSong,
                     lyrics: lyricsText
                 )
                 .frame(width: 300)
@@ -663,10 +540,6 @@ struct ContentView: View {
             .sheet(isPresented: $showKeyboardShortcuts) {
                 KeyboardShortcutsView()
             }
-            .onChange(of: selectedSong, perform: handleSelectedSongChange)
-            .onChange(of: volume, perform: handleVolumeChange)
-            .onChange(of: isShuffleEnabled, perform: handleShuffleEnabledChange)
-            .onChange(of: isRepeatOne) { _ in updateUpcomingSongs() }
             .onChange(of: appAppearance) { _ in updateMiniPlayerAppearance() }
             .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in saveUserPlaylists() }
             .onChange(of: deviceMonitor.connectedDevice) { device in
@@ -694,18 +567,18 @@ struct ContentView: View {
             .focusedSceneValue(\.showLyricsValue, showLyrics)
             .focusedSceneValue(\.toggleMiniPlayerAction, toggleMiniPlayer)
             .focusedSceneValue(\.togglePlayPauseAction, togglePlayPauseAction)
-            .focusedSceneValue(\.isPlayingValue, player?.rate != 0)
-            .focusedSceneValue(\.playNextAction, playNext)
-            .focusedSceneValue(\.playPreviousAction, playPrevious)
+            .focusedSceneValue(\.isPlayingValue, engine.player?.rate != 0)
+            .focusedSceneValue(\.playNextAction, engine.playNext)
+            .focusedSceneValue(\.playPreviousAction, engine.playPrevious)
             .focusedSceneValue(\.increaseVolumeAction, increaseVolumeAction)
             .focusedSceneValue(\.decreaseVolumeAction, decreaseVolumeAction)
             .focusedSceneValue(\.toggleMuteAction, toggleMuteAction)
-            .focusedSceneValue(\.isMutedValue, volume == 0)
+            .focusedSceneValue(\.isMutedValue, engine.volume == 0)
             .focusedSceneValue(\.toggleShuffleAction, toggleShuffleAction)
-            .focusedSceneValue(\.isShuffleValue, isShuffleEnabled)
+            .focusedSceneValue(\.isShuffleValue, engine.isShuffleEnabled)
             .focusedSceneValue(\.cycleRepeatModeAction, cycleRepeatModeAction)
-            .focusedSceneValue(\.isRepeatAllValue, isRepeatEnabled)
-            .focusedSceneValue(\.isRepeatOneValue, isRepeatOne)
+            .focusedSceneValue(\.isRepeatAllValue, engine.isRepeatEnabled)
+            .focusedSceneValue(\.isRepeatOneValue, engine.isRepeatOne)
             .focusedSceneValue(\.showKeyboardShortcutsAction, showKeyboardShortcutsAction)
     }
 
@@ -749,7 +622,7 @@ struct ContentView: View {
         withAnimation {
             showUpNext.toggle()
             if showUpNext {
-                updateUpcomingSongs()
+                engine.updateUpcomingSongs()
             }
         }
     }
@@ -757,52 +630,47 @@ struct ContentView: View {
     private func toggleLyricsMenuAction() {
         withAnimation {
             showLyrics.toggle()
-            if showLyrics, let song = selectedSong {
+            if showLyrics, let song = engine.selectedSong {
                 loadLyrics(for: song)
             }
         }
     }
 
     private func togglePlayPauseAction() {
-        if player?.rate != 0 {
-            player?.pause()
-        } else {
-            player?.play()
-            updateNowPlayingInfo()
-        }
+        engine.togglePlayPause()
     }
 
     private func increaseVolumeAction() {
-        volume = min(1.0, volume + 0.1)
+        engine.volume = min(1.0, engine.volume + 0.1)
     }
 
     private func decreaseVolumeAction() {
-        volume = max(0.0, volume - 0.1)
+        engine.volume = max(0.0, engine.volume - 0.1)
     }
 
     private func toggleMuteAction() {
-        if volume > 0 {
-            volumeBeforeMute = volume
-            volume = 0
+        if engine.volume > 0 {
+            volumeBeforeMute = engine.volume
+            engine.volume = 0
         } else {
-            volume = volumeBeforeMute > 0 ? volumeBeforeMute : 0.5
+            engine.volume = volumeBeforeMute > 0 ? volumeBeforeMute : 0.5
         }
     }
 
     private func toggleShuffleAction() {
-        isShuffleEnabled.toggle()
+        engine.isShuffleEnabled.toggle()
     }
 
     private func cycleRepeatModeAction() {
-        if !isRepeatEnabled && !isRepeatOne {
-            isRepeatEnabled = true
-            isRepeatOne = false
-        } else if isRepeatEnabled && !isRepeatOne {
-            isRepeatEnabled = false
-            isRepeatOne = true
+        if !engine.isRepeatEnabled && !engine.isRepeatOne {
+            engine.isRepeatEnabled = true
+            engine.isRepeatOne = false
+        } else if engine.isRepeatEnabled && !engine.isRepeatOne {
+            engine.isRepeatEnabled = false
+            engine.isRepeatOne = true
         } else {
-            isRepeatEnabled = false
-            isRepeatOne = false
+            engine.isRepeatEnabled = false
+            engine.isRepeatOne = false
         }
     }
 
@@ -829,22 +697,32 @@ struct ContentView: View {
         musicFolderAccess = nil
     }
 
-    // Ensures setupRemoteCommands() only ever registers its targets once per
-    // process lifetime, no matter how many times the view appears (window
-    // close/reopen, entering/exiting the mini player, etc). Without this,
-    // MPRemoteCommandCenter accumulates duplicate targets across stale
-    // generations of view state, which is what caused the "two songs at
-    // once" / "can only pause via Control Center" erratic behavior.
-    private static var remoteCommandsConfigured = false
+    // Registers exactly once, ever, since it runs from PlayerEngine's
+    // private init() rather than from this View's onAppear — see
+    // PlayerEngine.swift for why that distinction matters.
+    private static var lifecycleObserversConfigured = false
 
     private func handleContentViewAppear() {
         print("Running loadSongsOnce at launch")
         loadSongsOnce()
         loadUserPlaylists()
 
-        if !Self.remoteCommandsConfigured {
-            setupRemoteCommands()
-            Self.remoteCommandsConfigured = true
+        // Refresh these every time the view appears (window reopened, mini
+        // player closed, etc.) so the engine always asks the currently
+        // visible UI for playback context / side effects, without ever
+        // holding on to a stale View instance itself.
+        engine.contextProvider = { [self] song in playbackContext(for: song) }
+        engine.onSongChanged = { [self] song in
+            incrementPlayCount(for: song)
+            refreshSongPlayCounts()
+            generateSystemPlaylists()
+            if showLyrics {
+                loadLyrics(for: song)
+            }
+        }
+
+        if !Self.lifecycleObserversConfigured {
+            Self.lifecycleObserversConfigured = true
 
             // Stop security-scoped access cleanly when the app quits
             NotificationCenter.default.addObserver(
@@ -854,8 +732,6 @@ struct ContentView: View {
                 using: handleWillTerminate
             )
         }
-
-        restorePlaybackState()
     }
 
     private func handleContentViewDisappear() {
@@ -874,13 +750,12 @@ struct ContentView: View {
 
     private var isPlayingBinding: Binding<Bool> {
         Binding(
-            get: { player?.rate != 0 },
+            get: { engine.player?.rate != 0 },
             set: { shouldPlay in
                 if shouldPlay {
-                    player?.play()
-                    updateNowPlayingInfo()
+                    engine.play()
                 } else {
-                    player?.pause()
+                    engine.pause()
                 }
             }
         )
@@ -889,7 +764,7 @@ struct ContentView: View {
     private func toggleLyricsButtonAction() {
         withAnimation {
             showLyrics.toggle()
-            if showLyrics, let song = selectedSong {
+            if showLyrics, let song = engine.selectedSong {
                 loadLyrics(for: song)
             }
         }
@@ -899,7 +774,7 @@ struct ContentView: View {
         withAnimation {
             showUpNext.toggle()
             if showUpNext {
-                updateUpcomingSongs()
+                engine.updateUpcomingSongs()
             }
         }
     }
@@ -926,40 +801,9 @@ struct ContentView: View {
         songToAddToPlaylist = nil
     }
 
-    private func handleSelectedSongChange(_ newSong: Song?) {
-        guard let song = newSong else { return }
-        incrementPlayCount(for: song)
-        refreshSongPlayCounts()
-        generateSystemPlaylists()
-        updateNowPlayingInfo()
-        updateUpcomingSongs()
-
-        // Load lyrics when song changes
-        if showLyrics {
-            loadLyrics(for: song)
-        }
-    }
-
-    private func handleVolumeChange(_ newVolume: Double) {
-        player?.volume = Float(newVolume)
-        updateNowPlayingInfo()
-    }
-
-    private func handleShuffleEnabledChange(_ enabled: Bool) {
-        if enabled {
-            if let song = selectedSong {
-                rebuildShuffleQueue(startingFrom: song)
-            }
-        } else {
-            shuffleQueue.removeAll()
-            playedShuffleSongs.removeAll()
-        }
-        updateUpcomingSongs()
-    }
-
     private func handleAddToUpNextNotification(_ output: Notification) {
         if let song = output.object as? Song {
-            addSongsNext([song])
+            engine.addSongsNext([song])
         }
     }
 
@@ -1042,260 +886,20 @@ struct ContentView: View {
         }
     }
 
+    // Thin wrapper: preserves the "don't try to play without folder access"
+    // guard, then hands off to PlayerEngine (the single source of truth for
+    // everything else — queues, shuffle/repeat, the AVPlayer itself).
     private func playSong(_ song: Song) {
         guard musicFolderAccess != nil else {
             print("No folder access retained.")
             return
         }
-
-        // Set the correct playback context based on what we're playing from
-        currentPlaybackSongs = playbackContext(for: song)
-
-        // Handle shuffle mode
-        if isShuffleEnabled {
-            // Only rebuild shuffle queue if we're not navigating backward or if it's the first song
-            if !isNavigatingBackward {
-                if playedShuffleSongs.isEmpty || playedShuffleSongs.last?.id != song.id {
-                    rebuildShuffleQueue(startingFrom: song)
-                }
-            }
-        } else {
-            playedShuffleSongs.removeAll()
-        }
-
-        // Reset the backward navigation flag
-        isNavigatingBackward = false
-
-        setupNewPlayback(for: song)
-        updateUpcomingSongs()
-
-        // Load lyrics when playing a new song
-        if showLyrics {
-            loadLyrics(for: song)
-        }
-    }
-
-    // New function to play a song from Up Next view
-    private func playSongFromUpNext(_ song: Song) {
-        // Remove from whichever queue is authoritative so it isn't played again
-        manualQueue.removeAll { $0.id == song.id }
-        shuffleQueue.removeAll { $0.id == song.id }
-        // Skip the shuffle rebuild that playSong would normally trigger —
-        // the queue was already ordered by the user; preserve it.
-        playedShuffleSongs.append(song)
-        setupNewPlayback(for: song)
-        updateUpcomingSongs()
-        if showLyrics { loadLyrics(for: song) }
+        engine.playSong(song)
     }
 
     private func refreshSongPlayCounts() {
         for i in songs.indices {
             songs[i].playCount = getPlayCount(for: songs[i])
-        }
-    }
-
-    private func setupNewPlayback(for song: Song) {
-        stopCurrentPlayback()
-
-        let item = AVPlayerItem(url: song.url)
-        let newPlayer = AVPlayer(playerItem: item)
-        newPlayer.volume = Float(volume)
-        newPlayer.play()
-        // Removed isPlayingFlag = true
-
-        player = newPlayer
-        playerItem = item
-        selectedSong = song
-
-        if let d = song.duration {
-            playbackDuration = d
-        } else {
-            Task {
-                let seconds = (try? await item.asset.load(.duration).seconds) ?? 0
-                await MainActor.run { playbackDuration = seconds }
-            }
-        }
-
-        playbackPosition = 0.0
-
-        setupTimeObserver(for: newPlayer)
-        setupPlaybackCompletionHandler(for: item)
-        updateNowPlayingInfo()
-        
-        PersistentPlayer.shared.player = newPlayer
-        PersistentPlayer.shared.selectedSong = song
-    }
-
-    private func stopCurrentPlayback() {
-        player?.pause()
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-
-        if let token = playbackEndObserver {
-            NotificationCenter.default.removeObserver(token)
-            playbackEndObserver = nil
-        }
-
-        playerItem = nil
-        player = nil
-        
-        PersistentPlayer.shared.player = nil
-        PersistentPlayer.shared.selectedSong = nil
-    }
-
-    private func setupTimeObserver(for player: AVPlayer) {
-        if let token = timeObserverToken {
-            player.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        let interval = CMTime(seconds: 1.0, preferredTimescale: 1)
-        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-            let seconds = time.seconds
-            if !self.isSeeking {
-                self.playbackPosition = seconds / max(self.playbackDuration, 0.1)
-                self.updateNowPlayingPlaybackInfo()
-            }
-        }
-    }
-
-    private func setupPlaybackCompletionHandler(for item: AVPlayerItem) {
-        if let token = playbackEndObserver {
-            NotificationCenter.default.removeObserver(token)
-            playbackEndObserver = nil
-        }
-        playbackEndObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { _ in
-            if self.isRepeatOne {
-                // Loop the same item by seeking to start and resuming playback
-                self.player?.seek(to: .zero)
-                self.player?.play()
-                self.playbackPosition = 0.0
-                self.updateNowPlayingInfo()
-            } else {
-                self.playNext()
-            }
-        }
-    }
-
-    private func playNext() {
-        guard let current = selectedSong else { return }
-
-        // If there is a manually queued song at front, consume it first
-        if !isShuffleEnabled && !manualQueue.isEmpty {
-            let next = manualQueue.removeFirst()
-            playSong(next)
-            return
-        }
-
-        if isShuffleEnabled {
-            // Use the persistent shuffle queue
-            if shuffleQueue.isEmpty {
-                // If queue is empty but we have played songs, we can reshuffle
-                if isRepeatEnabled || isRepeatOne {
-                    // Rebuild the queue from the original playback context
-                    let context = playbackContext(for: current)
-                    let pool = context.filter { song in
-                        // Check if song is not the current song and not in playedShuffleSongs
-                        if song.id == current.id { return false }
-                        return !playedShuffleSongs.contains { $0.id == song.id }
-                    }
-                    if !pool.isEmpty {
-                        shuffleQueue = pool.shuffled()
-                    } else {
-                        // If all songs have been played, start fresh
-                        rebuildShuffleQueue(startingFrom: current)
-                    }
-                } else {
-                    // No more songs in queue and repeat is off
-                    return
-                }
-            }
-
-            if let next = shuffleQueue.first {
-                shuffleQueue.removeFirst()
-                playedShuffleSongs.append(next)
-                playSong(next)
-                return
-            }
-        }
-
-        playNextSequentialSong(after: current)
-    }
-
-    private func playPrevious() {
-        guard let current = selectedSong else { return }
-
-        // Set the backward navigation flag
-        isNavigatingBackward = true
-
-        if isShuffleEnabled {
-            if playedShuffleSongs.count > 1 {
-                // Remove the current song from the end
-                let justLeftSong = playedShuffleSongs.removeLast()
-                // Get the previous song
-                if let previousSong = playedShuffleSongs.last {
-                    // Insert the song we just left at the front of the shuffleQueue
-                    shuffleQueue.insert(justLeftSong, at: 0)
-                    playSong(previousSong)
-                    return
-                }
-            } else if playedShuffleSongs.count == 1 {
-                // At the start of shuffle history: restart current song
-                player?.seek(to: .zero)
-                playbackPosition = 0.0
-                updateNowPlayingPlaybackInfo()
-                return
-            }
-            // If no history or only one song in history, play a random song
-            playRandomSong(excluding: current)
-            return
-        }
-
-        playPreviousSequentialSong(before: current)
-    }
-
-    private func playRandomSong(excluding current: Song) {
-        let pool = currentPlaybackSongs.filter { $0.id != current.id }
-        if let randomSong = pool.randomElement() {
-            playSong(randomSong)
-        }
-    }
-
-    private func playNextSequentialSong(after current: Song) {
-        currentPlaybackSongs = playbackContext(for: current)
-        guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
-
-        let nextIndex = currentIndex + 1
-        if nextIndex < currentPlaybackSongs.count {
-            playSong(currentPlaybackSongs[nextIndex])
-        } else if isRepeatEnabled || isRepeatOne {
-            // When repeat is enabled, go back to the first song
-            playSong(currentPlaybackSongs.first!)
-        }
-    }
-
-    private func playPreviousSequentialSong(before current: Song) {
-        currentPlaybackSongs = playbackContext(for: current)
-        guard let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) else { return }
-
-        let previousIndex = currentIndex - 1
-        if previousIndex >= 0 {
-            playSong(currentPlaybackSongs[previousIndex])
-        } else if isRepeatEnabled || isRepeatOne {
-            // When repeat is enabled, go to the last song
-            playSong(currentPlaybackSongs.last!)
-        }
-    }
-
-    private func handleSeek(_ value: Double) {
-        if value == -1 {
-            player?.volume = Float(volume)
-        } else {
-            let seconds = value * playbackDuration
-            let time = CMTime(seconds: seconds, preferredTimescale: 600)
-            player?.seek(to: time)
-            updateNowPlayingPlaybackInfo()
         }
     }
 
@@ -1389,157 +993,6 @@ struct ContentView: View {
 
     private func getPlayHistory() -> [String] {
         UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
-    }
-
-    // System audio controls implementation
-    private func setupRemoteCommands() {
-        let commandCenter = MPRemoteCommandCenter.shared()
-
-        // Play command
-        commandCenter.playCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            if player.rate == 0 {
-                player.play()
-                // Removed self.isPlayingFlag = true
-                self.updateNowPlayingInfo()
-                return .success
-            }
-            return .commandFailed
-        }
-
-        // Pause command
-        commandCenter.pauseCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            if player.rate != 0 {
-                player.pause()
-                // Removed self.isPlayingFlag = false
-                self.updateNowPlayingInfo()
-                return .success
-            }
-            return .commandFailed
-        }
-
-        // Toggle play/pause command
-        commandCenter.togglePlayPauseCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            if player.rate == 0 {
-                player.play()
-                // Removed self.isPlayingFlag = true
-            } else {
-                player.pause()
-                // Removed self.isPlayingFlag = false
-            }
-            self.updateNowPlayingInfo()
-            return .success
-        }
-
-        // Next track command
-        commandCenter.nextTrackCommand.addTarget { _ in
-            self.playNext()
-            return .success
-        }
-
-        // Previous track command
-        commandCenter.previousTrackCommand.addTarget { _ in
-            self.playPrevious()
-            return .success
-        }
-
-        // Change playback position command
-        commandCenter.changePlaybackPositionCommand.addTarget { event in
-            guard let player = self.player else { return .commandFailed }
-            guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-
-            let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
-            player.seek(to: time)
-            self.updateNowPlayingPlaybackInfo()
-            return .success
-        }
-    }
-
-    private func updateNowPlayingInfo() {
-        guard let song = selectedSong else {
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-            return
-        }
-
-        var nowPlayingInfo = [String: Any]()
-
-        // Basic track information
-        nowPlayingInfo[MPMediaItemPropertyTitle] = song.title
-        nowPlayingInfo[MPMediaItemPropertyArtist] = song.artist
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = song.album
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = playbackDuration
-
-        // Artwork if available
-        if let artworkData = song.artworkData,
-           let artworkImage = NSImage(data: artworkData) {
-            let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { _ in artworkImage }
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-        }
-
-        // Playback position
-        if let player = player {
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
-        }
-
-        // Playback rate
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
-
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-    }
-
-    private func updateNowPlayingPlaybackInfo() {
-        guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
-
-        // Update playback position
-        if let player = player {
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
-        }
-
-        // Update playback rate
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate ?? 0
-
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-    }
-
-    // Up Next functionality
-    private func updateUpcomingSongs() {
-        guard let current = selectedSong else {
-            upcomingSongs = []
-            return
-        }
-
-        // If in "Repeat One" mode, the queue should be empty
-        if isRepeatOne {
-            upcomingSongs = []
-            return
-        }
-        
-        if isShuffleEnabled {
-            // Shuffle queue already reflects manual insertions; just show its front
-            upcomingSongs = Array(shuffleQueue.prefix(25))
-            return
-        }
-
-        // Non-shuffle: build computed "what comes next in the library" list
-        var computed: [Song] = []
-        if let currentIndex = currentPlaybackSongs.firstIndex(where: { $0.id == current.id }) {
-            let startIndex = currentIndex + 1
-            let endIndex = min(startIndex + 25, currentPlaybackSongs.count)
-            if startIndex < endIndex {
-                computed = Array(currentPlaybackSongs[startIndex..<endIndex])
-            }
-            if isRepeatEnabled && computed.count < 25 {
-                let needed = 25 - computed.count
-                computed.append(contentsOf: currentPlaybackSongs.prefix(needed))
-            }
-        }
-
-        // Prepend manualQueue, then fill with computed songs that aren't already in manual queue
-        let manualIDs = Set(manualQueue.map { $0.id })
-        let filteredComputed = computed.filter { !manualIDs.contains($0.id) }
-        upcomingSongs = manualQueue + filteredComputed
     }
 
     private func loadLyrics(for song: Song) {
@@ -1723,10 +1176,9 @@ struct ContentView: View {
     }
 
     private func openMiniPlayer() {
-        guard selectedSong != nil else { return }
+        guard engine.selectedSong != nil else { return }
 
         isMiniPlayerActive = true
-        // isPlayingFlag = (player?.rate != 0)
 
         // Hide main window
         if let mainWindow = NSApp.mainWindow {
@@ -1735,25 +1187,19 @@ struct ContentView: View {
 
         // Create and show mini player window
         let miniPlayerView = MiniPlayerView(
-            selectedSong: $selectedSong,
-            isPlaying: Binding(get: { (player?.rate ?? 0) != 0 }, set: { shouldPlay in
-                if shouldPlay { self.player?.play() } else { self.player?.pause() }
-                self.updateNowPlayingInfo()
+            selectedSong: $engine.selectedSong,
+            isPlaying: Binding(get: { (engine.player?.rate ?? 0) != 0 }, set: { shouldPlay in
+                if shouldPlay { engine.play() } else { engine.pause() }
             }),
-            volume: $volume,
-            playbackPosition: $playbackPosition,
-            playbackDuration: $playbackDuration,
+            volume: $engine.volume,
+            playbackPosition: $engine.playbackPosition,
+            playbackDuration: $engine.playbackDuration,
             onPlayPause: {
-                if self.player?.rate != 0 {
-                    self.player?.pause()
-                } else {
-                    self.player?.play()
-                }
-                self.updateNowPlayingInfo()
+                engine.togglePlayPause()
             },
-            onPrevious: playPrevious,
-            onNext: playNext,
-            onSeek: handleSeek,
+            onPrevious: engine.playPrevious,
+            onNext: engine.playNext,
+            onSeek: engine.handleSeek,
             onClose: closeMiniPlayer
         )
 
