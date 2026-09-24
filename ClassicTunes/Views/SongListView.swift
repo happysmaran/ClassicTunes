@@ -282,6 +282,9 @@ struct SongListView: View {
     // Closure hook running modifications to add tracks into secondary user lists.
     var onAddToPlaylist: (Song) -> Void
     
+    // Closure hook presenting the Get Info metadata sheet for a track.
+    var onShowInfo: (Song) -> Void = { _ in }
+    
     @State private var sortBy: SongColumn = .title
     @State private var isAscending = true
     @EnvironmentObject var playlistManager: PlaylistManager
@@ -526,6 +529,10 @@ struct SongListView: View {
             }
             Button("contextMenu.findMusicVideo") {
                 openYouTubeSearch(for: song)
+            }
+            Divider()
+            Button("contextMenu.songInfo") {
+                onShowInfo(song)
             }
         }
         .onDrag {

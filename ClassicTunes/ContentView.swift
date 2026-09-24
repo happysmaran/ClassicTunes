@@ -50,6 +50,9 @@ struct ContentView: View {
     @State private var showPlaylistSelectionSheet = false
     @State private var songToAddToPlaylist: Song?
 
+    // Song metadata editing
+    @State private var songForInfo: Song?
+
     // MiniPlayer states
     @AppStorage("isMiniPlayerActive") private var isMiniPlayerActive = false
     @State private var miniPlayerWindow: NSWindow?
@@ -339,6 +342,9 @@ struct ContentView: View {
                         playlistSongs: selectedPlaylistID != nil ? displayedSongs : nil,
                         onAddToPlaylist: { song in
                             songToAddToPlaylist = song
+                        },
+                        onShowInfo: { song in
+                            songForInfo = song
                         }
                     )
                     .environmentObject(playlistManager)
@@ -537,6 +543,11 @@ struct ContentView: View {
                 }
                 .environmentObject(playlistManager)
             }
+            .sheet(item: $songForInfo) { song in
+                SongInfoView(song: song) { updated in
+                    applyMetadataUpdate(updated)
+                }
+            }
             .sheet(isPresented: $showKeyboardShortcuts) {
                 KeyboardShortcutsView()
             }
@@ -580,6 +591,7 @@ struct ContentView: View {
             .focusedSceneValue(\.isRepeatAllValue, engine.isRepeatEnabled)
             .focusedSceneValue(\.isRepeatOneValue, engine.isRepeatOne)
             .focusedSceneValue(\.showKeyboardShortcutsAction, showKeyboardShortcutsAction)
+            .focusedSceneValue(\.showSongInfoAction, showSongInfoMenuAction())
     }
 
     private func newPlaylistAction() {
@@ -801,6 +813,29 @@ struct ContentView: View {
         songToAddToPlaylist = nil
     }
 
+    private func showSongInfoMenuAction() -> (() -> Void)? {
+        guard engine.selectedSong != nil else { return nil }
+        return { songForInfo = engine.selectedSong }
+    }
+
+    // Propagates an edited song's metadata to every place a copy of it is held:
+    // the library, every user playlist, and the currently selected/playing song.
+    private func applyMetadataUpdate(_ updated: Song) {
+        if let index = songs.firstIndex(where: { $0.id == updated.id }) {
+            songs[index] = updated
+        }
+        for playlistIndex in playlistManager.userPlaylists.indices {
+            if let songIndex = playlistManager.userPlaylists[playlistIndex].songs.firstIndex(where: { $0.id == updated.id }) {
+                playlistManager.userPlaylists[playlistIndex].songs[songIndex] = updated
+            }
+        }
+        if engine.selectedSong?.id == updated.id {
+            engine.selectedSong = updated
+        }
+        generateSystemPlaylists()
+        saveUserPlaylists()
+    }
+
     private func handleAddToUpNextNotification(_ output: Notification) {
         if let song = output.object as? Song {
             engine.addSongsNext([song])
@@ -984,6 +1019,8 @@ struct ContentView: View {
         history.insert(songID, at: 0)
         if history.count > 1000 { history = Array(history.prefix(1000)) }
         UserDefaults.standard.set(history, forKey: "playHistory")
+
+        recordLastPlayed(for: song)
     }
 
     private func getPlayCount(for song: Song) -> Int {

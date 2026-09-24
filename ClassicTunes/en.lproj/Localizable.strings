@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "Add to Playlist";
 "contextMenu.findMusicVideo"  = "Find Music Video";
 "contextMenu.resetColumns"    = "Reset Columns";
+"contextMenu.songInfo"        = "Song Info…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "Summary";
+"songInfo.tab.info"           = "Info";
+"songInfo.tab.lyrics"         = "Lyrics";
+"songInfo.name"               = "Name";
+"songInfo.artist"             = "Artist";
+"songInfo.album"              = "Album";
+"songInfo.year"               = "Year";
+"songInfo.trackNumber"        = "Track Number";
+"songInfo.discNumber"         = "Disc Number";
+"songInfo.composer"           = "Composer";
+"songInfo.comments"           = "Comments";
+"songInfo.genre"              = "Genre";
+"songInfo.kind"               = "Kind";
+"songInfo.size"               = "Size";
+"songInfo.bitRate"            = "Bit Rate";
+"songInfo.sampleRate"         = "Sample Rate";
+"songInfo.channels"           = "Channels";
+"songInfo.dateModified"       = "Date Modified";
+"songInfo.plays"              = "Plays";
+"songInfo.lastPlayed"         = "Last Played";
+"songInfo.where"              = "Where";
+"songInfo.cancel"             = "Cancel";
+"songInfo.save"               = "OK";
+"songInfo.unsupportedFormat"  = "Tag changes for this file format are saved in ClassicTunes but not written back to the file.";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Play";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "Import Music Folder…";
 "menu.importPlaylist"         = "Import Playlist (M3U)…";
 "menu.exportPlaylist"         = "Export Playlist (M3U)…";
+"menu.getInfo"                = "Song Info…";
 "menu.find"                   = "Find";
 "menu.showAsList"             = "as List";
 "menu.showAsAlbums"           = "as Albums";

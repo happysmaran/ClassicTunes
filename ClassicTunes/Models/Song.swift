@@ -12,16 +12,16 @@ struct Song: Identifiable, Codable, Hashable {
     let url: URL
     
     // The title of the track. Defaults to the filename if metadata is missing.
-    let title: String
+    var title: String
     
     // The artist who performed the track.
-    let artist: String
+    var artist: String
     
     // The album name the track belongs to.
-    let album: String
+    var album: String
     
     // The musical genre of the track.
-    let genre: String
+    var genre: String
     
     // The position of the track within its album or disc sequence.
     var trackNumber: Int? = nil

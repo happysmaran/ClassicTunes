@@ -87,6 +87,9 @@ private struct IsRepeatOneValueKey: FocusedValueKey {
 private struct ShowKeyboardShortcutsActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
+private struct ShowSongInfoActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
 
 extension FocusedValues {
     var deletePlaylistAction: (() -> Void)? {
@@ -201,6 +204,10 @@ extension FocusedValues {
         get { self[ShowKeyboardShortcutsActionKey.self] }
         set { self[ShowKeyboardShortcutsActionKey.self] = newValue }
     }
+    var showSongInfoAction: (() -> Void)? {
+        get { self[ShowSongInfoActionKey.self] }
+        set { self[ShowSongInfoActionKey.self] = newValue }
+    }
 }
 
 extension Color {
@@ -259,11 +266,13 @@ struct FileCommands: Commands {
     @FocusedValue(\.importMusicAction) private var importMusicAction: (() -> Void)?
     @FocusedValue(\.importPlaylistAction) private var importPlaylistAction: (() -> Void)?
     @FocusedValue(\.exportPlaylistAction) private var exportPlaylistAction: (() -> Void)?
+    @FocusedValue(\.showSongInfoAction) private var showSongInfoAction: (() -> Void)?
 
     @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
+    @AppStorage("shortcut.getInfo") private var shortcutGetInfo: String = "⌘I"
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -292,6 +301,14 @@ struct FileCommands: Commands {
             }
             .dynamicShortcut(shortcutExportPlaylist)
             .disabled(exportPlaylistAction == nil)
+
+            Divider()
+
+            Button("menu.getInfo") {
+                showSongInfoAction?()
+            }
+            .dynamicShortcut(shortcutGetInfo)
+            .disabled(showSongInfoAction == nil)
         }
     }
 }

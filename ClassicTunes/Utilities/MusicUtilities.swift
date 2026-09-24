@@ -108,6 +108,28 @@ func getPlayHistory() -> [String] {
     UserDefaults.standard.stringArray(forKey: playHistoryKey) ?? []
 }
 
+// Storage reference key holding per-track last-played timestamps.
+let lastPlayedKey = "lastPlayed"
+
+// Records the current moment as the most recent playback timestamp for a track.
+//
+// - Parameter song: The track that just started or finished playing.
+func recordLastPlayed(for song: Song, date: Date = Date()) {
+    var lastPlayed = UserDefaults.standard.dictionary(forKey: lastPlayedKey) as? [String: Double] ?? [:]
+    lastPlayed[song.id.uuidString] = date.timeIntervalSince1970
+    UserDefaults.standard.set(lastPlayed, forKey: lastPlayedKey)
+}
+
+// Resolves the most recent playback timestamp recorded for a track, if any.
+//
+// - Parameter song: Target track to query.
+// - Returns: The date the track was last played, or `nil` if it has never played.
+func getLastPlayed(for song: Song) -> Date? {
+    let lastPlayed = UserDefaults.standard.dictionary(forKey: lastPlayedKey) as? [String: Double] ?? [:]
+    guard let interval = lastPlayed[song.id.uuidString] else { return nil }
+    return Date(timeIntervalSince1970: interval)
+}
+
 // MARK: - Smart Playlist Generation Engine
 
 // Programmatically builds a temporary smart-playlist collecting recent audio selections without duplicates[span_21](start_span)[span_21](end_span).

@@ -10,6 +10,7 @@ struct KeyboardShortcutsView: View {
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
+    @AppStorage("shortcut.getInfo") private var shortcutGetInfo: String = "⌘I"
     
     // MARK: - Edit Key Backing Storage
     @AppStorage("shortcut.deletePlaylist") private var shortcutDeletePlaylist: String = "⌫"
@@ -46,7 +47,8 @@ struct KeyboardShortcutsView: View {
                 ("menu.newPlaylist", shortcutNewPlaylist),
                 ("menu.importMusic", shortcutImportMusic),
                 ("menu.importPlaylist", shortcutImportPlaylist),
-                ("menu.exportPlaylist", shortcutExportPlaylist)
+                ("menu.exportPlaylist", shortcutExportPlaylist),
+                ("menu.getInfo", shortcutGetInfo)
             ]),
             ShortcutGroup(title: "shortcuts.group.edit", items: [
                 ("menu.deletePlaylist", shortcutDeletePlaylist),
