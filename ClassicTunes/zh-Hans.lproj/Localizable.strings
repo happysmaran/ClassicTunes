@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "添加到播放列表";
 "contextMenu.findMusicVideo"  = "查找音乐视频";
 "contextMenu.resetColumns"    = "重置列";
+"contextMenu.songInfo"        = "歌曲信息…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "摘要";
+"songInfo.tab.info"           = "信息";
+"songInfo.tab.lyrics"         = "歌词";
+"songInfo.name"               = "名称";
+"songInfo.artist"             = "艺人";
+"songInfo.album"              = "专辑";
+"songInfo.year"               = "年份";
+"songInfo.trackNumber"        = "音轨号";
+"songInfo.discNumber"         = "光盘号";
+"songInfo.composer"           = "作曲者";
+"songInfo.comments"           = "注释";
+"songInfo.genre"              = "风格";
+"songInfo.kind"               = "种类";
+"songInfo.size"               = "大小";
+"songInfo.bitRate"            = "比特率";
+"songInfo.sampleRate"         = "采样率";
+"songInfo.channels"           = "声道";
+"songInfo.dateModified"       = "修改日期";
+"songInfo.plays"              = "播放次数";
+"songInfo.lastPlayed"         = "上次播放时间";
+"songInfo.where"              = "位置";
+"songInfo.cancel"             = "取消";
+"songInfo.save"               = "确定";
+"songInfo.unsupportedFormat"  = "此文件格式的标签更改会保存在 ClassicTunes 中，但不会写回文件。";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "播放";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "导入音乐文件夹…";
 "menu.importPlaylist"         = "导入播放列表 (M3U)…";
 "menu.exportPlaylist"         = "导出播放列表 (M3U)…";
+"menu.getInfo"                = "歌曲信息…";
 "menu.find"                   = "查找";
 "menu.showAsList"             = "以列表方式";
 "menu.showAsAlbums"           = "以专辑方式";

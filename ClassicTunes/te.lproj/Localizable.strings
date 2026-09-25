@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "ప్లేలిస్ట్‌కు జోడించు";
 "contextMenu.findMusicVideo"  = "మ్యూజిక్ వీడియోను కనుగొనండి";
 "contextMenu.resetColumns"    = "నిలువు వరుసలను రీసెట్ చేయండి";
+"contextMenu.songInfo"        = "పాట సమాచారం…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "సారాంశం";
+"songInfo.tab.info"           = "సమాచారం";
+"songInfo.tab.lyrics"         = "పాట మాటలు";
+"songInfo.name"               = "పేరు";
+"songInfo.artist"             = "కళాకారుడు";
+"songInfo.album"              = "ఆల్బమ్";
+"songInfo.year"               = "సంవత్సరం";
+"songInfo.trackNumber"        = "ట్రాక్ నంబర్";
+"songInfo.discNumber"         = "డిస్క్ నంబర్";
+"songInfo.composer"           = "స్వరకర్త";
+"songInfo.comments"           = "వ్యాఖ్యలు";
+"songInfo.genre"              = "శైలి";
+"songInfo.kind"               = "రకం";
+"songInfo.size"               = "పరిమాణం";
+"songInfo.bitRate"            = "బిట్ రేట్";
+"songInfo.sampleRate"         = "శాంపిల్ రేట్";
+"songInfo.channels"           = "ఛానెల్‌లు";
+"songInfo.dateModified"       = "సవరించిన తేదీ";
+"songInfo.plays"              = "ప్లేల సంఖ్య";
+"songInfo.lastPlayed"         = "చివరిసారి ప్లే చేసినది";
+"songInfo.where"              = "స్థానం";
+"songInfo.cancel"             = "రద్దు చేయి";
+"songInfo.save"               = "సరే";
+"songInfo.unsupportedFormat"  = "ఈ ఫైల్ ఫార్మాట్ కోసం ట్యాగ్ మార్పులు ClassicTunesలో సేవ్ చేయబడతాయి, కానీ ఫైల్‌లోకి తిరిగి వ్రాయబడవు.";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "ప్లే చేయి";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "మ్యూజిక్ ఫోల్డర్‌ను ఇంపోర్ట్ చేయి…";
 "menu.importPlaylist"         = "ప్లేలిస్ట్‌ను ఇంపోర్ట్ చేయి (M3U)…";
 "menu.exportPlaylist"         = "ప్లేలిస్ట్‌ను ఎక్స్‌పోర్ట్ చేయి (M3U)…";
+"menu.getInfo"                = "పాట సమాచారం…";
 "menu.find"                   = "వెతుకు";
 "menu.showAsList"             = "జాబితాగా చూపించు";
 "menu.showAsAlbums"           = "ఆల్బమ్‌లుగా చూపించు";

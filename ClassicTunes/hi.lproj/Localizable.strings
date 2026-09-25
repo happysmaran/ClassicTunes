@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "प्लेलिस्ट में जोड़ें";
 "contextMenu.findMusicVideo"  = "म्यूज़िक वीडियो ढूंढें";
 "contextMenu.resetColumns"    = "कॉलम रीसेट करें";
+"contextMenu.songInfo"        = "गाने की जानकारी…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "सारांश";
+"songInfo.tab.info"           = "जानकारी";
+"songInfo.tab.lyrics"         = "गीत के बोल";
+"songInfo.name"               = "नाम";
+"songInfo.artist"             = "कलाकार";
+"songInfo.album"              = "एल्बम";
+"songInfo.year"               = "वर्ष";
+"songInfo.trackNumber"        = "ट्रैक नंबर";
+"songInfo.discNumber"         = "डिस्क नंबर";
+"songInfo.composer"           = "संगीतकार";
+"songInfo.comments"           = "टिप्पणियाँ";
+"songInfo.genre"              = "शैली";
+"songInfo.kind"               = "प्रकार";
+"songInfo.size"               = "आकार";
+"songInfo.bitRate"            = "बिट रेट";
+"songInfo.sampleRate"         = "सैंपल रेट";
+"songInfo.channels"           = "चैनल";
+"songInfo.dateModified"       = "संशोधन तिथि";
+"songInfo.plays"              = "प्ले संख्या";
+"songInfo.lastPlayed"         = "आख़िरी बार चलाया गया";
+"songInfo.where"              = "स्थान";
+"songInfo.cancel"             = "रद्द करें";
+"songInfo.save"               = "ठीक है";
+"songInfo.unsupportedFormat"  = "इस फ़ाइल फ़ॉर्मेट के लिए टैग बदलाव ClassicTunes में सेव होते हैं, लेकिन फ़ाइल में वापस नहीं लिखे जाते।";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "चलाएँ";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "संगीत फ़ोल्डर इम्पोर्ट करें…";
 "menu.importPlaylist"         = "प्लेलिस्ट इम्पोर्ट करें (M3U)…";
 "menu.exportPlaylist"         = "प्लेलिस्ट एक्सपोर्ट करें (M3U)…";
+"menu.getInfo"                = "गाने की जानकारी…";
 "menu.find"                   = "खोजें";
 "menu.showAsList"             = "सूची के रूप में";
 "menu.showAsAlbums"           = "एल्बम के रूप में";

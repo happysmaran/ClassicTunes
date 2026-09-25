@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "Ajouter à une liste de lecture";
 "contextMenu.findMusicVideo"  = "Trouver un clip musical";
 "contextMenu.resetColumns"    = "Réinitialiser les colonnes";
+"contextMenu.songInfo"        = "Informations sur le morceau…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "Résumé";
+"songInfo.tab.info"           = "Infos";
+"songInfo.tab.lyrics"         = "Paroles";
+"songInfo.name"               = "Nom";
+"songInfo.artist"             = "Artiste";
+"songInfo.album"              = "Album";
+"songInfo.year"               = "Année";
+"songInfo.trackNumber"        = "Numéro de piste";
+"songInfo.discNumber"         = "Numéro de disque";
+"songInfo.composer"           = "Compositeur";
+"songInfo.comments"           = "Commentaires";
+"songInfo.genre"              = "Genre";
+"songInfo.kind"               = "Type";
+"songInfo.size"               = "Taille";
+"songInfo.bitRate"            = "Débit binaire";
+"songInfo.sampleRate"         = "Fréquence d'échantillonnage";
+"songInfo.channels"           = "Canaux";
+"songInfo.dateModified"       = "Date de modification";
+"songInfo.plays"              = "Lectures";
+"songInfo.lastPlayed"         = "Dernière lecture";
+"songInfo.where"              = "Emplacement";
+"songInfo.cancel"             = "Annuler";
+"songInfo.save"               = "OK";
+"songInfo.unsupportedFormat"  = "Les modifications de tags pour ce format de fichier sont enregistrées dans ClassicTunes, mais ne sont pas réécrites dans le fichier.";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Lire";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "Importer un dossier de musique…";
 "menu.importPlaylist"         = "Importer une playlist (M3U)…";
 "menu.exportPlaylist"         = "Exporter la playlist (M3U)…";
+"menu.getInfo"                = "Informations sur le morceau…";
 "menu.find"                   = "Rechercher";
 "menu.showAsList"             = "par liste";
 "menu.showAsAlbums"           = "par albums";

@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "재생 목록에 추가";
 "contextMenu.findMusicVideo"  = "뮤직비디오 찾기";
 "contextMenu.resetColumns"    = "열 재설정";
+"contextMenu.songInfo"        = "노래 정보…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "요약";
+"songInfo.tab.info"           = "정보";
+"songInfo.tab.lyrics"         = "가사";
+"songInfo.name"               = "이름";
+"songInfo.artist"             = "아티스트";
+"songInfo.album"              = "앨범";
+"songInfo.year"               = "연도";
+"songInfo.trackNumber"        = "트랙 번호";
+"songInfo.discNumber"         = "디스크 번호";
+"songInfo.composer"           = "작곡가";
+"songInfo.comments"           = "설명";
+"songInfo.genre"              = "장르";
+"songInfo.kind"               = "종류";
+"songInfo.size"               = "크기";
+"songInfo.bitRate"            = "비트 전송률";
+"songInfo.sampleRate"         = "샘플링 속도";
+"songInfo.channels"           = "채널";
+"songInfo.dateModified"       = "수정한 날짜";
+"songInfo.plays"              = "재생 횟수";
+"songInfo.lastPlayed"         = "마지막 재생";
+"songInfo.where"              = "위치";
+"songInfo.cancel"             = "취소";
+"songInfo.save"               = "확인";
+"songInfo.unsupportedFormat"  = "이 파일 형식의 태그 변경 사항은 ClassicTunes에 저장되지만 파일에는 다시 기록되지 않습니다.";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "재생";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "음악 폴더 가져오기…";
 "menu.importPlaylist"         = "플레이리스트 가져오기 (M3U)…";
 "menu.exportPlaylist"         = "플레이리스트 내보내기 (M3U)…";
+"menu.getInfo"                = "노래 정보…";
 "menu.find"                   = "찾기";
 "menu.showAsList"             = "목록으로 보기";
 "menu.showAsAlbums"           = "앨범으로 보기";

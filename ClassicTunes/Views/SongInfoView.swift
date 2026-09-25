@@ -210,12 +210,6 @@ struct SongInfoView: View {
                         .frame(height: 60)
                         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(nsColor: .separatorColor)))
                 }
-
-                if !SongMetadataWriter.canWriteToFile(originalSong.url) {
-                    Text("songInfo.unsupportedFormat")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             }
             .padding()
         }
@@ -279,11 +273,6 @@ struct SongInfoView: View {
 
         onSave(updated)
         saveLyricsIfNeeded()
-
-        guard SongMetadataWriter.canWriteToFile(updated.url) else {
-            dismiss()
-            return
-        }
 
         Task {
             do {

@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "Добавить в плейлист";
 "contextMenu.findMusicVideo"  = "Найти музыкальный клип";
 "contextMenu.resetColumns"    = "Сбросить столбцы";
+"contextMenu.songInfo"        = "Информация о песне…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "Обзор";
+"songInfo.tab.info"           = "Инфо";
+"songInfo.tab.lyrics"         = "Текст песни";
+"songInfo.name"               = "Название";
+"songInfo.artist"             = "Исполнитель";
+"songInfo.album"              = "Альбом";
+"songInfo.year"               = "Год";
+"songInfo.trackNumber"        = "Номер трека";
+"songInfo.discNumber"         = "Номер диска";
+"songInfo.composer"           = "Композитор";
+"songInfo.comments"           = "Комментарии";
+"songInfo.genre"              = "Жанр";
+"songInfo.kind"               = "Тип";
+"songInfo.size"               = "Размер";
+"songInfo.bitRate"            = "Битрейт";
+"songInfo.sampleRate"         = "Частота дискретизации";
+"songInfo.channels"           = "Каналы";
+"songInfo.dateModified"       = "Дата изменения";
+"songInfo.plays"              = "Воспроизведения";
+"songInfo.lastPlayed"         = "Последнее воспроизведение";
+"songInfo.where"              = "Расположение";
+"songInfo.cancel"             = "Отмена";
+"songInfo.save"               = "ОК";
+"songInfo.unsupportedFormat"  = "Изменения тегов для этого формата файла сохраняются в ClassicTunes, но не записываются обратно в файл.";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Воспроизвести";

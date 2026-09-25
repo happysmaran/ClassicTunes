@@ -47,6 +47,33 @@
 "contextMenu.addToPlaylist"   = "プレイリストに追加";
 "contextMenu.findMusicVideo"  = "ミュージックビデオを探す";
 "contextMenu.resetColumns"    = "列をリセット";
+"contextMenu.songInfo"        = "曲情報…";
+
+// MARK: - Song Info sheet
+"songInfo.tab.summary"        = "概要";
+"songInfo.tab.info"           = "情報";
+"songInfo.tab.lyrics"         = "歌詞";
+"songInfo.name"               = "名前";
+"songInfo.artist"             = "アーティスト";
+"songInfo.album"              = "アルバム";
+"songInfo.year"               = "年";
+"songInfo.trackNumber"        = "トラック番号";
+"songInfo.discNumber"         = "ディスク番号";
+"songInfo.composer"           = "作曲者";
+"songInfo.comments"           = "コメント";
+"songInfo.genre"              = "ジャンル";
+"songInfo.kind"               = "種類";
+"songInfo.size"               = "サイズ";
+"songInfo.bitRate"            = "ビットレート";
+"songInfo.sampleRate"         = "サンプルレート";
+"songInfo.channels"           = "チャンネル";
+"songInfo.dateModified"       = "変更日";
+"songInfo.plays"              = "再生回数";
+"songInfo.lastPlayed"         = "最終再生日";
+"songInfo.where"              = "場所";
+"songInfo.cancel"             = "キャンセル";
+"songInfo.save"               = "OK";
+"songInfo.unsupportedFormat"  = "このファイル形式のタグ変更はClassicTunes内には保存されますが、ファイルには書き戻されません。";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "再生";
@@ -123,6 +150,7 @@
 "menu.importMusic"            = "ミュージックフォルダを読み込み…";
 "menu.importPlaylist"         = "プレイリストを読み込み (M3U)…";
 "menu.exportPlaylist"         = "プレイリストを書き出し (M3U)…";
+"menu.getInfo"                = "曲情報…";
 "menu.find"                   = "検索";
 "menu.showAsList"             = "リストとして表示";
 "menu.showAsAlbums"           = "アルバムとして表示";
