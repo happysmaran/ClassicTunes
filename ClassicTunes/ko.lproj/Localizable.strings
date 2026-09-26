@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "시스템 화면 모드를 따릅니다.";
 "settings.appearanceHelp.light"  = "앱이 항상 라이트 모드를 사용합니다.";
 "settings.appearanceHelp.dark"   = "앱이 항상 다크 모드를 사용합니다.";
+"settings.themeColor"         = "테마 색상";
+"settings.themeColor.system"  = "시스템 강조 색상";
+"settings.themeColor.blue"    = "블루";
+"settings.themeColor.graphite" = "그래파이트";
+"settings.themeColor.red"     = "레드";
+"settings.themeColor.orange"  = "오렌지";
+"settings.themeColor.yellow"  = "옐로";
+"settings.themeColor.green"   = "그린";
+"settings.themeColor.purple"  = "퍼플";
+"settings.themeColor.pink"    = "핑크";
 "settings.albumGrid"          = "앨범 그리드";
 "settings.albumGrid.background" = "배경";
 "settings.albumGrid.note"     = "앱이 다크 모드일 때 앨범 그리드는 이 설정과 관계없이 다크를 사용합니다.";

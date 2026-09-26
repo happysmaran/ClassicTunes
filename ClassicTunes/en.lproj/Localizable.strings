@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "Follows the system appearance.";
 "settings.appearanceHelp.light"  = "Forces the app to always use Light appearance.";
 "settings.appearanceHelp.dark"   = "Forces the app to always use Dark appearance.";
+"settings.themeColor"         = "Theme Color";
+"settings.themeColor.system"  = "System Accent Color";
+"settings.themeColor.blue"    = "Blue";
+"settings.themeColor.graphite" = "Graphite";
+"settings.themeColor.red"     = "Red";
+"settings.themeColor.orange"  = "Orange";
+"settings.themeColor.yellow"  = "Yellow";
+"settings.themeColor.green"   = "Green";
+"settings.themeColor.purple"  = "Purple";
+"settings.themeColor.pink"    = "Pink";
 "settings.albumGrid"          = "Album Grid";
 "settings.albumGrid.background" = "Background";
 "settings.albumGrid.note"     = "When the app is in Dark appearance, the album grid will use Dark regardless of this setting.";

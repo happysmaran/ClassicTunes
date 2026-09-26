@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "Suit l'apparence du système.";
 "settings.appearanceHelp.light"  = "Force l'app à toujours utiliser l'apparence claire.";
 "settings.appearanceHelp.dark"   = "Force l'app à toujours utiliser l'apparence sombre.";
+"settings.themeColor"         = "Couleur du thème";
+"settings.themeColor.system"  = "Couleur d'accentuation système";
+"settings.themeColor.blue"    = "Bleu";
+"settings.themeColor.graphite" = "Graphite";
+"settings.themeColor.red"     = "Rouge";
+"settings.themeColor.orange"  = "Orange";
+"settings.themeColor.yellow"  = "Jaune";
+"settings.themeColor.green"   = "Vert";
+"settings.themeColor.purple"  = "Violet";
+"settings.themeColor.pink"    = "Rose";
 "settings.albumGrid"          = "Grille d'albums";
 "settings.albumGrid.background" = "Arrière-plan";
 "settings.albumGrid.note"     = "Lorsque l'app est en apparence sombre, la grille d'albums utilisera le mode sombre quel que soit ce réglage.";

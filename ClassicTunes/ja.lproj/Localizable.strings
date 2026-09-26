@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "システムの外観に従います。";
 "settings.appearanceHelp.light"  = "常にライト外観を使用します。";
 "settings.appearanceHelp.dark"   = "常にダーク外観を使用します。";
+"settings.themeColor"         = "テーマカラー";
+"settings.themeColor.system"  = "システムアクセントカラー";
+"settings.themeColor.blue"    = "ブルー";
+"settings.themeColor.graphite" = "グラファイト";
+"settings.themeColor.red"     = "レッド";
+"settings.themeColor.orange"  = "オレンジ";
+"settings.themeColor.yellow"  = "イエロー";
+"settings.themeColor.green"   = "グリーン";
+"settings.themeColor.purple"  = "パープル";
+"settings.themeColor.pink"    = "ピンク";
 "settings.albumGrid"          = "アルバムグリッド";
 "settings.albumGrid.background" = "背景";
 "settings.albumGrid.note"     = "アプリがダーク外観のとき、この設定に関わらずアルバムグリッドはダークになります。";

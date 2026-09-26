@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "సిస్టమ్ రూపాన్ని అనుసరిస్తుంది.";
 "settings.appearanceHelp.light"  = "యాప్ ఎల్లప్పుడూ లైట్ రూపాన్ని ఉపయోగిస్తుంది.";
 "settings.appearanceHelp.dark"   = "యాప్ ఎల్లప్పుడూ డార్క్ రూపాన్ని ఉపయోగిస్తుంది.";
+"settings.themeColor"         = "థీమ్ రంగు";
+"settings.themeColor.system"  = "సిస్టమ్ యాక్సెంట్ రంగు";
+"settings.themeColor.blue"    = "నీలం";
+"settings.themeColor.graphite" = "గ్రాఫైట్";
+"settings.themeColor.red"     = "ఎరుపు";
+"settings.themeColor.orange"  = "నారింజ";
+"settings.themeColor.yellow"  = "పసుపు";
+"settings.themeColor.green"   = "ఆకుపచ్చ";
+"settings.themeColor.purple"  = "ఊదా";
+"settings.themeColor.pink"    = "గులాబీ";
 "settings.albumGrid"          = "ఆల్బమ్ గ్రిడ్";
 "settings.albumGrid.background" = "నేపథ్యం";
 "settings.albumGrid.note"     = "యాప్ డార్క్ రూపంలో ఉన్నప్పుడు, ఈ సెట్టింగ్ తో నిమిత్తం లేకుండా ఆల్బమ్ గ్రిడ్ డార్క్‌ని ఉపయోగిస్తుంది.";

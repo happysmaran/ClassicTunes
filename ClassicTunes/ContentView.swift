@@ -81,6 +81,7 @@ struct ContentView: View {
 
     @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
     @EnvironmentObject var syncEngine: iPodSyncEngine
+    @EnvironmentObject var appearanceManager: AppearanceManager
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
@@ -348,7 +349,7 @@ struct ContentView: View {
                         }
                     )
                     .environmentObject(playlistManager)
-                    .tint(.iTunesBlue)
+                    .tint(appearanceManager.themeColor)
                     // Do not remove below func. It breaks without it.
                     .ignoresSafeArea()
                 }
@@ -365,7 +366,7 @@ struct ContentView: View {
                 fullPlayerView
             }
         }
-        .tint(.iTunesBlue)
+        .tint(appearanceManager.themeColor)
     }
 
     // The full (non-mini-player) layout, with all modifiers applied in

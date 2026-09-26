@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "Следует системному виду.";
 "settings.appearanceHelp.light"  = "Приложение всегда использует светлый вид.";
 "settings.appearanceHelp.dark"   = "Приложение всегда использует тёмный вид.";
+"settings.themeColor"         = "Цвет темы";
+"settings.themeColor.system"  = "Системный акцентный цвет";
+"settings.themeColor.blue"    = "Синий";
+"settings.themeColor.graphite" = "Графитовый";
+"settings.themeColor.red"     = "Красный";
+"settings.themeColor.orange"  = "Оранжевый";
+"settings.themeColor.yellow"  = "Жёлтый";
+"settings.themeColor.green"   = "Зелёный";
+"settings.themeColor.purple"  = "Фиолетовый";
+"settings.themeColor.pink"    = "Розовый";
 "settings.albumGrid"          = "Сетка альбомов";
 "settings.albumGrid.background" = "Фон";
 "settings.albumGrid.note"     = "Когда приложение использует тёмный вид, сетка альбомов также будет тёмной независимо от этой настройки.";

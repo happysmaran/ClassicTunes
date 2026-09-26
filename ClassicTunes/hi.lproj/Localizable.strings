@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "सिस्टम की दिखावट का अनुसरण करता है।";
 "settings.appearanceHelp.light"  = "ऐप को हमेशा हल्की दिखावट में रखता है।";
 "settings.appearanceHelp.dark"   = "ऐप को हमेशा गहरी दिखावट में रखता है।";
+"settings.themeColor"         = "थीम रंग";
+"settings.themeColor.system"  = "सिस्टम एक्सेंट रंग";
+"settings.themeColor.blue"    = "नीला";
+"settings.themeColor.graphite" = "ग्रेफाइट";
+"settings.themeColor.red"     = "लाल";
+"settings.themeColor.orange"  = "नारंगी";
+"settings.themeColor.yellow"  = "पीला";
+"settings.themeColor.green"   = "हरा";
+"settings.themeColor.purple"  = "बैंगनी";
+"settings.themeColor.pink"    = "गुलाबी";
 "settings.albumGrid"          = "एल्बम ग्रिड";
 "settings.albumGrid.background" = "पृष्ठभूमि";
 "settings.albumGrid.note"     = "जब ऐप गहरी दिखावट में हो, तो इस सेटिंग की परवाह किए बिना एल्बम ग्रिड गहरा रहेगा।";

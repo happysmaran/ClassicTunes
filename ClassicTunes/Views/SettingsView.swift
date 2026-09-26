@@ -72,6 +72,20 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
+                Section(header: Text("settings.themeColor")) {
+                    HStack(spacing: 10) {
+                        ForEach(ThemeColorOption.allCases) { option in
+                            ThemeColorSwatch(
+                                option: option,
+                                isSelected: appearanceManager.themeColorName == option.rawValue
+                            ) {
+                                appearanceManager.themeColorName = option.rawValue
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
                 Section(header: Text("settings.albumGrid")) {
                     // Light/dark background behind album art in the grid view.
                     Picker("settings.albumGrid.background", selection: $albumGridBackgroundStyle) {
@@ -207,6 +221,41 @@ struct SettingsView: View {
         case "dark": return NSLocalizedString("settings.appearanceHelp.dark", comment: "")
         default: return NSLocalizedString("settings.appearanceHelp.system", comment: "")
         }
+    }
+}
+
+// A single circular swatch button in the Theme Color picker; shows a
+// checkmark when it's the currently selected theme color.
+struct ThemeColorSwatch: View {
+    let option: ThemeColorOption
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    // A rainbow swatch fill for the "system" option — the same convention macOS
+    // itself uses for the "Multicolor" accent option in System Settings.
+    private static let systemSwatchGradient = AngularGradient(
+        gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple, .red]),
+        center: .center
+    )
+
+    var body: some View {
+        Button(action: onSelect) {
+            Circle()
+                .fill(option == .system ? AnyShapeStyle(Self.systemSwatchGradient) : AnyShapeStyle(option.color))
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Circle().stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+                )
+                .overlay(
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .opacity(isSelected ? 1 : 0)
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(option.labelKey)
+        .help(option.labelKey)
     }
 }
 

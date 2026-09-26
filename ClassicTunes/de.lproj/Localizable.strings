@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "Folgt dem Systemerscheinungsbild.";
 "settings.appearanceHelp.light"  = "Erzwingt immer das helle Erscheinungsbild.";
 "settings.appearanceHelp.dark"   = "Erzwingt immer das dunkle Erscheinungsbild.";
+"settings.themeColor"         = "Designfarbe";
+"settings.themeColor.system"  = "Systemakzentfarbe";
+"settings.themeColor.blue"    = "Blau";
+"settings.themeColor.graphite" = "Graphit";
+"settings.themeColor.red"     = "Rot";
+"settings.themeColor.orange"  = "Orange";
+"settings.themeColor.yellow"  = "Gelb";
+"settings.themeColor.green"   = "Grün";
+"settings.themeColor.purple"  = "Violett";
+"settings.themeColor.pink"    = "Pink";
 "settings.albumGrid"          = "Albumraster";
 "settings.albumGrid.background" = "Hintergrund";
 "settings.albumGrid.note"     = "Wenn die App das dunkle Erscheinungsbild verwendet, nutzt das Albumraster unabhängig von dieser Einstellung den dunklen Modus.";

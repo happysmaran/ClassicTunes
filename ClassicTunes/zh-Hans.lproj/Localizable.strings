@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "跟随系统外观。";
 "settings.appearanceHelp.light"  = "强制应用始终使用浅色外观。";
 "settings.appearanceHelp.dark"   = "强制应用始终使用深色外观。";
+"settings.themeColor"         = "主题颜色";
+"settings.themeColor.system"  = "系统强调色";
+"settings.themeColor.blue"    = "蓝色";
+"settings.themeColor.graphite" = "石墨色";
+"settings.themeColor.red"     = "红色";
+"settings.themeColor.orange"  = "橙色";
+"settings.themeColor.yellow"  = "黄色";
+"settings.themeColor.green"   = "绿色";
+"settings.themeColor.purple"  = "紫色";
+"settings.themeColor.pink"    = "粉色";
 "settings.albumGrid"          = "专辑网格";
 "settings.albumGrid.background" = "背景";
 "settings.albumGrid.note"     = "当应用处于深色外观时，专辑网格将无论此设置如何都使用深色。";

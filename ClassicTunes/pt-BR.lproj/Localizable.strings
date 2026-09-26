@@ -113,6 +113,16 @@
 "settings.appearanceHelp.system" = "Segue a aparência do sistema.";
 "settings.appearanceHelp.light"  = "Força o app a sempre usar a aparência clara.";
 "settings.appearanceHelp.dark"   = "Força o app a sempre usar a aparência escura.";
+"settings.themeColor"         = "Cor do Tema";
+"settings.themeColor.system"  = "Cor de Destaque do Sistema";
+"settings.themeColor.blue"    = "Azul";
+"settings.themeColor.graphite" = "Grafite";
+"settings.themeColor.red"     = "Vermelho";
+"settings.themeColor.orange"  = "Laranja";
+"settings.themeColor.yellow"  = "Amarelo";
+"settings.themeColor.green"   = "Verde";
+"settings.themeColor.purple"  = "Roxo";
+"settings.themeColor.pink"    = "Rosa";
 "settings.albumGrid"          = "Grade de Álbuns";
 "settings.albumGrid.background" = "Fundo";
 "settings.albumGrid.note"     = "Quando o app estiver no modo escuro, a grade de álbuns usará o modo escuro independentemente desta configuração.";
