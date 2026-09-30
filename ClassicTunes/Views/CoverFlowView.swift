@@ -179,17 +179,29 @@ struct CoverFlowView: View {
         .buttonStyle(PlainButtonStyle())
     }
 
-    // Dark vertical gradient used behind the carousel stage.
+    // Dark vertical gradient used behind the carousel stage, with a soft
+    // overhead "spotlight" glow centered above the stage.
     private var backgroundColor: some View {
-        LinearGradient(
-            gradient: Gradient(stops: [
-                .init(color: Color(white: 0.18), location: 0.0),
-                .init(color: Color(white: 0.05), location: 0.55),
-                .init(color: Color.black, location: 1.0)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(stops: [
+                    .init(color: Color(white: 0.18), location: 0.0),
+                    .init(color: Color(white: 0.05), location: 0.55),
+                    .init(color: Color.black, location: 1.0)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    Color.white.opacity(0.08),
+                    Color.white.opacity(0.0)
+                ]),
+                center: .init(x: 0.5, y: 0.1),
+                startRadius: 0,
+                endRadius: 300
+            )
+        }
     }
 
     // Caption showing the centered album's name and artist, shown above the slider.
@@ -211,7 +223,7 @@ struct CoverFlowView: View {
     }
 
     // The "1 ... N" scrub bar beneath the album caption, used to quickly
-    // jump to any album by index. Hidden when there's only one album.
+    // jump to any album by index.
     private var sliderSection: some View {
         Group {
             if sortedAlbums.count > 1 {
@@ -307,8 +319,27 @@ struct CoverFlowView: View {
 
         let leftCount = currentIndex
         let rightCount = sortedAlbums.count - currentIndex - 1
+        let floorY = size.height / 2 + 100
 
         return ZStack {
+            // Soft pool of light on the "floor" directly beneath the centered cover
+            Ellipse()
+                .fill(
+                    RadialGradient(
+                        gradient: Gradient(colors: [
+                            Color.white.opacity(0.10),
+                            Color.white.opacity(0.0)
+                        ]),
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: coverWidth * 0.9
+                    )
+                )
+                .frame(width: coverWidth * 1.8, height: coverWidth * 0.6)
+                .position(x: centerX, y: floorY)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+
             ForEach(visibleAlbums, id: \.globalIndex) { item in
                 let index = item.globalIndex
                 let album = item.album
@@ -372,8 +403,9 @@ struct CoverFlowView: View {
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
-        // Tighter spacing for side items — real CoverFlow packs them close together
-        let sideSpacing = coverWidth * 0.42
+        // Tighter spacing for side items
+        let sideSpacing = coverWidth * 0.32
+        let minSpacing = coverWidth * 0.16
 
         if index == currentIndex {
             return centerX
@@ -382,15 +414,16 @@ struct CoverFlowView: View {
         if index < currentIndex {
             // Left side: stack items to the left of center with decreasing spacing further away
             let distance = CGFloat(currentIndex - index)
-            // Add a small easing so spacing compresses as items get farther
-            let eased = sideSpacing * (0.85 + 0.15 / max(1.0, distance))
+            // Spacing decays toward minSpacing the farther out you go, so
+            // covers near the edge nearly stack on top of one another.
+            let eased = minSpacing + (sideSpacing - minSpacing) / distance
             let position = centerX - (coverWidth / 2) - (distance * eased)
             // Clamp to not go past the left edge
             return max(leftEdge, position)
         } else {
             // Right side
             let distance = CGFloat(index - currentIndex)
-            let eased = sideSpacing * (0.85 + 0.15 / max(1.0, distance))
+            let eased = minSpacing + (sideSpacing - minSpacing) / distance
             let position = centerX + (coverWidth / 2) + (distance * eased)
             return min(rightEdge, position)
         }
@@ -516,7 +549,11 @@ struct CoverFlowItemView: View {
 
             // Reflection
             // A second copy of the same cover, flipped vertically and faded
-            // out via a gradient mask, to simulate a glossy reflective surface.
+            // out via a gradient mask, to simulate a glossy reflective floor.
+            // The falloff is steep (most of the reflection has vanished by
+            // ~40% of its height) so it reads as a quick glossy sheen rather
+            // than a full mirror image — closer items get a brighter, taller
+            // reflection than items further from center.
             coverImage
                 .rotation3DEffect(
                     .degrees(rotationAngle),
@@ -527,9 +564,10 @@ struct CoverFlowItemView: View {
                 .scaleEffect(x: 1, y: -1) // flip vertically
                 .mask(
                     LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.black.opacity(0.45),
-                            Color.black.opacity(0.0)
+                        gradient: Gradient(stops: [
+                            .init(color: Color.black.opacity(isCenterItem ? 0.5 : 0.22), location: 0.0),
+                            .init(color: Color.black.opacity(isCenterItem ? 0.14 : 0.05), location: 0.35),
+                            .init(color: Color.black.opacity(0.0), location: 0.7)
                         ]),
                         startPoint: .top,
                         endPoint: .bottom
@@ -546,49 +584,68 @@ struct CoverFlowItemView: View {
 
     // The actual cover artwork view: the album's artwork image if available,
     // otherwise a generated gradient placeholder with a music-note icon and
-    // album name. Shadow intensity/blur increases for the centered item.
+    // album name. A subtle top-down glass sheen is layered over the artwork
+    // (the "glossy" highlight classic CoverFlow covers had), and shadow
+    // intensity/blur increases for the centered item.
     @ViewBuilder
     private var coverImage: some View {
-        if let image = album.artwork {
-            Image(nsImage: image)
-                .resizable()
-                .scaledToFit()
-                .clipShape(RoundedRectangle(cornerRadius: 3))
-                .shadow(
-                    color: .black.opacity(isCenterItem ? 0.7 : 0.4),
-                    radius: isCenterItem ? 14 : 4,
-                    x: 0,
-                    y: isCenterItem ? 6 : 2
-                )
-        } else {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(white: 0.35),
-                        Color(white: 0.18)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .overlay(
-                    VStack(spacing: 4) {
-                        Image(systemName: "music.note")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color(white: 0.6))
-                        Text(album.name)
-                            .font(.caption2)
-                            .foregroundColor(Color(white: 0.7))
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(6)
-                )
-                .shadow(
-                    color: .black.opacity(isCenterItem ? 0.7 : 0.4),
-                    radius: isCenterItem ? 14 : 4,
-                    x: 0,
-                    y: isCenterItem ? 6 : 2
-                )
+        Group {
+            if let image = album.artwork {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color(white: 0.35),
+                            Color(white: 0.18)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                    .overlay(
+                        VStack(spacing: 4) {
+                            Image(systemName: "music.note")
+                                .font(.system(size: 24))
+                                .foregroundColor(Color(white: 0.6))
+                            Text(album.name)
+                                .font(.caption2)
+                                .foregroundColor(Color(white: 0.7))
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(6)
+                    )
+            }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 3))
+        .overlay(glossOverlay)
+        .overlay(
+            RoundedRectangle(cornerRadius: 3)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(
+            color: .black.opacity(isCenterItem ? 0.7 : 0.4),
+            radius: isCenterItem ? 14 : 4,
+            x: 0,
+            y: isCenterItem ? 6 : 2
+        )
+    }
+
+    // Soft glass highlight running along the top of the cover, fading out
+    // by the upper-third
+    private var glossOverlay: some View {
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color.white.opacity(0.28), location: 0.0),
+                .init(color: Color.white.opacity(0.06), location: 0.18),
+                .init(color: Color.white.opacity(0.0), location: 0.4)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .blendMode(.plusLighter)
+        .allowsHitTesting(false)
     }
 
     // Side covers shrink slightly the farther they are from center
