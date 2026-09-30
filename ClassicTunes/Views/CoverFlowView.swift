@@ -319,7 +319,12 @@ struct CoverFlowView: View {
 
         let leftCount = currentIndex
         let rightCount = sortedAlbums.count - currentIndex - 1
-        let floorY = size.height / 2 + 100
+        // Keep a small gap above the cover, proportional to the stage
+        // height rather than a fixed point offset, so the stack of
+        // cover+reflection stays inside the visible stage instead of
+        // sliding off it on unusually short/tall windows.
+        let topGap = min(size.height * 0.12, 24)
+        let itemCenterY = topGap + frameHeight / 2
 
         return ZStack {
             // Soft pool of light on the "floor" directly beneath the centered cover
@@ -336,7 +341,7 @@ struct CoverFlowView: View {
                     )
                 )
                 .frame(width: coverWidth * 1.8, height: coverWidth * 0.6)
-                .position(x: centerX, y: floorY)
+                .position(x: centerX, y: itemCenterY)
                 .blendMode(.plusLighter)
                 .allowsHitTesting(false)
 
@@ -363,7 +368,7 @@ struct CoverFlowView: View {
                     isInteracting: isInteracting
                 )
                 .frame(width: coverWidth, height: frameHeight)
-                .position(x: xPosition, y: size.height / 2 + 100)
+                .position(x: xPosition, y: itemCenterY)
                 .zIndex(Double(sortedAlbums.count) - abs(Double(index - currentIndex)))
                 .onTapGesture {
                     // Tapping a cover animates it to the center, then commits
@@ -389,7 +394,16 @@ struct CoverFlowView: View {
     }
 
     // Computes the horizontal screen position for a cover at `index`,
-    // relative to `currentIndex`. The centered cover sits at `centerX`;
+    // relative to `currentIndex`. The centered cover sits at `centerX`; side
+    // covers converge toward whichever edge they're closest to, with each
+    // successive cover's *step* shrinking geometrically (unlike a naive
+    // `distance * (base + k/distance)` curve, which is secretly linear once
+    // simplified — that only looked "converging" by coincidence at one
+    // window size, and turned into obviously uniform spacing on wide
+    // windows once the fan was scaled to reach the edge). The whole curve is
+    // then rescaled so the farthest *rendered* cover lands exactly on the
+    // window edge, and every quantity is derived from the current geometry
+    // so this holds at any window size or aspect ratio.
     private func calculateXPosition(
         for index: Int,
         currentIndex: Int,
@@ -404,31 +418,31 @@ struct CoverFlowView: View {
             return centerX
         }
 
-        // Unscaled convergence curve (in units of coverWidth): the "step" to
-        // the next cover shrinks toward minRatio the farther out you go.
-        let sideRatio: CGFloat = 0.32
-        let minRatio: CGFloat = 0.16
-        func rawOffset(_ distance: CGFloat) -> CGFloat {
-            let eased = minRatio + (sideRatio - minRatio) / distance
-            return distance * eased
+        // Normalized convergence curve: monotonically increasing from 0 to
+        // (nearly) 1, with strictly diminishing increments as distance
+        // grows — a real geometric falloff, not a disguised straight line.
+        let decay: CGFloat = 0.72
+        func convergence(_ distance: CGFloat) -> CGFloat {
+            1 - pow(decay, distance)
         }
 
         if index < currentIndex {
             let distance = CGFloat(currentIndex - index)
-            let visibleCount = CGFloat(min(leftCount, visibleRange))
-            // Distance (in points) from centerX to where the outermost
-            // cover's near edge should land: flush with the left window edge.
-            let target = centerX - coverWidth / 2 - leftEdge
-            let scale = visibleCount > 0 ? target / (rawOffset(visibleCount) * coverWidth) : 1
-            let position = centerX - (coverWidth / 2) - (rawOffset(distance) * coverWidth * scale)
-            return max(leftEdge, position)
+            let visibleCount = max(1, CGFloat(min(leftCount, visibleRange)))
+            // Points available between the center cover and the left edge.
+            // Clamped to 0 so absurdly narrow windows can't drive this
+            // negative and flip covers onto the wrong side of center.
+            let available = max(0, centerX - coverWidth / 2 - leftEdge)
+            let fraction = convergence(distance) / convergence(visibleCount)
+            let position = centerX - (coverWidth / 2) - fraction * available
+            return min(centerX - coverWidth / 2, max(leftEdge, position))
         } else {
             let distance = CGFloat(index - currentIndex)
-            let visibleCount = CGFloat(min(rightCount, visibleRange))
-            let target = rightEdge - coverWidth / 2 - centerX
-            let scale = visibleCount > 0 ? target / (rawOffset(visibleCount) * coverWidth) : 1
-            let position = centerX + (coverWidth / 2) + (rawOffset(distance) * coverWidth * scale)
-            return min(rightEdge, position)
+            let visibleCount = max(1, CGFloat(min(rightCount, visibleRange)))
+            let available = max(0, rightEdge - coverWidth / 2 - centerX)
+            let fraction = convergence(distance) / convergence(visibleCount)
+            let position = centerX + (coverWidth / 2) + fraction * available
+            return max(centerX + coverWidth / 2, min(rightEdge, position))
         }
     }
 

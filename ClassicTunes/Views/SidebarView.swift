@@ -114,7 +114,8 @@ struct SidebarView: View {
             }
         }
         .listStyle(SidebarListStyle())
-        .background(Color.itunesSidebar)
+        .scrollContentBackground(.hidden)
+        .background(AquaSidebarBackground())
         .foregroundColor(.primary)
         .alert("alert.comingSoon.title", isPresented: $showComingSoon) {
             Button("alert.ok", role: .cancel) { }
@@ -173,20 +174,55 @@ struct SidebarView: View {
     }
 }
 
+// The classic Mac OS X "Aqua" source-list panel: a soft brushed vertical
+// gradient (rather than a flat fill) with a thin bright top hairline and a
+// darker trailing-edge seam separating it from the content pane — the same
+// subtle depth cues Leopard/Tiger-era Finder and iTunes sidebars used.
+struct AquaSidebarBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var gradientColors: [Color] {
+        if colorScheme == .dark {
+            return [Color(white: 0.16), Color(white: 0.11)]
+        } else {
+            return [Color(white: 0.96), Color(white: 0.87)]
+        }
+    }
+
+    var body: some View {
+        LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(Color.white.opacity(colorScheme == .dark ? 0.06 : 0.9))
+                    .frame(height: 1)
+            }
+            .overlay(alignment: .trailing) {
+                Rectangle()
+                    .fill(Color.black.opacity(colorScheme == .dark ? 0.5 : 0.18))
+                    .frame(width: 1)
+            }
+    }
+}
+
 struct ITunesSidebarButtonStyle: ButtonStyle {
     var selected: Bool
     @Environment(\.colorScheme) private var colorScheme
 
+    // A richer 3-stop version of the classic Aqua "lickable" blue, deepest
+    // in the middle so the glass-shine overlay above it has real contrast
+    // to catch the light against.
     private var selectionColors: [Color] {
         if colorScheme == .dark {
             return [
-                Color(red: 0.17, green: 0.28, blue: 0.52),
-                Color(red: 0.10, green: 0.20, blue: 0.42)
+                Color(red: 0.20, green: 0.32, blue: 0.58),
+                Color(red: 0.13, green: 0.23, blue: 0.47),
+                Color(red: 0.09, green: 0.17, blue: 0.38)
             ]
         } else {
             return [
-                Color(red: 0.65, green: 0.80, blue: 1.0),
-                Color(red: 0.45, green: 0.65, blue: 1.0)
+                Color(red: 0.70, green: 0.84, blue: 1.0),
+                Color(red: 0.45, green: 0.68, blue: 1.0),
+                Color(red: 0.33, green: 0.56, blue: 0.96)
             ]
         }
     }
@@ -210,6 +246,22 @@ struct ITunesSidebarButtonStyle: ButtonStyle {
                         startPoint: .top,
                         endPoint: .bottom
                     )
+                )
+                .overlay(
+                    // Faint glass-shine over the top edge only — just enough
+                    // to keep the pill from looking perfectly flat, without
+                    // the more pronounced glossy "reflection" band it had before.
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(stops: [
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.10 : 0.22), location: 0.0),
+                                    .init(color: Color.white.opacity(0.0), location: 0.3)
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
