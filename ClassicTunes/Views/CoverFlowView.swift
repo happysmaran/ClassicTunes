@@ -313,9 +313,9 @@ struct CoverFlowView: View {
         // Each item's frame holds cover + reflection, so the cover occupies the top half
         let frameHeight = coverWidth * 2.0  // cover + equal-height reflection area
         let centerX = size.width / 2
-        let coverMargin = coverWidth / 2 + size.width * 0.04
-        let leftEdge = coverMargin
-        let rightEdge = size.width - coverMargin
+        // No margin
+        let leftEdge: CGFloat = 0
+        let rightEdge = size.width
 
         let leftCount = currentIndex
         let rightCount = sortedAlbums.count - currentIndex - 1
@@ -390,9 +390,6 @@ struct CoverFlowView: View {
 
     // Computes the horizontal screen position for a cover at `index`,
     // relative to `currentIndex`. The centered cover sits at `centerX`;
-    // covers to either side are packed closer together as they get farther
-    // from center (an "eased" spacing), and are clamped so they never
-    // render past the carousel's left/right edges.
     private func calculateXPosition(
         for index: Int,
         currentIndex: Int,
@@ -403,28 +400,34 @@ struct CoverFlowView: View {
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
-        // Tighter spacing for side items
-        let sideSpacing = coverWidth * 0.32
-        let minSpacing = coverWidth * 0.16
-
         if index == currentIndex {
             return centerX
         }
 
+        // Unscaled convergence curve (in units of coverWidth): the "step" to
+        // the next cover shrinks toward minRatio the farther out you go.
+        let sideRatio: CGFloat = 0.32
+        let minRatio: CGFloat = 0.16
+        func rawOffset(_ distance: CGFloat) -> CGFloat {
+            let eased = minRatio + (sideRatio - minRatio) / distance
+            return distance * eased
+        }
+
         if index < currentIndex {
-            // Left side: stack items to the left of center with decreasing spacing further away
             let distance = CGFloat(currentIndex - index)
-            // Spacing decays toward minSpacing the farther out you go, so
-            // covers near the edge nearly stack on top of one another.
-            let eased = minSpacing + (sideSpacing - minSpacing) / distance
-            let position = centerX - (coverWidth / 2) - (distance * eased)
-            // Clamp to not go past the left edge
+            let visibleCount = CGFloat(min(leftCount, visibleRange))
+            // Distance (in points) from centerX to where the outermost
+            // cover's near edge should land: flush with the left window edge.
+            let target = centerX - coverWidth / 2 - leftEdge
+            let scale = visibleCount > 0 ? target / (rawOffset(visibleCount) * coverWidth) : 1
+            let position = centerX - (coverWidth / 2) - (rawOffset(distance) * coverWidth * scale)
             return max(leftEdge, position)
         } else {
-            // Right side
             let distance = CGFloat(index - currentIndex)
-            let eased = minSpacing + (sideSpacing - minSpacing) / distance
-            let position = centerX + (coverWidth / 2) + (distance * eased)
+            let visibleCount = CGFloat(min(rightCount, visibleRange))
+            let target = rightEdge - coverWidth / 2 - centerX
+            let scale = visibleCount > 0 ? target / (rawOffset(visibleCount) * coverWidth) : 1
+            let position = centerX + (coverWidth / 2) + (rawOffset(distance) * coverWidth * scale)
             return min(rightEdge, position)
         }
     }
