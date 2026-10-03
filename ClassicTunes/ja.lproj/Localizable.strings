@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "概要";
 "songInfo.tab.info"           = "情報";
 "songInfo.tab.lyrics"         = "歌詞";
+"songInfo.tab.artwork"        = "アートワーク";
 "songInfo.name"               = "名前";
 "songInfo.artist"             = "アーティスト";
 "songInfo.album"              = "アルバム";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "作曲者";
 "songInfo.comments"           = "コメント";
 "songInfo.genre"              = "ジャンル";
+"songInfo.albumArtist"        = "アルバムアーティスト";
+"songInfo.grouping"           = "グループ化";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "コンピレーションの一部";
 "songInfo.kind"               = "種類";
 "songInfo.size"               = "サイズ";
 "songInfo.bitRate"            = "ビットレート";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "キャンセル";
 "songInfo.save"               = "OK";
 "songInfo.unsupportedFormat"  = "このファイル形式のタグ変更はClassicTunes内には保存されますが、ファイルには書き戻されません。";
+"songInfo.artwork.choose"     = "アートワークを選択…";
+"songInfo.artwork.remove"     = "アートワークを削除";
+"songInfo.artwork.empty"      = "ここに画像をドラッグするか、ファイルを選択してください";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "再生";

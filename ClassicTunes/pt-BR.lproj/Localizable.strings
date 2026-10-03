@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "Resumo";
 "songInfo.tab.info"           = "Informações";
 "songInfo.tab.lyrics"         = "Letras";
+"songInfo.tab.artwork"        = "Capa";
 "songInfo.name"               = "Nome";
 "songInfo.artist"             = "Artista";
 "songInfo.album"              = "Álbum";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "Compositor";
 "songInfo.comments"           = "Comentários";
 "songInfo.genre"              = "Gênero";
+"songInfo.albumArtist"        = "Artista do Álbum";
+"songInfo.grouping"           = "Agrupamento";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "Parte de uma Coletânea";
 "songInfo.kind"               = "Tipo";
 "songInfo.size"               = "Tamanho";
 "songInfo.bitRate"            = "Taxa de Bits";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "Cancelar";
 "songInfo.save"               = "OK";
 "songInfo.unsupportedFormat"  = "As alterações de tags para este formato de arquivo são salvas no ClassicTunes, mas não são gravadas de volta no arquivo.";
+"songInfo.artwork.choose"     = "Escolher Capa…";
+"songInfo.artwork.remove"     = "Remover Capa";
+"songInfo.artwork.empty"      = "Arraste uma imagem aqui ou escolha um arquivo";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Reproduzir";

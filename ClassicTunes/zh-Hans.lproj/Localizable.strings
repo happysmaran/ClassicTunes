@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "摘要";
 "songInfo.tab.info"           = "信息";
 "songInfo.tab.lyrics"         = "歌词";
+"songInfo.tab.artwork"        = "插图";
 "songInfo.name"               = "名称";
 "songInfo.artist"             = "艺人";
 "songInfo.album"              = "专辑";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "作曲者";
 "songInfo.comments"           = "注释";
 "songInfo.genre"              = "风格";
+"songInfo.albumArtist"        = "专辑艺人";
+"songInfo.grouping"           = "分组";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "合辑的一部分";
 "songInfo.kind"               = "种类";
 "songInfo.size"               = "大小";
 "songInfo.bitRate"            = "比特率";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "取消";
 "songInfo.save"               = "确定";
 "songInfo.unsupportedFormat"  = "此文件格式的标签更改会保存在 ClassicTunes 中，但不会写回文件。";
+"songInfo.artwork.choose"     = "选择插图…";
+"songInfo.artwork.remove"     = "移除插图";
+"songInfo.artwork.empty"      = "将图片拖到此处，或选择文件";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "播放";

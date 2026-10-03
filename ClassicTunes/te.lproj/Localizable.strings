@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "సారాంశం";
 "songInfo.tab.info"           = "సమాచారం";
 "songInfo.tab.lyrics"         = "పాట మాటలు";
+"songInfo.tab.artwork"        = "ఆర్ట్‌వర్క్";
 "songInfo.name"               = "పేరు";
 "songInfo.artist"             = "కళాకారుడు";
 "songInfo.album"              = "ఆల్బమ్";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "స్వరకర్త";
 "songInfo.comments"           = "వ్యాఖ్యలు";
 "songInfo.genre"              = "శైలి";
+"songInfo.albumArtist"        = "ఆల్బమ్ కళాకారుడు";
+"songInfo.grouping"           = "గ్రూపింగ్";
+"songInfo.bpm"                = "బీపీఎం";
+"songInfo.compilation"        = "సంకలనంలో భాగం";
 "songInfo.kind"               = "రకం";
 "songInfo.size"               = "పరిమాణం";
 "songInfo.bitRate"            = "బిట్ రేట్";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "రద్దు చేయి";
 "songInfo.save"               = "సరే";
 "songInfo.unsupportedFormat"  = "ఈ ఫైల్ ఫార్మాట్ కోసం ట్యాగ్ మార్పులు ClassicTunesలో సేవ్ చేయబడతాయి, కానీ ఫైల్‌లోకి తిరిగి వ్రాయబడవు.";
+"songInfo.artwork.choose"     = "ఆర్ట్‌వర్క్ ఎంచుకోండి…";
+"songInfo.artwork.remove"     = "ఆర్ట్‌వర్క్ తీసివేయి";
+"songInfo.artwork.empty"      = "ఇక్కడ చిత్రాన్ని లాగండి, లేదా ఫైల్‌ను ఎంచుకోండి";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "ప్లే చేయి";

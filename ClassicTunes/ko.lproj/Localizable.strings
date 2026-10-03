@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "요약";
 "songInfo.tab.info"           = "정보";
 "songInfo.tab.lyrics"         = "가사";
+"songInfo.tab.artwork"        = "아트워크";
 "songInfo.name"               = "이름";
 "songInfo.artist"             = "아티스트";
 "songInfo.album"              = "앨범";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "작곡가";
 "songInfo.comments"           = "설명";
 "songInfo.genre"              = "장르";
+"songInfo.albumArtist"        = "앨범 아티스트";
+"songInfo.grouping"           = "그룹화";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "컴필레이션의 일부";
 "songInfo.kind"               = "종류";
 "songInfo.size"               = "크기";
 "songInfo.bitRate"            = "비트 전송률";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "취소";
 "songInfo.save"               = "확인";
 "songInfo.unsupportedFormat"  = "이 파일 형식의 태그 변경 사항은 ClassicTunes에 저장되지만 파일에는 다시 기록되지 않습니다.";
+"songInfo.artwork.choose"     = "아트워크 선택…";
+"songInfo.artwork.remove"     = "아트워크 제거";
+"songInfo.artwork.empty"      = "여기에 이미지를 드래그하거나 파일을 선택하세요";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "재생";

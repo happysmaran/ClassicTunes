@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "सारांश";
 "songInfo.tab.info"           = "जानकारी";
 "songInfo.tab.lyrics"         = "गीत के बोल";
+"songInfo.tab.artwork"        = "आर्टवर्क";
 "songInfo.name"               = "नाम";
 "songInfo.artist"             = "कलाकार";
 "songInfo.album"              = "एल्बम";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "संगीतकार";
 "songInfo.comments"           = "टिप्पणियाँ";
 "songInfo.genre"              = "शैली";
+"songInfo.albumArtist"        = "एल्बम कलाकार";
+"songInfo.grouping"           = "समूहन";
+"songInfo.bpm"                = "बीपीएम";
+"songInfo.compilation"        = "संकलन का हिस्सा";
 "songInfo.kind"               = "प्रकार";
 "songInfo.size"               = "आकार";
 "songInfo.bitRate"            = "बिट रेट";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "रद्द करें";
 "songInfo.save"               = "ठीक है";
 "songInfo.unsupportedFormat"  = "इस फ़ाइल फ़ॉर्मेट के लिए टैग बदलाव ClassicTunes में सेव होते हैं, लेकिन फ़ाइल में वापस नहीं लिखे जाते।";
+"songInfo.artwork.choose"     = "आर्टवर्क चुनें…";
+"songInfo.artwork.remove"     = "आर्टवर्क हटाएँ";
+"songInfo.artwork.empty"      = "यहाँ इमेज खींचें, या कोई फ़ाइल चुनें";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "चलाएँ";
@@ -175,7 +183,7 @@
 "menu.pause"                  = "रोकें";
 "menu.nextSong"                = "अगला गाना";
 "menu.previousSong"           = "पिछला गाना";
-"menu.increaseVolume"         = "आवाज़ बढ़ाएँ";
+"menu.increaseVolume"         = "आवाज़ बढ़ाएँ";
 "menu.decreaseVolume"         = "आवाज़ कम करें";
 "menu.mute"                   = "म्यूट करें";
 "menu.unmute"                 = "अनम्यूट करें";
@@ -202,7 +210,7 @@
 "device.eject"              = "iPod बाहर निकालें";
 "device.trackCount"         = "iPod पर %d गाने";
 "device.empty"              = "इस iPod पर कोई गाने नहीं हैं।";
-"sync.addSongs"             = "गाने जोड़ें…";
+"sync.addSongs"             = "गाने जोड़ें…";
 "sync.dragHere"             = "इस iPod से सिंक करने के लिए\nअपनी लाइब्रेरी से गाने यहाँ लाएँ।";
 "sync.syncNow"              = "सिंक करें";
 "sync.cancel"               = "रद्द करें";
@@ -217,6 +225,6 @@
 "eject.confirm.message"     = "बाहर निकालने से पहले सुनिश्चित करें कि सिंक पूरा हो गया है।";
 "eject.eject"               = "बाहर निकालें";
 "eject.cancel"              = "रद्द करें";
-"picker.done"               = "सिंक सूची में जोड़ें";
+"picker.done"               = "सिंक सूची में जोड़ें";
 "picker.cancel"             = "रद्द करें";
 "picker.queued"             = "कतार में है";

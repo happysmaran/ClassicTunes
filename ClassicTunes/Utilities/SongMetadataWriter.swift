@@ -1,5 +1,7 @@
 import Foundation
 import AVFoundation
+import CoreMedia
+import ImageIO
 
 // Errors surfaced while attempting to rewrite a track's embedded tags on disk.
 enum SongMetadataWriteError: LocalizedError {
@@ -98,6 +100,11 @@ enum SongMetadataWriter {
         if let comment = song.comment { items.append(mpeg4StringItem(.iTunesMetadataUserComment, comment)) }
         if let track = song.trackNumber { items.append(mpeg4NumberItem(.iTunesMetadataTrackNumber, track)) }
         if let disc = song.discNumber { items.append(mpeg4NumberItem(.iTunesMetadataDiscNumber, disc)) }
+        if let albumArtist = song.albumArtist { items.append(mpeg4StringItem(.iTunesMetadataAlbumArtist, albumArtist)) }
+        if let grouping = song.grouping { items.append(mpeg4StringItem(.iTunesMetadataGrouping, grouping)) }
+        if song.compilation { items.append(mpeg4NumberItem(.iTunesMetadataDiscCompilation, 1)) }
+        if let bpm = song.bpm { items.append(mpeg4NumberItem(.iTunesMetadataBeatsPerMin, bpm)) }
+        if let artworkData = song.artworkData { items.append(mpeg4DataItem(.iTunesMetadataCoverArt, artworkData)) }
         return items
     }
 
@@ -114,6 +121,32 @@ enum SongMetadataWriter {
         item.identifier = identifier
         item.value = NSNumber(value: value)
         return item
+    }
+
+    private static func mpeg4DataItem(_ identifier: AVMetadataIdentifier, _ value: Data) -> AVMetadataItem {
+        let item = AVMutableMetadataItem()
+        item.identifier = identifier
+        item.value = value as NSData
+        item.dataType = imageMIMEType(for: value) == "image/png" ? kCMMetadataBaseDataType_PNG as String : kCMMetadataBaseDataType_JPEG as String
+        return item
+    }
+
+    // MARK: - Shared artwork helpers
+
+    // Sniffs the image container format from its leading bytes; falls back to JPEG.
+    private static func imageMIMEType(for data: Data) -> String {
+        if data.starts(with: [0x89, 0x50, 0x4E, 0x47]) { return "image/png" }
+        return "image/jpeg"
+    }
+
+    private static func imagePixelDimensions(for data: Data) -> (width: Int, height: Int) {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] else {
+            return (0, 0)
+        }
+        let width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
+        let height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
+        return (width, height)
     }
 
     // MARK: - MP3 (ID3v2.3)
@@ -144,6 +177,11 @@ enum SongMetadataWriter {
         if let comment = song.comment { frames.append(id3CommentFrame(comment)) }
         if let track = song.trackNumber { frames.append(id3TextFrame("TRCK", String(track))) }
         if let disc = song.discNumber { frames.append(id3TextFrame("TPOS", String(disc))) }
+        if let albumArtist = song.albumArtist { frames.append(id3TextFrame("TPE2", albumArtist)) }
+        if let grouping = song.grouping { frames.append(id3TextFrame("TIT1", grouping)) }
+        if song.compilation { frames.append(id3TextFrame("TCMP", "1")) }
+        if let bpm = song.bpm { frames.append(id3TextFrame("TBPM", String(bpm))) }
+        if let artworkData = song.artworkData { frames.append(id3PictureFrame(artworkData)) }
 
         var tag = Data([0x49, 0x44, 0x33, 0x03, 0x00, 0x00]) // "ID3", v2.3.0, flags = 0
         tag.append(intToSyncsafe(UInt32(frames.count)))
@@ -168,6 +206,17 @@ enum SongMetadataWriter {
         payload.append(contentsOf: [0xFF, 0xFE]) // BOM for the actual text
         payload.append(value.data(using: .utf16LittleEndian) ?? Data())
         return id3Frame("COMM", payload)
+    }
+
+    // Picture type 0x03 ("Cover (front)") with Latin-1 encoded, empty-description payload.
+    private static func id3PictureFrame(_ data: Data) -> Data {
+        var payload = Data([0x00]) // encoding: ISO-8859-1
+        payload.append((imageMIMEType(for: data)).data(using: .isoLatin1) ?? Data())
+        payload.append(0x00) // MIME type null terminator
+        payload.append(0x03) // picture type: front cover
+        payload.append(0x00) // empty description + its null terminator
+        payload.append(data)
+        return id3Frame("APIC", payload)
     }
 
     private static func id3Frame(_ id: String, _ payload: Data) -> Data {
@@ -278,8 +327,8 @@ enum SongMetadataWriter {
     // MARK: - FLAC (VORBIS_COMMENT metadata block)
 
     // Rebuilds the file's metadata block chain, dropping any existing VORBIS_COMMENT block
-    // (type 4) and appending a freshly built one last. STREAMINFO and any other blocks
-    // (e.g. PICTURE) are preserved in their original order; audio frames are untouched.
+    // (type 4) and PICTURE block (type 6) and appending freshly built ones last. STREAMINFO
+    // and any other blocks are preserved in their original order; audio frames are untouched.
     private static func writeFLAC(_ song: Song, to url: URL) throws {
         let data = try Data(contentsOf: url)
         guard data.count >= 4, data.subdata(in: 0..<4).elementsEqual(Array("fLaC".utf8)) else {
@@ -298,7 +347,7 @@ enum SongMetadataWriter {
             let blockEnd = blockStart + length
             guard blockEnd <= data.count else { break }
 
-            if blockType != 4 { // drop existing VORBIS_COMMENT; keep everything else (incl. STREAMINFO first)
+            if blockType != 4 && blockType != 6 { // drop existing VORBIS_COMMENT/PICTURE; keep the rest (incl. STREAMINFO first)
                 let payload = data.subdata(in: blockStart..<blockEnd)
                 keptBlocks.append(flacBlockHeader(type: blockType, length: payload.count) + payload)
             }
@@ -308,6 +357,10 @@ enum SongMetadataWriter {
 
         let commentPayload = buildVorbisCommentBlock(for: song)
         keptBlocks.append(flacBlockHeader(type: 4, length: commentPayload.count) + commentPayload)
+        if let artworkData = song.artworkData {
+            let picturePayload = buildFLACPictureBlock(for: artworkData)
+            keptBlocks.append(flacBlockHeader(type: 6, length: picturePayload.count) + picturePayload)
+        }
 
         var rebuilt = Data("fLaC".utf8)
         for (index, var block) in keptBlocks.enumerated() {
@@ -321,6 +374,35 @@ enum SongMetadataWriter {
         rebuilt.append(audioData)
 
         try rebuilt.write(to: url, options: .atomic)
+    }
+
+    // Builds a METADATA_BLOCK_PICTURE payload (type 0x03 "Cover (front)") per the FLAC spec,
+    // all fields big-endian.
+    private static func buildFLACPictureBlock(for artworkData: Data) -> Data {
+        let mimeBytes = Array(imageMIMEType(for: artworkData).utf8)
+        let (width, height) = imagePixelDimensions(for: artworkData)
+
+        var block = Data()
+        block.append(writeUInt32BE(3)) // picture type: front cover
+        block.append(writeUInt32BE(UInt32(mimeBytes.count)))
+        block.append(contentsOf: mimeBytes)
+        block.append(writeUInt32BE(0)) // description length (none)
+        block.append(writeUInt32BE(UInt32(width)))
+        block.append(writeUInt32BE(UInt32(height)))
+        block.append(writeUInt32BE(0)) // color depth: unknown
+        block.append(writeUInt32BE(0)) // colors used: non-indexed
+        block.append(writeUInt32BE(UInt32(artworkData.count)))
+        block.append(artworkData)
+        return block
+    }
+
+    private static func writeUInt32BE(_ value: UInt32) -> Data {
+        Data([
+            UInt8((value >> 24) & 0xFF),
+            UInt8((value >> 16) & 0xFF),
+            UInt8((value >> 8) & 0xFF),
+            UInt8(value & 0xFF)
+        ])
     }
 
     private static func flacBlockHeader(type: UInt8, length: Int) -> Data {
@@ -344,6 +426,10 @@ enum SongMetadataWriter {
         if let comment = song.comment { comments.append("COMMENT=\(comment)") }
         if let track = song.trackNumber { comments.append("TRACKNUMBER=\(track)") }
         if let disc = song.discNumber { comments.append("DISCNUMBER=\(disc)") }
+        if let albumArtist = song.albumArtist { comments.append("ALBUMARTIST=\(albumArtist)") }
+        if let grouping = song.grouping { comments.append("GROUPING=\(grouping)") }
+        if song.compilation { comments.append("COMPILATION=1") }
+        if let bpm = song.bpm { comments.append("BPM=\(bpm)") }
 
         var data = Data()
         let vendorBytes = Array("ClassicTunes".utf8)

@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "Обзор";
 "songInfo.tab.info"           = "Инфо";
 "songInfo.tab.lyrics"         = "Текст песни";
+"songInfo.tab.artwork"        = "Обложка";
 "songInfo.name"               = "Название";
 "songInfo.artist"             = "Исполнитель";
 "songInfo.album"              = "Альбом";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "Композитор";
 "songInfo.comments"           = "Комментарии";
 "songInfo.genre"              = "Жанр";
+"songInfo.albumArtist"        = "Исполнитель альбома";
+"songInfo.grouping"           = "Группировка";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "Часть сборника";
 "songInfo.kind"               = "Тип";
 "songInfo.size"               = "Размер";
 "songInfo.bitRate"            = "Битрейт";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "Отмена";
 "songInfo.save"               = "ОК";
 "songInfo.unsupportedFormat"  = "Изменения тегов для этого формата файла сохраняются в ClassicTunes, но не записываются обратно в файл.";
+"songInfo.artwork.choose"     = "Выбрать обложку…";
+"songInfo.artwork.remove"     = "Удалить обложку";
+"songInfo.artwork.empty"      = "Перетащите изображение сюда или выберите файл";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Воспроизвести";

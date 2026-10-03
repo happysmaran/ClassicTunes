@@ -38,6 +38,18 @@ struct Song: Identifiable, Codable, Hashable {
     // An optional user or encoder comment stored in the metadata.
     var comment: String? = nil
     
+    // The album-level artist, used when the track artist differs from the album's primary credit (e.g. compilations, features).
+    var albumArtist: String? = nil
+    
+    // A free-form grouping/work name, distinct from genre (e.g. a classical movement or concept grouping).
+    var grouping: String? = nil
+    
+    // Whether this track is considered part of a various-artists compilation album.
+    var compilation: Bool = false
+    
+    // Tempo of the track in beats per minute.
+    var bpm: Int? = nil
+    
     // The total duration of the track in seconds.
     var duration: TimeInterval? = nil
     
@@ -60,6 +72,10 @@ struct Song: Identifiable, Codable, Hashable {
         discNumber: Int? = nil,
         composer: String? = nil,
         comment: String? = nil,
+        albumArtist: String? = nil,
+        grouping: String? = nil,
+        compilation: Bool = false,
+        bpm: Int? = nil,
         duration: TimeInterval? = nil,
         playCount: Int = 0,
         artworkData: Data? = nil
@@ -75,6 +91,10 @@ struct Song: Identifiable, Codable, Hashable {
         self.discNumber = discNumber
         self.composer = composer
         self.comment = comment
+        self.albumArtist = albumArtist
+        self.grouping = grouping
+        self.compilation = compilation
+        self.bpm = bpm
         self.duration = duration
         self.playCount = playCount
         self.artworkData = artworkData
@@ -149,6 +169,10 @@ extension Song {
 
         var trackNumber: Int? = nil
         var discNumber: Int?  = nil
+        var albumArtist: String? = nil
+        var grouping: String?    = nil
+        var compilation = false
+        var bpm: Int? = nil
 
         for item in allItems {
             guard let value = try? await item.load(.value) else { continue }
@@ -158,11 +182,11 @@ extension Song {
 
                 // Track number — stored as "n" or "n/total" in ID3
                 case "TRCK":
-                    trackNumber = parseLeadingInt(value as? String)
+                    trackNumber = parseLeadingIntPair(value as? String).0
 
                 // Disc number — stored as "n" or "n/total" in ID3
                 case "TPOS":
-                    discNumber = parseLeadingInt(value as? String)
+                    discNumber = parseLeadingIntPair(value as? String).0
 
                 // Genre (ID3 numeric codes like "(17)" or plain text)
                 case "TCON":
@@ -181,6 +205,22 @@ extension Song {
                 // Comment
                 case "COMM":
                     comment = comment ?? (value as? String)
+
+                // Album artist
+                case "TPE2":
+                    albumArtist = albumArtist ?? (value as? String)
+
+                // Grouping / content group description
+                case "TIT1":
+                    grouping = grouping ?? (value as? String)
+
+                // iTunes compilation flag
+                case "TCMP":
+                    compilation = compilation || (value as? String) == "1" || (value as? NSNumber)?.intValue == 1
+
+                // Beats per minute
+                case "TBPM":
+                    bpm = bpm ?? parseLeadingIntPair(value as? String).0
 
                 // Artwork (ID3 APIC frame)
                 case "APIC":
@@ -216,6 +256,26 @@ extension Song {
                 case 0xA9777274:
                     composer = composer ?? (value as? String)
 
+                // aART — album artist
+                case 0x61415254:
+                    albumArtist = albumArtist ?? (value as? String)
+
+                // ©grp — grouping
+                case 0xA9677270:
+                    grouping = grouping ?? (value as? String)
+
+                // cpil — compilation flag
+                case 0x6370696C:
+                    if let num = value as? NSNumber {
+                        compilation = compilation || num.intValue != 0
+                    } else if let data = value as? Data, let first = data.first {
+                        compilation = compilation || first != 0
+                    }
+
+                // tmpo — beats per minute
+                case 0x746D706F:
+                    bpm = bpm ?? (value as? NSNumber)?.intValue
+
                 default:
                     break
                 }
@@ -233,17 +293,24 @@ extension Song {
             discNumber: discNumber,
             composer: composer,
             comment: comment,
+            albumArtist: albumArtist,
+            grouping: grouping,
+            compilation: compilation,
+            bpm: bpm,
             duration: duration,
             artworkData: artworkData
         )
     }
 }
 
-// Extracts a leading integer from formatted tag strings, discarding total metrics (e.g., handles "03/12" to yield 3).
-private func parseLeadingInt(_ string: String?) -> Int? {
-    guard let s = string?.trimmingCharacters(in: .whitespaces), !s.isEmpty else { return nil }
-    let base = s.components(separatedBy: "/").first ?? s
-    return Int(base.trimmingCharacters(in: .whitespaces))
+// Extracts a leading integer (and, if present, the "total" following a slash) from formatted tag
+// strings, e.g. "03/12" yields (3, 12), while "03" yields (3, nil).
+private func parseLeadingIntPair(_ string: String?) -> (Int?, Int?) {
+    guard let s = string?.trimmingCharacters(in: .whitespaces), !s.isEmpty else { return (nil, nil) }
+    let parts = s.components(separatedBy: "/")
+    let number = Int(parts[0].trimmingCharacters(in: .whitespaces))
+    let total = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) : nil
+    return (number, total)
 }
 
 // Decodes sequential MP4 atom binary payloads to parse position index numbers from raw data structures.

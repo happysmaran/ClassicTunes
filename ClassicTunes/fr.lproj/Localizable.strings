@@ -53,6 +53,7 @@
 "songInfo.tab.summary"        = "Résumé";
 "songInfo.tab.info"           = "Infos";
 "songInfo.tab.lyrics"         = "Paroles";
+"songInfo.tab.artwork"        = "Pochette";
 "songInfo.name"               = "Nom";
 "songInfo.artist"             = "Artiste";
 "songInfo.album"              = "Album";
@@ -62,6 +63,10 @@
 "songInfo.composer"           = "Compositeur";
 "songInfo.comments"           = "Commentaires";
 "songInfo.genre"              = "Genre";
+"songInfo.albumArtist"        = "Artiste de l'album";
+"songInfo.grouping"           = "Regroupement";
+"songInfo.bpm"                = "BPM";
+"songInfo.compilation"        = "Fait partie d'une compilation";
 "songInfo.kind"               = "Type";
 "songInfo.size"               = "Taille";
 "songInfo.bitRate"            = "Débit binaire";
@@ -74,6 +79,9 @@
 "songInfo.cancel"             = "Annuler";
 "songInfo.save"               = "OK";
 "songInfo.unsupportedFormat"  = "Les modifications de tags pour ce format de fichier sont enregistrées dans ClassicTunes, mais ne sont pas réécrites dans le fichier.";
+"songInfo.artwork.choose"     = "Choisir une pochette…";
+"songInfo.artwork.remove"     = "Supprimer la pochette";
+"songInfo.artwork.empty"      = "Faites glisser une image ici, ou choisissez un fichier";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Lire";

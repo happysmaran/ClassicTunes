@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import CoreMedia
+import UniformTypeIdentifiers
 
 // A modal "Get Info" style sheet replicating iTunes' Summary / Info / Lyrics tabs for a track.
 //
@@ -13,13 +14,14 @@ struct SongInfoView: View {
     @Environment(\.dismiss) private var dismiss
 
     private enum Tab: String, CaseIterable, Identifiable {
-        case summary, info, lyrics
+        case summary, info, lyrics, artwork
         var id: String { rawValue }
         var titleKey: LocalizedStringKey {
             switch self {
             case .summary: return "songInfo.tab.summary"
             case .info: return "songInfo.tab.info"
             case .lyrics: return "songInfo.tab.lyrics"
+            case .artwork: return "songInfo.tab.artwork"
             }
         }
     }
@@ -36,6 +38,11 @@ struct SongInfoView: View {
     @State private var discNumber: String
     @State private var composer: String
     @State private var comment: String
+    @State private var albumArtist: String
+    @State private var grouping: String
+    @State private var bpm: String
+    @State private var compilation: Bool
+    @State private var artworkData: Data?
 
     @State private var summary: FileSummary?
 
@@ -58,6 +65,11 @@ struct SongInfoView: View {
         _discNumber = State(initialValue: song.discNumber.map(String.init) ?? "")
         _composer = State(initialValue: song.composer ?? "")
         _comment = State(initialValue: song.comment ?? "")
+        _albumArtist = State(initialValue: song.albumArtist ?? "")
+        _grouping = State(initialValue: song.grouping ?? "")
+        _bpm = State(initialValue: song.bpm.map(String.init) ?? "")
+        _compilation = State(initialValue: song.compilation)
+        _artworkData = State(initialValue: song.artworkData)
     }
 
     var body: some View {
@@ -82,6 +94,7 @@ struct SongInfoView: View {
                 case .summary: summaryTab
                 case .info: infoTab
                 case .lyrics: lyricsTab
+                case .artwork: artworkTab
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -191,15 +204,28 @@ struct SongInfoView: View {
                     labeledField("songInfo.year", text: $year)
                 }
 
-                labeledField("songInfo.album", text: $album)
+                HStack(spacing: 12) {
+                    labeledField("songInfo.album", text: $album)
+                    labeledField("songInfo.albumArtist", text: $albumArtist)
+                }
 
                 HStack(spacing: 12) {
                     labeledField("songInfo.trackNumber", text: $trackNumber)
                     labeledField("songInfo.discNumber", text: $discNumber)
                 }
 
-                labeledField("songInfo.composer", text: $composer)
-                labeledField("songInfo.genre", text: $genre)
+                HStack(spacing: 12) {
+                    labeledField("songInfo.composer", text: $composer)
+                    labeledField("songInfo.genre", text: $genre)
+                }
+
+                HStack(spacing: 12) {
+                    labeledField("songInfo.grouping", text: $grouping)
+                    labeledField("songInfo.bpm", text: $bpm)
+                }
+
+                Toggle("songInfo.compilation", isOn: $compilation)
+                    .toggleStyle(.checkbox)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("songInfo.comments")
@@ -240,6 +266,51 @@ struct SongInfoView: View {
         }
     }
 
+    // MARK: - Artwork tab
+
+    private var artworkTab: some View {
+        VStack(spacing: 16) {
+            Group {
+                if let artworkData, let image = NSImage(data: artworkData) {
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 220, height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                } else {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color(nsColor: .quaternaryLabelColor))
+                        .frame(width: 220, height: 220)
+                        .overlay(
+                            VStack(spacing: 8) {
+                                Image(systemName: "photo")
+                                    .font(.system(size: 36))
+                                    .foregroundColor(.secondary)
+                                Text("songInfo.artwork.empty")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .frame(width: 160)
+                            }
+                        )
+                }
+            }
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(nsColor: .separatorColor)))
+            .onDrop(of: [.fileURL, .image], isTargeted: nil) { providers in
+                loadArtwork(from: providers)
+                return true
+            }
+
+            HStack(spacing: 12) {
+                Button("songInfo.artwork.choose") { chooseArtwork() }
+                Button("songInfo.artwork.remove") { artworkData = nil }
+                    .disabled(artworkData == nil)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+
     // MARK: - Footer
 
     private var footer: some View {
@@ -270,6 +341,11 @@ struct SongInfoView: View {
         updated.discNumber = Int(discNumber)
         updated.composer = composer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : composer
         updated.comment = comment.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : comment
+        updated.albumArtist = albumArtist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : albumArtist
+        updated.grouping = grouping.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : grouping
+        updated.compilation = compilation
+        updated.bpm = Int(bpm)
+        updated.artworkData = artworkData
 
         onSave(updated)
         saveLyricsIfNeeded()
@@ -288,6 +364,37 @@ struct SongInfoView: View {
         guard hasLoadedLyricsOnce, lyricsText != loadedLyrics else { return }
         let lrcURL = originalSong.url.deletingPathExtension().appendingPathExtension("lrc")
         try? lyricsText.write(to: lrcURL, atomically: true, encoding: .utf8)
+    }
+
+    private func chooseArtwork() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK,
+              let url = panel.url,
+              let data = try? Data(contentsOf: url) else { return }
+        artworkData = data
+    }
+
+    private func loadArtwork(from providers: [NSItemProvider]) {
+        guard let provider = providers.first else { return }
+        if provider.canLoadObject(ofClass: NSImage.self) {
+            _ = provider.loadObject(ofClass: NSImage.self) { image, _ in
+                guard let image = image as? NSImage,
+                      let tiff = image.tiffRepresentation,
+                      let bitmap = NSBitmapImageRep(data: tiff),
+                      let data = bitmap.representation(using: .png, properties: [:]) else { return }
+                Task { @MainActor in artworkData = data }
+            }
+        } else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                guard let data = item as? Data,
+                      let fileURL = URL(dataRepresentation: data, relativeTo: nil),
+                      let imageData = try? Data(contentsOf: fileURL) else { return }
+                Task { @MainActor in artworkData = imageData }
+            }
+        }
     }
 
     private func loadSummaryIfNeeded() async {
