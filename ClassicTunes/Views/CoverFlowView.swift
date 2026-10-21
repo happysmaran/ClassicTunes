@@ -55,13 +55,13 @@ struct CoverFlowView: View {
     // normalized sort key), so there is no need to re-sort on every read.
     private var sortedAlbums: [AlbumInfo] { albums }
 
-    // Get songs for the committed album (prevents list churn while sliding)
+    // Songs for the committed album (prevents list churn while sliding).
     // Uses `committedIndex` rather than the live `currentIndex` so the song
     // list below doesn't flicker/reload while the user is still scrubbing.
+    // Each album already carries its songs, so this is a lookup, not a filter.
     private var albumSongs: [Song] {
-        guard !sortedAlbums.isEmpty && committedIndex < sortedAlbums.count else { return [] }
-        let currentAlbum = sortedAlbums[committedIndex]
-        return songs.filter { $0.album == currentAlbum.name }
+        guard committedIndex < sortedAlbums.count else { return [] }
+        return sortedAlbums[committedIndex].songs
     }
 
     // All songs or album songs based on toggle
@@ -486,14 +486,18 @@ struct AlbumInfo: Identifiable {
     let name: String
     let artist: String
     let artworkData: Data?
+    // Every song in this album, in library order, so per-album lookups don't
+    // need to filter the whole library.
+    let songs: [Song]
     // Changes whenever the artwork changes; keys the decoded-image cache and
     // re-triggers loading if the album's artwork is edited.
     let artworkKey: String
 
-    init(name: String, artist: String, artworkData: Data?) {
+    init(name: String, artist: String, artworkData: Data?, songs: [Song] = []) {
         self.name = name
         self.artist = artist
         self.artworkData = artworkData
+        self.songs = songs
         if let data = artworkData {
             self.artworkKey = "\(name)|\(data.count)|\(data.prefix(64).hashValue)"
         } else {
@@ -516,29 +520,36 @@ final class AlbumListCache {
         hasher.combine(songs.count)
         for song in songs {
             hasher.combine(song.id)
+            hasher.combine(song.title)
             hasher.combine(song.album)
             hasher.combine(song.artist)
+            hasher.combine(song.trackNumber)
+            hasher.combine(song.discNumber)
+            hasher.combine(song.playCount)
             hasher.combine(song.artworkData?.count ?? -1)
         }
         let newSignature = hasher.finalize()
         if newSignature == signature { return albums }
 
-        var firstSongs: [String: Song] = [:]
-        for song in songs where firstSongs[song.album] == nil {
-            firstSongs[song.album] = song
+        // Group songs by album in a single pass, remembering library order.
+        var songsByAlbum: [String: [Song]] = [:]
+        for song in songs {
+            songsByAlbum[song.album, default: []].append(song)
         }
+
         // Compute each sort key once rather than inside the comparator.
-        var entries: [(key: String, name: String, song: Song)] = []
-        entries.reserveCapacity(firstSongs.count)
-        for (name, song) in firstSongs {
-            entries.append((key: normalizedSortKey(name), name: name, song: song))
+        var entries: [(key: String, name: String, songs: [Song])] = []
+        entries.reserveCapacity(songsByAlbum.count)
+        for (name, albumSongs) in songsByAlbum {
+            entries.append((key: normalizedSortKey(name), name: name, songs: albumSongs))
         }
         entries.sort { lhs, rhs in
             if lhs.key != rhs.key { return lhs.key < rhs.key }
             return lhs.name < rhs.name
         }
-        albums = entries.map { entry in
-            AlbumInfo(name: entry.name, artist: entry.song.artist, artworkData: entry.song.artworkData)
+        albums = entries.compactMap { entry in
+            guard let first = entry.songs.first else { return nil }
+            return AlbumInfo(name: entry.name, artist: first.artist, artworkData: first.artworkData, songs: entry.songs)
         }
         signature = newSignature
         return albums

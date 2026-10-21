@@ -196,8 +196,8 @@ struct ContentView: View {
 
     // Unique, sorted albums for Cover Flow. Memoized so artwork/grouping work
     // only reruns when the displayed library actually changes.
-    private var albumsForCoverFlow: [AlbumInfo] {
-        albumListCache.albums(for: displayedSongs)
+    private func albumsForCoverFlow(from displayed: [Song]) -> [AlbumInfo] {
+        albumListCache.albums(for: displayed)
     }
 
     // Build the playback context based on current selection, sorted alphabetically
@@ -266,8 +266,10 @@ struct ContentView: View {
             if showITunesStore {
                 iTunesStoreView()
             } else if isCoverFlowActive {
+                // Evaluate the (deduped/filtered) song list once per render.
+                let displayed = displayedSongs
                 CoverFlowView(
-                    albums: albumsForCoverFlow,
+                    albums: albumsForCoverFlow(from: displayed),
                     selectedAlbum: .constant(engine.selectedSong?.album ?? ""),
                     isCoverFlowActive: $isCoverFlowActive,
                     onAlbumSelect: { albumName in
@@ -276,7 +278,7 @@ struct ContentView: View {
                             playSong(firstSong)
                         }
                     },
-                    songs: displayedSongs,
+                    songs: displayed,
                     selectedSong: $engine.selectedSong,
                     currentPlaybackSongs: $engine.currentPlaybackSongs,
                     shuffleQueue: $engine.shuffleQueue,
