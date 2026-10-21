@@ -51,13 +51,9 @@ struct CoverFlowView: View {
         return (start...end).map { ($0, sortedAlbums[$0]) }
     }
 
-    // Albums sorted alphabetically (using a normalized sort key, e.g. to
-    // ignore leading articles/case) for stable carousel ordering.
-    private var sortedAlbums: [AlbumInfo] {
-        albums.sorted { a, b in
-            normalizedSortKey(a.name) < normalizedSortKey(b.name)
-        }
-    }
+    // `albums` arrives already sorted (by `AlbumListCache`, using the shared
+    // normalized sort key), so there is no need to re-sort on every read.
+    private var sortedAlbums: [AlbumInfo] { albums }
 
     // Get songs for the committed album (prevents list churn while sliding)
     // Uses `committedIndex` rather than the live `currentIndex` so the song
@@ -479,44 +475,118 @@ struct CoverFlowView: View {
     }
 }
 
-// Lightweight, identifiable model representing one album in the carousel:
-// its name, artist, and a pre-downsampled artwork image (to avoid decoding
-// full-resolution artwork during animation, which would cause hitches).
+// Lightweight, identifiable model representing one album in the carousel.
+// It only holds the raw artwork bytes (a cheap, copy-on-write reference to
+// the song's data); decoding happens lazily and off the main thread through
+// `AlbumArtworkLoader`, and only for covers that are actually on screen.
 struct AlbumInfo: Identifiable {
-    let id = UUID()
+    // Album names are unique within the carousel, so the name makes a stable
+    // identity that survives the list being rebuilt.
+    var id: String { name }
     let name: String
     let artist: String
-    let artwork: NSImage?
+    let artworkData: Data?
+    // Changes whenever the artwork changes; keys the decoded-image cache and
+    // re-triggers loading if the album's artwork is edited.
+    let artworkKey: String
 
     init(name: String, artist: String, artworkData: Data?) {
         self.name = name
         self.artist = artist
-        // Downsample artwork once to avoid large decode hitches during animation
+        self.artworkData = artworkData
         if let data = artworkData {
-            self.artwork = AlbumInfo.downsampleImage(data: data, maxDimension: 600)
+            self.artworkKey = "\(name)|\(data.count)|\(data.prefix(64).hashValue)"
         } else {
-            self.artwork = nil
+            self.artworkKey = "\(name)|none"
         }
     }
+}
 
-    // Uses ImageIO's thumbnail generation to decode and downsample artwork
-    // data directly to a target pixel size (scaled for the screen's backing
-    // scale factor), which is far cheaper than decoding full-size then resizing.
-    private static func downsampleImage(data: Data, maxDimension: CGFloat, scale: CGFloat = NSScreen.main?.backingScaleFactor ?? 2.0) -> NSImage? {
-        let options: [CFString: Any] = [
-            kCGImageSourceShouldCache: false
-        ]
-        guard let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else { return nil }
-        let pixelSize = Int(maxDimension * scale)
+// Builds the sorted album list for Cover Flow and memoizes it, so it is only
+// recomputed when the library (or the filtered/selected song set) actually
+// changes rather than on every SwiftUI body evaluation.
+final class AlbumListCache {
+    private var signature: Int?
+    private var albums: [AlbumInfo] = []
+
+    func albums(for songs: [Song]) -> [AlbumInfo] {
+        // Cheap fingerprint of everything the carousel depends on. Artwork is
+        // represented by its byte count to avoid hashing large blobs.
+        var hasher = Hasher()
+        hasher.combine(songs.count)
+        for song in songs {
+            hasher.combine(song.id)
+            hasher.combine(song.album)
+            hasher.combine(song.artist)
+            hasher.combine(song.artworkData?.count ?? -1)
+        }
+        let newSignature = hasher.finalize()
+        if newSignature == signature { return albums }
+
+        var firstSongs: [String: Song] = [:]
+        for song in songs where firstSongs[song.album] == nil {
+            firstSongs[song.album] = song
+        }
+        // Compute each sort key once rather than inside the comparator.
+        var entries: [(key: String, name: String, song: Song)] = []
+        entries.reserveCapacity(firstSongs.count)
+        for (name, song) in firstSongs {
+            entries.append((key: normalizedSortKey(name), name: name, song: song))
+        }
+        entries.sort { lhs, rhs in
+            if lhs.key != rhs.key { return lhs.key < rhs.key }
+            return lhs.name < rhs.name
+        }
+        albums = entries.map { entry in
+            AlbumInfo(name: entry.name, artist: entry.song.artist, artworkData: entry.song.artworkData)
+        }
+        signature = newSignature
+        return albums
+    }
+}
+
+// Decodes album artwork to a small thumbnail on a background thread and keeps
+// the results in a bounded in-memory cache.
+enum AlbumArtworkLoader {
+    private static let cache: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 80
+        return cache
+    }()
+
+    // Covers render at most ~200pt tall, so 512px is sharp on Retina displays.
+    private static let maxPixelSize = 512
+
+    static func cachedImage(for album: AlbumInfo) -> NSImage? {
+        cache.object(forKey: album.artworkKey as NSString)
+    }
+
+    static func image(for album: AlbumInfo) async -> NSImage? {
+        if let cached = cachedImage(for: album) { return cached }
+        guard let data = album.artworkData else { return nil }
+
+        let cgImage = await Task.detached(priority: .userInitiated) {
+            downsample(data: data, maxPixelSize: maxPixelSize)
+        }.value
+        guard let cgImage else { return nil }
+
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        cache.setObject(image, forKey: album.artworkKey as NSString)
+        return image
+    }
+
+    // Uses ImageIO's thumbnail generation to decode directly to the target
+    // pixel size, far cheaper than decoding full-size then resizing.
+    private static func downsample(data: Data, maxPixelSize: Int) -> CGImage? {
+        let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions as CFDictionary) else { return nil }
         let thumbOptions: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: pixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
             kCGImageSourceShouldCacheImmediately: true
         ]
-        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary) else { return nil }
-        let size = NSSize(width: cgImage.width, height: cgImage.height)
-        let image = NSImage(cgImage: cgImage, size: size)
-        return image
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary)
     }
 }
 
@@ -529,6 +599,19 @@ struct CoverFlowItemView: View {
     let currentIndex: Int
     let geometry: GeometryProxy
     let isInteracting: Bool
+
+    // Decoded thumbnail, loaded lazily and asynchronously (nil until ready).
+    @State private var artwork: NSImage?
+
+    init(album: AlbumInfo, index: Int, currentIndex: Int, geometry: GeometryProxy, isInteracting: Bool) {
+        self.album = album
+        self.index = index
+        self.currentIndex = currentIndex
+        self.geometry = geometry
+        self.isInteracting = isInteracting
+        // Seed from the cache so already-decoded covers appear immediately.
+        _artwork = State(initialValue: AlbumArtworkLoader.cachedImage(for: album))
+    }
 
     // Whether this is the cover currently centered in the carousel.
     private var isCenterItem: Bool {
@@ -595,6 +678,13 @@ struct CoverFlowItemView: View {
         .brightness(itemBrightness)
         .compositingGroup()
         .animation(.easeInOut(duration: 0.3), value: currentIndex)
+        .task(id: album.artworkKey) {
+            if let cached = AlbumArtworkLoader.cachedImage(for: album) {
+                artwork = cached
+            } else {
+                artwork = await AlbumArtworkLoader.image(for: album)
+            }
+        }
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
     }
@@ -607,7 +697,7 @@ struct CoverFlowItemView: View {
     @ViewBuilder
     private var coverImage: some View {
         Group {
-            if let image = album.artwork {
+            if let image = artwork {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFit()

@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var isCoverFlowActive = false
     @State private var showFileImporter = false
     @State private var songs: [Song] = []
+    @State private var albumListCache = AlbumListCache()
     @ObservedObject private var engine = PlayerEngine.shared
     @AppStorage("appAppearance") private var appAppearance: String = "system" // "system", "light", or "dark"
     @State private var isStopped = false
@@ -193,36 +194,10 @@ struct ContentView: View {
         }
     }
 
-    // Get unique albums for Cover Flow
+    // Unique, sorted albums for Cover Flow. Memoized so artwork/grouping work
+    // only reruns when the displayed library actually changes.
     private var albumsForCoverFlow: [AlbumInfo] {
-        let groupedSongs = Dictionary(grouping: displayedSongs) { $0.album }
-        var albumInfos: [AlbumInfo] = []
-
-        // Shared normalized key function
-        func normalizedSortKey(_ key: String) -> String {
-            key.lowercased()
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .replacingOccurrences(of: "the ", with: "")
-                .replacingOccurrences(of: "a ", with: "")
-                .replacingOccurrences(of: "an ", with: "")
-        }
-
-        // Sort albums by normalized name to ensure consistent ordering
-        let sortedAlbums = groupedSongs.sorted { lhs, rhs in
-            normalizedSortKey(lhs.key).localizedCaseInsensitiveCompare(normalizedSortKey(rhs.key)) == .orderedAscending
-        }
-
-        for (albumName, songs) in sortedAlbums {
-            if let firstSong = songs.first {
-                albumInfos.append(AlbumInfo(
-                    name: albumName,
-                    artist: firstSong.artist,
-                    artworkData: firstSong.artworkData
-                ))
-            }
-        }
-
-        return albumInfos
+        albumListCache.albums(for: displayedSongs)
     }
 
     // Build the playback context based on current selection, sorted alphabetically
