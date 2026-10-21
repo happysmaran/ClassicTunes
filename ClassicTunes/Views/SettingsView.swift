@@ -1,13 +1,18 @@
 import SwiftUI
 
 // The app's Settings window, with two tabs:
-//   1. "General" — appearance (light/dark/system) and album grid background style.
-//   2. "Shortcuts" — a reassignable list of keyboard shortcuts for menu actions,
+//   1. "General" — appearance (light/dark/system) and theme color.
+//   2. "Backgrounds" — album grid and song list background color/image.
+//   3. "Shortcuts" — a reassignable list of keyboard shortcuts for menu actions,
 //      grouped by category (File, Edit, View, Controls), with a reset-to-defaults action.
 // All preferences are persisted via @AppStorage (backed by UserDefaults).
 struct SettingsView: View {
     @EnvironmentObject private var appearanceManager: AppearanceManager
-    @AppStorage("albumGridBackgroundStyle") private var albumGridBackgroundStyle: String = "dark"
+    @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
+    @AppStorage("resumeLastSongOnLaunch") private var resumeLastSongOnLaunch: Bool = false
+    @AppStorage("pauseOnOutputDeviceChange") private var pauseOnOutputDeviceChange: Bool = false
+    @State private var showClearHistoryConfirm = false
+    @State private var showResetAppearanceConfirm = false
 
     // todo
     // Playback-related settings (crossfade, sound enhancer) — declared but
@@ -86,17 +91,67 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
 
-                Section(header: Text("settings.albumGrid")) {
-                    // Light/dark background behind album art in the grid view.
-                    Picker("settings.albumGrid.background", selection: $albumGridBackgroundStyle) {
-                        Text("settings.light").tag("light")
-                        Text("settings.dark").tag("dark")
+                Section(header: Text("settings.library")) {
+                    LabeledContent("settings.library.folder") {
+                        Text(musicFolderPath)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .foregroundStyle(.secondary)
                     }
-                    .pickerStyle(.segmented)
+                    HStack {
+                        Button("settings.library.change") {
+                            NotificationCenter.default.post(name: .ChooseMusicFolderRequested, object: nil)
+                        }
+                        Button("settings.library.rescan") {
+                            NotificationCenter.default.post(name: .RescanLibraryRequested, object: nil)
+                        }
+                        .disabled(musicFolderBookmarkData.isEmpty)
+                    }
+                    .controlSize(.small)
+                }
+
+                Section(header: Text("settings.playback")) {
+                    Toggle("settings.playback.resumeLast", isOn: $resumeLastSongOnLaunch)
+                    Toggle("settings.playback.pauseOnOutputChange", isOn: $pauseOnOutputDeviceChange)
+                }
+
+                Section(header: Text("settings.data")) {
+                    HStack {
+                        Button("settings.data.revealPlaylists") { revealPlaylistsInFinder() }
+                        Button("settings.data.clearHistory") { showClearHistoryConfirm = true }
+                        Button("settings.data.resetAppearance") { showResetAppearanceConfirm = true }
+                    }
+                    .controlSize(.small)
                 }
             }
-            .padding()
+            .formStyle(.grouped)
+            .frame(width: 480, height: 540)
             .tabItem { Label("General", systemImage: "gearshape") }
+            .confirmationDialog("settings.data.clearHistoryConfirm", isPresented: $showClearHistoryConfirm, titleVisibility: .visible) {
+                Button("settings.data.clear", role: .destructive) { clearPlayHistory() }
+            } message: {
+                Text("settings.data.clearHistoryMessage")
+            }
+            .confirmationDialog("settings.data.resetAppearanceConfirm", isPresented: $showResetAppearanceConfirm, titleVisibility: .visible) {
+                Button("settings.background.reset", role: .destructive) { resetAllAppearance() }
+            } message: {
+                Text("settings.data.resetAppearanceMessage")
+            }
+
+            // MARK: - Backgrounds Tab
+            // Per-view background customization: color style plus optional image.
+            Form {
+                Section(header: Text("settings.albumGrid")) {
+                    BackgroundOptionsSection(target: .albumGrid)
+                }
+
+                Section(header: Text("settings.songList")) {
+                    BackgroundOptionsSection(target: .songList)
+                }
+            }
+            .formStyle(.grouped)
+            .frame(width: 480, height: 540)
+            .tabItem { Label("settings.backgrounds", systemImage: "photo") }
 
             // MARK: - Shortcuts Tab
             // Scrollable list of shortcut groups, each rendered as a card-like
@@ -157,12 +212,12 @@ struct SettingsView: View {
                     .padding(.top, 5)
                 }
                 .padding(.horizontal)
-                .padding(.top, 50)
-                .padding(.bottom, 60)
+                .padding(.top, 20)
+                .padding(.bottom, 20)
             }
+            .frame(width: 480, height: 540)
             .tabItem { Label("Shortcuts", systemImage: "keyboard") }
         }
-        .frame(width: 480, height: 460)
         .preferredColorScheme(appearanceManager.currentColorScheme())
         .tint(appearanceManager.themeColor)
         .environment(\.themeColor, appearanceManager.themeColor)
@@ -213,6 +268,44 @@ struct SettingsView: View {
         shortcutToggleMute = "⌘⇧↓"
         shortcutShuffle = "⌘S"
         shortcutRepeat = "⌘R"
+    }
+
+    // The music folder's path, resolved from the saved security-scoped bookmark (without opening access).
+    private var musicFolderPath: String {
+        var isStale = false
+        guard !musicFolderBookmarkData.isEmpty,
+              let url = try? URL(resolvingBookmarkData: musicFolderBookmarkData, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &isStale)
+        else { return NSLocalizedString("settings.library.noFolder", comment: "") }
+        return url.path
+    }
+
+    // Shows the user playlists file (or its folder, if nothing has been saved yet) in Finder.
+    private func revealPlaylistsInFinder() {
+        let bundleID = Bundle.main.bundleIdentifier ?? "ClassicTunes"
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+        let directory = appSupport.appendingPathComponent(bundleID, isDirectory: true)
+        let file = directory.appendingPathComponent("userPlaylists.v1.json")
+        if FileManager.default.fileExists(atPath: file.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([file])
+        } else {
+            NSWorkspace.shared.open(directory)
+        }
+    }
+
+    // Wipes play counts, Recently Played history and last-played dates, then tells the library to refresh.
+    private func clearPlayHistory() {
+        for key in ["playCounts", "playHistory", lastPlayedKey] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        NotificationCenter.default.post(name: .PlayHistoryDidClear, object: nil)
+    }
+
+    // Restores appearance mode, theme color and both view backgrounds to their defaults.
+    private func resetAllAppearance() {
+        appearanceManager.appAppearance = "system"
+        appearanceManager.themeColorName = ThemeColorOption.blue.rawValue
+        BackgroundTarget.albumGrid.resetStorage()
+        BackgroundTarget.songList.resetStorage()
     }
 
     // Returns the localized help text describing the currently selected
@@ -355,4 +448,11 @@ struct ShortcutLocalMonitor: NSViewRepresentable {
         return view
     }
     func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+// Requests sent from Settings to ContentView, which owns the library and playback bookkeeping.
+extension Notification.Name {
+    static let ChooseMusicFolderRequested = Notification.Name("ChooseMusicFolderRequested")
+    static let RescanLibraryRequested = Notification.Name("RescanLibraryRequested")
+    static let PlayHistoryDidClear = Notification.Name("PlayHistoryDidClear")
 }

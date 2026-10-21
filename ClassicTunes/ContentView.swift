@@ -370,7 +370,6 @@ struct ContentView: View {
     private var topToolbarSection: some View {
         TopToolbarView(
             isAlbumView: $isAlbumView,
-            showFileImporter: $showFileImporter,
             selectedSong: $engine.selectedSong,
             isPlaying: isPlayingBinding,
             playPrevious: engine.playPrevious,
@@ -535,6 +534,9 @@ struct ContentView: View {
                 if device == nil { isDeviceSelected = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext")), perform: handleAddToUpNextNotification)
+            .onReceive(NotificationCenter.default.publisher(for: .ChooseMusicFolderRequested)) { _ in showFileImporter = true }
+            .onReceive(NotificationCenter.default.publisher(for: .RescanLibraryRequested)) { _ in rescanLibrary() }
+            .onReceive(NotificationCenter.default.publisher(for: .PlayHistoryDidClear), perform: handlePlayHistoryCleared)
             .preferredColorScheme(appAppearance == "light" ? .light : appAppearance == "dark" ? .dark : nil)
     }
 
@@ -873,6 +875,25 @@ struct ContentView: View {
         }
     }
 
+    // Re-reads the current music folder (used by Settings → "Rescan Library Now").
+    private func rescanLibrary() {
+        guard let folderURL = musicFolderAccess else { return }
+        Task {
+            let loaded = await loadSongs(from: folderURL)
+            await MainActor.run {
+                songs = loaded
+                refreshSongPlayCounts()
+                generateSystemPlaylists()
+            }
+        }
+    }
+
+    // Recomputes play counts and the smart playlists after Settings clears play history.
+    private func handlePlayHistoryCleared(_ output: Notification) {
+        refreshSongPlayCounts()
+        generateSystemPlaylists()
+    }
+
     private func loadSongsOnce() {
         guard !musicFolderBookmarkData.isEmpty else { return }
 
@@ -888,6 +909,7 @@ struct ContentView: View {
                         songs = loaded
                         refreshSongPlayCounts()
                         generateSystemPlaylists()
+                        engine.restoreLastSong(from: loaded)
                     }
                 }
                 print("Successfully loaded songs from bookmark.")

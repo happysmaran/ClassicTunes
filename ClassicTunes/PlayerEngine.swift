@@ -3,6 +3,7 @@ import AVFoundation
 import MediaPlayer
 import AppKit
 import Combine
+import CoreAudio
 
 /// Owns all audio-playback state and logic for the app as a single,
 /// process-lifetime singleton, instead of the older state living in
@@ -80,6 +81,42 @@ final class PlayerEngine: ObservableObject {
         isRepeatOne = UserDefaults.standard.bool(forKey: "isRepeatOne")
         volume = (UserDefaults.standard.object(forKey: "playerVolume") as? Double) ?? 0.5
         setupRemoteCommands()
+        observeDefaultOutputDevice()
+    }
+
+    // MARK: - Settings-driven behavior
+
+    private static let lastSongPathKey = "lastPlayedSongPath"
+    private static let lastPositionKey = "lastPlayedPositionSeconds"
+
+    /// Pauses playback when the system's default output device changes (headphones
+    /// unplugged, Bluetooth disconnected, etc.), if enabled in Settings.
+    private func observeDefaultOutputDevice() {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &address, DispatchQueue.main) { [weak self] _, _ in
+            guard let self,
+                  UserDefaults.standard.bool(forKey: "pauseOnOutputDeviceChange"),
+                  let player = self.player, player.rate != 0 else { return }
+            player.pause()
+            self.updateNowPlayingInfo()
+        }
+    }
+
+    /// Loads the song that was playing when the app last quit, paused at its saved position,
+    /// if "Resume last song on launch" is enabled and nothing is playing yet.
+    func restoreLastSong(from library: [Song]) {
+        guard UserDefaults.standard.bool(forKey: "resumeLastSongOnLaunch"),
+              selectedSong == nil,
+              let path = UserDefaults.standard.string(forKey: Self.lastSongPathKey),
+              let song = library.first(where: { $0.url.path == path }) else { return }
+        let seconds = UserDefaults.standard.double(forKey: Self.lastPositionKey)
+        currentPlaybackSongs = contextProvider(song)
+        setupNewPlayback(for: song, autoplay: false, startAt: seconds)
+        updateUpcomingSongs()
     }
 
     // MARK: - Playback
@@ -111,13 +148,20 @@ final class PlayerEngine: ObservableObject {
         updateUpcomingSongs()
     }
 
-    private func setupNewPlayback(for song: Song) {
+    private func setupNewPlayback(for song: Song, autoplay: Bool = true, startAt seconds: Double = 0) {
         stopCurrentPlayback()
 
         let item = AVPlayerItem(url: song.url)
         let newPlayer = AVPlayer(playerItem: item)
         newPlayer.volume = Float(volume)
-        newPlayer.play()
+        if seconds > 0 {
+            newPlayer.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
+        }
+        if autoplay {
+            newPlayer.play()
+        }
+        UserDefaults.standard.set(song.url.path, forKey: Self.lastSongPathKey)
+        UserDefaults.standard.set(seconds, forKey: Self.lastPositionKey)
 
         player = newPlayer
         playerItem = item
@@ -132,13 +176,16 @@ final class PlayerEngine: ObservableObject {
             }
         }
 
-        playbackPosition = 0.0
+        playbackPosition = (seconds > 0 && playbackDuration > 0) ? min(seconds / playbackDuration, 1) : 0.0
 
         setupTimeObserver(for: newPlayer)
         setupPlaybackCompletionHandler(for: item)
         updateNowPlayingInfo()
 
-        onSongChanged?(song)
+        // A restored (paused) song isn't a new play, so skip play counts/history.
+        if autoplay {
+            onSongChanged?(song)
+        }
     }
 
     private func stopCurrentPlayback() {
@@ -164,6 +211,7 @@ final class PlayerEngine: ObservableObject {
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             guard let self else { return }
             if !self.isSeeking {
+                UserDefaults.standard.set(time.seconds, forKey: Self.lastPositionKey)
                 self.playbackPosition = time.seconds / max(self.playbackDuration, 0.1)
                 self.updateNowPlayingPlaybackInfo()
             }

@@ -5,7 +5,6 @@ import AVKit
 struct TopToolbarView: View {
     // MARK: - Navigation & View Binding Mappings
     @Binding var isAlbumView: Bool
-    @Binding var showFileImporter: Bool
     @Binding var selectedSong: Song?
     @Binding var isPlaying: Bool
     
@@ -45,7 +44,7 @@ struct TopToolbarView: View {
             volumeControl
             nowPlayingView
             viewToggleButtons
-            searchAndImportGroup
+            searchField
         }
         .padding(.top, 24)
         .padding(.horizontal, 8)
@@ -187,17 +186,11 @@ struct TopToolbarView: View {
         }
     }
 
-    private var searchAndImportGroup: some View {
-        HStack {
-            TextField("toolbar.search", text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 160)
-                .focused(searchFieldFocus)
-
-            Button("toolbar.importMusic") {
-                showFileImporter = true
-            }
-        }
+    private var searchField: some View {
+        TextField("toolbar.search", text: $searchText)
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 160)
+            .focused(searchFieldFocus)
     }
 
     // MARK: - Styling & Button Builders

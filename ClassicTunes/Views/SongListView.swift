@@ -291,6 +291,36 @@ struct SongListView: View {
 
     @StateObject private var columnStore = ColumnPreferencesStore()
 
+    // Background customization ("default" = system, or "custom") chosen in Settings.
+    @AppStorage("songListBackgroundStyle") private var backgroundStyle: String = "default"
+    @AppStorage("songListCustomColor") private var customColorHex: String = BackgroundTarget.defaultCustomColorHex
+    @AppStorage("songListBackgroundImage") private var backgroundImageName: String = ""
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var customBackgroundColor: Color {
+        Color(hex: customColorHex) ?? .gray
+    }
+
+    // True when the list should draw its own background instead of the plain system one.
+    private var isBackgroundCustomized: Bool {
+        backgroundStyle != "default" || !backgroundImageName.isEmpty
+    }
+
+    private var backgroundFillColor: Color {
+        switch backgroundStyle {
+        case "custom": return customBackgroundColor
+        default: return Color(nsColor: .windowBackgroundColor)
+        }
+    }
+
+    // Color scheme forced on the list so text stays readable over the chosen background.
+    private var listColorScheme: ColorScheme {
+        switch backgroundStyle {
+        case "custom": return customBackgroundColor.isDark ? .dark : .light
+        default: return colorScheme
+        }
+    }
+
     private let minColumnWidth: CGFloat = 50
     private let maxColumnFractionCap: CGFloat = 0.7
 
@@ -397,7 +427,12 @@ struct SongListView: View {
             Divider()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background {
+            ZStack {
+                backgroundFillColor
+                BackgroundImageLayer(target: .songList)
+            }
+        }
     }
 
     // Assembles an explicit search query and dispatches an NSWorkspace event to open a YouTube search in the default web browser.
@@ -436,6 +471,7 @@ struct SongListView: View {
                         }
                     }
                     .listStyle(.plain)
+                    .scrollContentBackground(isBackgroundCustomized ? .hidden : .automatic)
                     .listRowInsets(EdgeInsets())
                     .frame(width: tableWidth)
                     .frame(maxHeight: .infinity)
@@ -444,6 +480,7 @@ struct SongListView: View {
                 .frame(maxHeight: .infinity)
             }
         }
+        .environment(\.colorScheme, listColorScheme)
     }
 
     // Generates the header row, providing a context menu to toggle column visibility.
@@ -473,7 +510,7 @@ struct SongListView: View {
             }
         }
         .padding(.vertical, 4)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(isBackgroundCustomized ? Color.primary.opacity(0.08) : Color(nsColor: .controlBackgroundColor))
         .frame(width: totalWidth, height: 32, alignment: .leading)
         .contextMenu {
             columnVisibilityMenu

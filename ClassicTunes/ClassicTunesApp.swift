@@ -254,7 +254,6 @@ struct ClassicTunesApp: App {
 
         Settings {
             SettingsView()
-                .frame(minWidth: 480, minHeight: 200)
                 .environmentObject(appearanceManager)
         }
     }

@@ -43,11 +43,24 @@ struct AlbumGridView: View {
 
     // Dictates the target style sheet environment constraints passed downstream[span_14](start_span)[span_14](end_span).
     private var gridColorScheme: ColorScheme {
-        (isAppDark || albumGridBackgroundStyle == "dark") ? .dark : .light
+        if albumGridBackgroundStyle == "custom" {
+            return customBackgroundColor.isDark ? .dark : .light
+        }
+        return (isAppDark || albumGridBackgroundStyle == "dark") ? .dark : .light
+    }
+
+    // User-picked fill used when the "custom" style is selected.
+    @AppStorage("albumGridCustomColor") private var customColorHex: String = BackgroundTarget.defaultCustomColorHex
+
+    private var customBackgroundColor: Color {
+        Color(hex: customColorHex) ?? .gray
     }
 
     // Evaluates environmental contexts to establish the underlying frame fill color[span_15](start_span)[span_15](end_span).
     private var effectiveBackgroundColor: Color {
+        if albumGridBackgroundStyle == "custom" {
+            return customBackgroundColor
+        }
         if isAppDark {
             return Color.itunesWindowBG
         }
@@ -65,7 +78,12 @@ struct AlbumGridView: View {
             albumGrid
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(effectiveBackgroundColor)
+        .background {
+            ZStack {
+                effectiveBackgroundColor
+                BackgroundImageLayer(target: .albumGrid)
+            }
+        }
         .environment(\.colorScheme, gridColorScheme)
     }
     
@@ -149,7 +167,6 @@ struct AlbumGridView: View {
                 .padding(.vertical, itemSpacing)
                 .frame(maxWidth: .infinity)
             }
-            .background(effectiveBackgroundColor)
         }
     }
     
