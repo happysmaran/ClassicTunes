@@ -32,18 +32,90 @@ struct CoverFlowView: View {
     // Size of the carousel's container, captured via GeometryReader, used to
     // compute a responsive cover size.
     @State private var containerSize: CGSize = .zero
+
+    // Height of the whole Cover Flow view (stage + caption + slider + controls
+    // + song list), used to detect when vertical space is tight.
+    @State private var viewHeight: CGFloat = 0
+
+    // Height of the carousel stage. It is 280pt unless the window is too short
+    // to also leave `CoverFlowMetrics.minSongListHeight` for the song list, in
+    // which case the stage shrinks and the caption/slider block slides up over
+    // the bottom of it (hiding the reflections behind it).
+    private var stageHeight: CGFloat {
+        guard viewHeight > 0 else { return CoverFlowMetrics.fullStageHeight }
+        let budget = viewHeight - CoverFlowMetrics.reservedBelowStage
+        return min(CoverFlowMetrics.fullStageHeight, max(CoverFlowMetrics.minStageHeight, budget))
+    }
+
+    // Height the layout actually gives the black box behind the carousel
+    // (measured), and the height its content naturally needs.
+    @State private var boxHeight: CGFloat = 0
+    private var naturalBoxHeight: CGFloat {
+        stageHeight + CoverFlowMetrics.captionAndSliderHeight
+    }
+
+    // When the box is taller than its content, split the spare room above and
+    // below so the carousel sits centered instead of pinned to the top.
+    private var topInset: CGFloat {
+        max(0, boxHeight - naturalBoxHeight) / 2
+    }
+
+    // 0 with plenty of vertical space, ramping to 1 as the stage is squeezed
+    // (over the first 40pt of lost height, so the change is gradual).
+    private var stageSqueeze: CGFloat {
+        min(1, max(0, (CoverFlowMetrics.fullStageHeight - stageHeight) / 40))
+    }
+
+    // How far to push the covers toward the bottom of the stage (and back them
+    // with the caption block so the reflections are hidden): when vertical space
+    // is tight, or when the window is narrow enough to count as compact. In the
+    // compact case the covers are already shrunk, and sitting lower gives them
+    // a balanced buffer above instead of a bare strip of stage.
+    private var dropAmount: CGFloat {
+        max(stageSqueeze, CoverFlowMetrics.compactness(forWidth: containerSize.width))
+    }
+
     private var coverSize: CGFloat {
         // Base on height so covers fill the stage; cap so they don't overflow on wide windows
         let heightBased = containerSize.height * 0.7
         let widthCap = containerSize.width * 0.25
-        return min(heightBased, widthCap)
+        let baseSize = min(heightBased, widthCap)
+
+        // Side covers are tilted toward the camera, so their outer edges are
+        // drawn taller than the cover itself (see CoverFlowMetrics). On smaller
+        // windows that makes them poke out of the top of the stage and look
+        // bigger than the centered cover. Shrink the covers just enough that
+        // the magnified edges fit under the usual top gap, fading the shrink
+        // in as the window gets narrower so larger windows are unchanged.
+        let topGap = min(containerSize.height * 0.12, 24)
+        let fitSize = topGap / ((CoverFlowMetrics.edgeMagnification - 1) / 2)
+        let compactness = CoverFlowMetrics.compactness(forWidth: containerSize.width)
+        let compactSize = baseSize + (min(baseSize, fitSize) - baseSize) * compactness
+
+        // Hard limit for unusually short stages: the magnified edge must fit
+        // in the stage height regardless of window width.
+        let stageLimit = max(0, (containerSize.height - 6) / CoverFlowMetrics.edgeMagnification)
+        return min(compactSize, stageLimit)
     }
 
     // Only render a window of items around the current index
     // Rendering every album cover at once would be wasteful (and most are
     // off-screen anyway), so only a window of `visibleRange` items on each
     // side of the current index gets built into the view tree.
-    private let visibleRange: Int = 6 // number of items to show on each side
+    // The count is derived from how many covers it takes to fan out to the
+    // window edge at the current cover size, so a tighter fan shows more covers.
+    private var visibleRange: Int {
+        let size = coverSize
+        guard size > 0, containerSize.width > 0 else { return CoverFlowMetrics.minVisibleRange }
+        let available = max(0, containerSize.width / 2 - size / 2)
+        var count = 1
+        while count < CoverFlowMetrics.maxVisibleRange,
+              CoverFlowMetrics.innerEdgeOffset(forDistance: count, coverSize: size) < available {
+            count += 1
+        }
+        // One extra so the last cover bleeds off the edge instead of stopping short.
+        return min(CoverFlowMetrics.maxVisibleRange, max(CoverFlowMetrics.minVisibleRange, count + 1))
+    }
     private var visibleAlbums: [(globalIndex: Int, album: AlbumInfo)] {
         guard !sortedAlbums.isEmpty else { return [] }
         let start = max(0, currentIndex - visibleRange)
@@ -73,38 +145,73 @@ struct CoverFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack(alignment: .top) {
-                // The Backgrounds (Back)
-                // Background layer: a dark gradient behind the carousel,
-                // fading to solid black further down behind the text/slider.
-                VStack(spacing: 0) {
-                    backgroundColor
-                        .frame(maxWidth: .infinity, maxHeight: 280)
-                    Color.black // This stretches down to fill behind the text/slider
-                }
+            // The black "box" behind the carousel. It is greedy, so it takes
+            // whatever height the layout gives it, but its own minimum is just the
+            // natural height of the stage + caption + slider. The visible content
+            // is an overlay so it never feeds back into the box's size, which lets
+            // us measure the box and place the content within it.
+            Color.black
+                .frame(maxWidth: .infinity, minHeight: naturalBoxHeight)
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { boxHeight = proxy.size.height }
+                            .onChange(of: proxy.size.height) { newHeight in
+                                boxHeight = newHeight
+                            }
+                    }
+                )
+                .overlay(alignment: .top) {
+                    ZStack(alignment: .top) {
+                        // The Backgrounds (Back)
+                        // A dark gradient behind the carousel, fading to solid
+                        // black further down behind the text/slider. When the box
+                        // has spare room, the gradient grows to cover the extra
+                        // space above the (centered) content.
+                        backgroundColor
+                            .frame(maxWidth: .infinity)
+                            .frame(height: stageHeight + topInset)
 
-                // CoverFlow & Reflections (Middle)
-                // The actual 3D carousel content, sized from the available geometry.
-                GeometryReader { geometry in
-                    coverFlowContent(geometry: geometry)
-                        .onAppear { containerSize = geometry.size }
-                        .onChange(of: geometry.size) { newSize in
-                            containerSize = newSize
+                        // CoverFlow & Reflections (Middle)
+                        // The actual 3D carousel content, sized from the available geometry.
+                        GeometryReader { geometry in
+                            coverFlowContent(geometry: geometry)
+                                .onAppear { containerSize = geometry.size }
+                                .onChange(of: geometry.size) { newSize in
+                                    containerSize = newSize
+                                }
                         }
-                }
-                .frame(maxWidth: .infinity, maxHeight: 280)
+                        .frame(maxWidth: .infinity, maxHeight: stageHeight)
+                        .padding(.top, topInset)
 
-                // Text & Slider (Front)
-                // Foreground layer: album name/artist caption plus the scrub slider,
-                // positioned below the carousel area (Color.clear reserves that space).
-                VStack(spacing: 0) {
-                    Color.clear
-                        .frame(height: 280)
+                        // Text & Slider (Front)
+                        // Foreground layer: album name/artist caption plus the scrub slider,
+                        // positioned below the carousel area (Color.clear reserves that space).
+                        VStack(spacing: 0) {
+                            Color.clear
+                                .frame(height: stageHeight + topInset)
 
-                    albumInfoSection
-                    sliderSection
+                            VStack(spacing: 0) {
+                                albumInfoSection
+                                sliderSection
+                            }
+                            // When the covers are dropped the reflections sit behind this block, so
+                            // give it a black backing (fading in at its top edge) to hide
+                            // them. Fully transparent when there is room.
+                            .background(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: .black.opacity(0), location: 0),
+                                        .init(color: .black.opacity(dropAmount), location: 0.25),
+                                        .init(color: .black.opacity(dropAmount), location: 1)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                        }
+                    }
                 }
-            }
             .contentShape(Rectangle())
 
             controlsSection
@@ -140,6 +247,15 @@ struct CoverFlowView: View {
             Spacer()
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { viewHeight = proxy.size.height }
+                    .onChange(of: proxy.size.height) { newHeight in
+                        viewHeight = newHeight
+                    }
+            }
+        )
         .clipShape(Rectangle())
         .onChange(of: committedIndex) { newValue in
             // Whenever the committed (settled) index changes, propagate the
@@ -309,18 +425,18 @@ struct CoverFlowView: View {
         // Each item's frame holds cover + reflection, so the cover occupies the top half
         let frameHeight = coverWidth * 2.0  // cover + equal-height reflection area
         let centerX = size.width / 2
-        // No margin
-        let leftEdge: CGFloat = 0
-        let rightEdge = size.width
-
-        let leftCount = currentIndex
-        let rightCount = sortedAlbums.count - currentIndex - 1
         // Keep a small gap above the cover, proportional to the stage
         // height rather than a fixed point offset, so the stack of
         // cover+reflection stays inside the visible stage instead of
         // sliding off it on unusually short/tall windows.
         let topGap = min(size.height * 0.12, 24)
-        let itemCenterY = topGap + frameHeight / 2
+        // When space is tight or the window is compact, drop the covers toward the bottom of it
+        // (leaving just room for the tilted covers' enlarged lower edges) so the
+        // reflections end up behind the caption/slider block.
+        let defaultCoverCenter = topGap + coverWidth / 2
+        let lowestCoverCenter = size.height - 4 - coverWidth * CoverFlowMetrics.edgeMagnification / 2
+        let drop = max(0, lowestCoverCenter - defaultCoverCenter) * dropAmount
+        let itemCenterY = topGap + frameHeight / 2 + drop
 
         return ZStack {
             // Soft pool of light on the "floor" directly beneath the centered cover
@@ -348,10 +464,6 @@ struct CoverFlowView: View {
                 let xPosition = calculateXPosition(
                     for: index,
                     currentIndex: currentIndex,
-                    leftCount: leftCount,
-                    rightCount: rightCount,
-                    leftEdge: leftEdge,
-                    rightEdge: rightEdge,
                     centerX: centerX,
                     coverWidth: coverWidth
                 )
@@ -390,24 +502,17 @@ struct CoverFlowView: View {
         }
     }
 
-    // Computes the horizontal screen position for a cover at `index`,
-    // relative to `currentIndex`. The centered cover sits at `centerX`; side
-    // covers converge toward whichever edge they're closest to, with each
-    // successive cover's *step* shrinking geometrically (unlike a naive
-    // `distance * (base + k/distance)` curve, which is secretly linear once
-    // simplified — that only looked "converging" by coincidence at one
-    // window size, and turned into obviously uniform spacing on wide
-    // windows once the fan was scaled to reach the edge). The whole curve is
-    // then rescaled so the farthest *rendered* cover lands exactly on the
-    // window edge, and every quantity is derived from the current geometry
-    // so this holds at any window size or aspect ratio.
+    // Computes the horizontal screen position (cell center) for a cover at
+    // `index`, relative to `currentIndex`. The centered cover sits at `centerX`.
+    // Side covers pivot on their inner edge, so each one is placed by where that
+    // edge falls: a small gap from the centered cover's edge, then steps that
+    // shrink toward a minimum (see `CoverFlowMetrics.innerEdgeOffset`). Spacing
+    // scales with the cover size rather than being stretched to the window
+    // width, so the fan stays tight; `visibleRange` supplies enough covers to
+    // reach the edge.
     private func calculateXPosition(
         for index: Int,
         currentIndex: Int,
-        leftCount: Int,
-        rightCount: Int,
-        leftEdge: CGFloat,
-        rightEdge: CGFloat,
         centerX: CGFloat,
         coverWidth: CGFloat
     ) -> CGFloat {
@@ -415,31 +520,16 @@ struct CoverFlowView: View {
             return centerX
         }
 
-        // Normalized convergence curve: monotonically increasing from 0 to
-        // (nearly) 1, with strictly diminishing increments as distance
-        // grows — a real geometric falloff, not a disguised straight line.
-        let decay: CGFloat = 0.72
-        func convergence(_ distance: CGFloat) -> CGFloat {
-            1 - pow(decay, distance)
-        }
-
+        let distance = abs(index - currentIndex)
+        let offset = CoverFlowMetrics.innerEdgeOffset(forDistance: distance, coverSize: coverWidth)
         if index < currentIndex {
-            let distance = CGFloat(currentIndex - index)
-            let visibleCount = max(1, CGFloat(min(leftCount, visibleRange)))
-            // Points available between the center cover and the left edge.
-            // Clamped to 0 so absurdly narrow windows can't drive this
-            // negative and flip covers onto the wrong side of center.
-            let available = max(0, centerX - coverWidth / 2 - leftEdge)
-            let fraction = convergence(distance) / convergence(visibleCount)
-            let position = centerX - (coverWidth / 2) - fraction * available
-            return min(centerX - coverWidth / 2, max(leftEdge, position))
+            // Left side: the cell's trailing edge is the inner (pivot) edge.
+            let innerEdge = centerX - coverWidth / 2 - offset
+            return innerEdge - coverWidth / 2
         } else {
-            let distance = CGFloat(index - currentIndex)
-            let visibleCount = max(1, CGFloat(min(rightCount, visibleRange)))
-            let available = max(0, rightEdge - coverWidth / 2 - centerX)
-            let fraction = convergence(distance) / convergence(visibleCount)
-            let position = centerX + (coverWidth / 2) + fraction * available
-            return max(centerX + coverWidth / 2, min(rightEdge, position))
+            // Right side: the cell's leading edge is the inner (pivot) edge.
+            let innerEdge = centerX + coverWidth / 2 + offset
+            return innerEdge + coverWidth / 2
         }
     }
 
@@ -473,6 +563,62 @@ struct CoverFlowView: View {
                 committedIndex = albumIndex
             }
         }
+    }
+}
+
+// Shared geometry constants for the carousel, so layout code can account for
+// how the 3D tilt changes the size of side covers.
+enum CoverFlowMetrics {
+    static let perspective: CGFloat = 0.25
+    static let baseRotation: Double = 65
+    static let maxExtraRotation: Double = 8
+
+    // Vertical layout. The carousel stage is normally 280pt tall; below it sit
+    // the caption (~63pt), slider (~40pt) and controls row (~28pt) — measured
+    // by eye, so approximate — and the song list, which is guaranteed at least
+    // `minSongListHeight` before the stage is allowed to shrink.
+    static let fullStageHeight: CGFloat = 280
+    static let minStageHeight: CGFloat = 170
+    static let minSongListHeight: CGFloat = 160
+    static let captionAndSliderHeight: CGFloat = 63 + 40
+    static let reservedBelowStage: CGFloat = captionAndSliderHeight + 28 + minSongListHeight
+
+    // With a rotation about a cover's inner edge, SwiftUI places the eye at
+    // (cover size / perspective) from the view, so the outer edge, which swings
+    // toward the camera by size * sin(angle), is magnified by
+    // 1 / (1 - perspective * sin(angle)). This is the worst case (steepest tilt)
+    // and is independent of the cover's size.
+    static var edgeMagnification: CGFloat {
+        let angle = (baseRotation + maxExtraRotation) * .pi / 180
+        return 1 / (1 - perspective * CGFloat(sin(angle)))
+    }
+
+    // Fan spacing, in multiples of the cover size. Distances are measured from
+    // the centered cover's edge to a side cover's inner (pivot) edge.
+    static let firstGap: CGFloat = 0.18       // centered cover → first neighbor
+    static let nearStep: CGFloat = 0.30       // spacing of the 2nd cover; later steps shrink…
+    static let farStep: CGFloat = 0.15        // …toward this minimum
+    static let stepDecay: CGFloat = 0.78      // how quickly steps shrink
+    static let minVisibleRange = 6
+    static let maxVisibleRange = 15           // caps rendering cost on wide windows
+
+    static func innerEdgeOffset(forDistance distance: Int, coverSize: CGFloat) -> CGFloat {
+        guard distance >= 1 else { return 0 }
+        var offset = firstGap
+        if distance >= 2 {
+            for k in 2...distance {
+                offset += farStep + (nearStep - farStep) * pow(stepDecay, CGFloat(k - 2))
+            }
+        }
+        return offset * coverSize
+    }
+
+    // 0 for roomy windows, ramping to 1 for compact ones (≈13-inch displays
+    // and smaller windows). Width in points.
+    static func compactness(forWidth width: CGFloat) -> CGFloat {
+        let roomy: CGFloat = 1400
+        let compact: CGFloat = 1000
+        return min(1, max(0, (roomy - width) / (roomy - compact)))
     }
 }
 
@@ -780,7 +926,7 @@ struct CoverFlowItemView: View {
                     .degrees(rotationAngle),
                     axis: (x: 0, y: 1, z: 0),
                     anchor: rotationAnchor,
-                    perspective: 0.25
+                    perspective: CoverFlowMetrics.perspective
                 )
 
             // Reflection
@@ -815,7 +961,7 @@ struct CoverFlowItemView: View {
                     .degrees(rotationAngle),
                     axis: (x: 0, y: 1, z: 0),
                     anchor: reflectionRotationAnchor,
-                    perspective: 0.25
+                    perspective: CoverFlowMetrics.perspective
                 )
         }
         .saturation(itemSaturation)
@@ -914,8 +1060,8 @@ struct CoverFlowItemView: View {
     // of the center the cover is on.
     private var rotationAngle: Double {
         guard !isCenterItem else { return 0 }
-        let baseRotation = 65.0
-        let extra = min(Double(distanceFromCenter - 1) * 3.0, 8.0)
+        let baseRotation = CoverFlowMetrics.baseRotation
+        let extra = min(Double(distanceFromCenter - 1) * 3.0, CoverFlowMetrics.maxExtraRotation)
         let rotation = baseRotation + extra
         return index < currentIndex ? rotation : -rotation
     }
