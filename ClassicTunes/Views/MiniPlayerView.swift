@@ -245,10 +245,9 @@ struct MiniPlayerView: View {
                         }
                     )
                     .disabled(playbackDuration <= 0)
-                    .tint(Color.accentColor)
                     .background(
                         Capsule()
-                            .fill(Color.accentColor.opacity(0.3))
+                            .fill(.tint.opacity(0.3))
                             .frame(height: 4)
                     )
                     .frame(height: 4)

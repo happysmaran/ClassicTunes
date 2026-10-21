@@ -512,8 +512,8 @@ struct SongListView: View {
         .font(.system(size: 11))
         .background(
             selectedSong?.id == song.id
-            ? Color.accentColor.opacity(0.25)
-            : Color.clear
+            ? AnyShapeStyle(.tint.opacity(0.25))
+            : AnyShapeStyle(Color.clear)
         )
         .contentShape(Rectangle())
         .onTapGesture {

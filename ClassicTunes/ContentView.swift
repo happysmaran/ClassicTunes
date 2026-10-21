@@ -405,7 +405,7 @@ struct ContentView: View {
                     isDeviceSelected: $isDeviceSelected
                 )
                 .frame(width: 220)
-                .tint(.blue)
+                .tint(appearanceManager.themeColor)
                 .background(ITunesSidebarBackground())
 
                 if let device = deviceMonitor.connectedDevice, isDeviceSelected {
@@ -1714,7 +1714,7 @@ struct UpNextView: View {
                         Text(current.artist).font(.subheadline).foregroundColor(.secondary).lineLimit(1)
                     }
                     Spacer()
-                    Image(systemName: "speaker.wave.2.fill").foregroundColor(.blue)
+                    Image(systemName: "speaker.wave.2.fill").foregroundStyle(.tint)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 12)
@@ -1752,7 +1752,7 @@ struct UpNextView: View {
                 }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.accentColor, lineWidth: 2)
+                        .stroke(.tint, lineWidth: 2)
                         .opacity(externalDropHovering ? 1 : 0)
                         .padding(4)
                 )
@@ -1760,7 +1760,7 @@ struct UpNextView: View {
             } else if isPlaying {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.accentColor.opacity(externalDropHovering ? 1 : 0.35), lineWidth: 1.5)
+                        .stroke(.tint.opacity(externalDropHovering ? 1 : 0.35), lineWidth: 1.5)
                     VStack(spacing: 8) {
                         Image(systemName: "plus.circle")
                             .font(.system(size: 32))
@@ -1811,7 +1811,7 @@ struct UpNextView: View {
             // Visible accent line when active
             if isActive {
                 Capsule()
-                    .fill(Color.accentColor)
+                    .fill(.tint)
                     .frame(height: 3)
                     .padding(.horizontal, 4)
             }
@@ -1946,12 +1946,12 @@ private struct UpNextSongBlock: View {
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(isDragging
-                    ? Color.accentColor.opacity(0.12)
-                    : Color(nsColor: .controlBackgroundColor).opacity(colorScheme == .dark ? 1 : 0.7))
+                    ? AnyShapeStyle(.tint.opacity(0.12))
+                    : AnyShapeStyle(Color(nsColor: .controlBackgroundColor).opacity(colorScheme == .dark ? 1 : 0.7)))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(isDragging ? Color.accentColor.opacity(0.6) : Color.clear, lineWidth: 1.5)
+                .stroke(isDragging ? AnyShapeStyle(.tint.opacity(0.6)) : AnyShapeStyle(Color.clear), lineWidth: 1.5)
         )
         .opacity(isDragging ? 0.45 : 1)
         .animation(.easeInOut(duration: 0.12), value: isDragging)

@@ -10,6 +10,7 @@ import AVKit
 // and a right "On iPod" list showing what's currently on the device — plus
 // a storage usage bar and an action bar with Sync/Cancel buttons.
 struct iPodDeviceView: View {
+    @Environment(\.themeColor) private var themeColor
     let device: iPodDevice
     @ObservedObject var syncEngine: iPodSyncEngine
     var allLibrarySongs: [Song]                         // Full library to pick from
@@ -289,7 +290,7 @@ struct iPodDeviceView: View {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(
                             LinearGradient(
-                                colors: [Color.iTunesBlue.opacity(0.9), Color.iTunesBlue],
+                                colors: [themeColor.opacity(0.9), themeColor],
                                 startPoint: .top, endPoint: .bottom
                             )
                         )
@@ -300,7 +301,7 @@ struct iPodDeviceView: View {
 
             // Legend
             HStack(spacing: 16) {
-                storageLabel(color: .iTunesBlue, text: "Music: \(usedString)")
+                storageLabel(color: themeColor, text: "Music: \(usedString)")
                 Spacer()
                 storageLabel(color: Color(nsColor: .separatorColor), text: "Free: \(freeString)")
                 storageLabel(color: .primary.opacity(0.4), text: "Total: \(capacityString)")
@@ -347,7 +348,7 @@ struct iPodDeviceView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(syncList.isEmpty || syncEngine.progress.isActive)
-            .tint(.iTunesBlue)
+            .tint(themeColor)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -653,6 +654,7 @@ private struct SyncSongRow: View {
 // add to the device sync staging list. Supports live text search across
 // title/artist/album, and flags songs already queued for sync.
 struct SongPickerSheet: View {
+    @Environment(\.themeColor) private var themeColor
     let allSongs: [Song]
     let alreadySelected: [Song]
     let onConfirm: ([Song]) -> Void
@@ -687,7 +689,7 @@ struct SongPickerSheet: View {
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.iTunesBlue)
+                .tint(themeColor)
                 .disabled(selected.isEmpty)
             }
             .padding()
@@ -737,8 +739,8 @@ struct SongPickerSheet: View {
                             .font(.caption2)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Capsule().fill(Color.iTunesBlue.opacity(0.2)))
-                            .foregroundColor(.iTunesBlue)
+                            .background(Capsule().fill(.tint.opacity(0.2)))
+                            .foregroundStyle(.tint)
                     }
 
                     if let dur = song.duration {

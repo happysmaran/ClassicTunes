@@ -453,9 +453,9 @@ struct CoverFlowView: View {
                 .padding(.vertical, 4)
                 .background(
                     Capsule()
-                        .fill(Color.accentColor.opacity(0.15))
+                        .fill(.tint.opacity(0.15))
                 )
-                .foregroundColor(.accentColor)
+                .foregroundStyle(.tint)
             }
             .buttonStyle(PlainButtonStyle())
             .padding(.trailing, 12)

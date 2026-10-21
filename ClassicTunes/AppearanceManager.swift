@@ -11,7 +11,7 @@ enum ThemeColorOption: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .system: return Color(nsColor: .controlAccentColor)
+        case .system: return Self.systemAccentColor
         case .blue: return .iTunesBlue
         case .graphite: return Color(red: 0.55, green: 0.55, blue: 0.58)
         case .red: return Color(red: 0.85, green: 0.24, blue: 0.24)
@@ -21,6 +21,20 @@ enum ThemeColorOption: String, CaseIterable, Identifiable {
         case .purple: return Color(red: 0.58, green: 0.35, blue: 0.85)
         case .pink: return Color(red: 0.93, green: 0.36, blue: 0.61)
         }
+    }
+
+    // The macOS accent color except if it uses stock macOS blue it is swapped
+    // for iTunes blue
+    private static var systemAccentColor: Color {
+        let accent = NSColor.controlAccentColor.usingColorSpace(.sRGB)
+        let stockBlue = NSColor.systemBlue.usingColorSpace(.sRGB)
+        if let accent, let stockBlue,
+           abs(accent.redComponent - stockBlue.redComponent) < 0.02,
+           abs(accent.greenComponent - stockBlue.greenComponent) < 0.02,
+           abs(accent.blueComponent - stockBlue.blueComponent) < 0.02 {
+            return .iTunesBlue
+        }
+        return Color(nsColor: .controlAccentColor)
     }
 
     var labelKey: LocalizedStringKey {
@@ -35,6 +49,28 @@ enum ThemeColorOption: String, CaseIterable, Identifiable {
         case .purple: return "settings.themeColor.purple"
         case .pink: return "settings.themeColor.pink"
         }
+    }
+}
+
+// Exposes the selected theme color through the environment for views that need a concrete
+// `Color` (gradients, derived shades) rather than the `.tint` shape style.
+private struct ThemeColorKey: EnvironmentKey {
+    static let defaultValue: Color = .iTunesBlue
+}
+
+extension EnvironmentValues {
+    var themeColor: Color {
+        get { self[ThemeColorKey.self] }
+        set { self[ThemeColorKey.self] = newValue }
+    }
+}
+
+extension Color {
+    // Mixes this color toward white (positive) or black (negative) by `amount` (0...1).
+    func shaded(_ amount: Double) -> Color {
+        let base = NSColor(self).usingColorSpace(.sRGB) ?? .gray
+        let target: NSColor = amount >= 0 ? .white : .black
+        return Color(nsColor: base.blended(withFraction: CGFloat(abs(amount)), of: target) ?? base)
     }
 }
 

@@ -156,10 +156,9 @@ struct TopToolbarView: View {
                 }
             )
             .frame(width: 280)
-            .tint(.accentColor)
             .background(
                 Capsule()
-                    .fill(Color.accentColor.opacity(0.3))
+                    .fill(.tint.opacity(0.3))
                     .frame(height: 4)
             )
             .frame(height: 4)
@@ -262,7 +261,7 @@ struct TopToolbarView: View {
     private func toggleButton(icon: String, isActive: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .foregroundColor(isActive ? .blue : .gray)
+                .foregroundStyle(isActive ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.gray))
         }
         .buttonStyle(.borderless)
     }
@@ -281,15 +280,15 @@ struct RepeatButton: View {
                 if isRepeatOne {
                     ZStack(alignment: .bottomTrailing) {
                         Image(systemName: "repeat")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.tint)
                         Text("1")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.tint)
                             .offset(x: 2, y: 2)
                     }
                 } else if isRepeatAll {
                     Image(systemName: "repeat")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.tint)
                 } else {
                     Image(systemName: "repeat")
                         .foregroundColor(.gray)

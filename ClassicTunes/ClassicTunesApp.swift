@@ -236,6 +236,7 @@ struct ClassicTunesApp: App {
                 .preferredColorScheme(appearanceManager.currentColorScheme())
                 .id(appearanceManager.appAppearance)
                 .tint(appearanceManager.themeColor)
+                .environment(\.themeColor, appearanceManager.themeColor)
                 .onAppear {
                     NSApp.appearance = NSAppearance(named: .aqua)
                     deviceMonitor.scanMountedVolumes()

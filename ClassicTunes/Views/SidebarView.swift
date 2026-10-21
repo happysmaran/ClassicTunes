@@ -97,7 +97,7 @@ struct SidebarView: View {
                     .buttonStyle(ITunesSidebarButtonStyle(selected: selectedPlaylistID == playlist.id && !libraryActive))
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.accentColor.opacity(dropHoverPlaylistID == playlist.id ? 0.8 : 0), lineWidth: 2)
+                            .stroke(.tint.opacity(dropHoverPlaylistID == playlist.id ? 0.8 : 0), lineWidth: 2)
                     )
                     .onDrop(of: [UTType.json], isTargeted: Binding(get: { dropHoverPlaylistID == playlist.id }, set: { isTargeted in
                         dropHoverPlaylistID = isTargeted ? playlist.id : nil
@@ -207,11 +207,18 @@ struct AquaSidebarBackground: View {
 struct ITunesSidebarButtonStyle: ButtonStyle {
     var selected: Bool
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.themeColor) private var themeColor
 
     // A richer 3-stop version of the classic Aqua "lickable" blue, deepest
     // in the middle so the glass-shine overlay above it has real contrast
     // to catch the light against.
     private var selectionColors: [Color] {
+        // Any non-default theme derives the same light/mid/deep ramp from its own color.
+        if themeColor != .iTunesBlue {
+            return colorScheme == .dark
+                ? [themeColor.shaded(-0.30), themeColor.shaded(-0.55), themeColor.shaded(-0.70)]
+                : [themeColor.shaded(0.60), themeColor.shaded(0.25), themeColor]
+        }
         if colorScheme == .dark {
             return [
                 Color(red: 0.20, green: 0.32, blue: 0.58),

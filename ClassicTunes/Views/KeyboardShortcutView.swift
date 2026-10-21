@@ -91,7 +91,7 @@ struct KeyboardShortcutsView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(group.title)
                                 .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.accentColor)
+                                .foregroundStyle(.tint)
                                 .textCase(.uppercase)
 
                             VStack(spacing: 0) {

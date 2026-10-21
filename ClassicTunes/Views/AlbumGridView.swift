@@ -80,7 +80,7 @@ struct AlbumGridView: View {
                         .frame(height: 4)
 
                     Capsule()
-                        .fill(Color.accentColor)
+                        .fill(.tint)
                         .frame(width: CGFloat((coverSize - 60) / 140) * geometry.size.width, height: 4)
                 }
                 .frame(height: 10)

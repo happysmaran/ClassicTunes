@@ -301,7 +301,7 @@ struct StoreItemView: View {
             if let price = item.trackPrice ?? item.collectionPrice, price > 0 {
                 Text("\(item.currency ?? "$")\(price, specifier: "%.2f")")
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.tint)
             } else {
                 Text("store.free")
                     .font(.subheadline)

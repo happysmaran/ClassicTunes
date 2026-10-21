@@ -164,6 +164,8 @@ struct SettingsView: View {
         }
         .frame(width: 480, height: 460)
         .preferredColorScheme(appearanceManager.currentColorScheme())
+        .tint(appearanceManager.themeColor)
+        .environment(\.themeColor, appearanceManager.themeColor)
     }
 
     // Builds a titled, card-styled group of shortcut rows (used for File,
@@ -173,7 +175,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: 11, weight: .bold))
-                .foregroundColor(.accentColor)
+                .foregroundStyle(.tint)
                 .textCase(.uppercase)
                 .padding(.horizontal, 4)
 
@@ -281,7 +283,7 @@ struct ShortcutAssignerRow: View {
                         .frame(width: 110)
                 }
                 .buttonStyle(.bordered)
-                .tint(isListening ? .accentColor : .secondary)
+                .tint(isListening ? nil : Color.secondary)
                 // Invisible helper view that installs/removes the actual
                 // NSEvent key-down monitor used to capture the new shortcut.
                 .background(ShortcutLocalMonitor(isListening: $isListening, shortcut: $shortcut))

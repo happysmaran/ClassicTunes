@@ -41,7 +41,7 @@ struct PlaylistSelectionView: View {
                         // Show a checkmark if the song is already in this playlist.
                         if playlist.songs.contains(where: { $0.id == song.id }) {
                             Image(systemName: "checkmark")
-                                .foregroundColor(.accentColor)
+                                .foregroundStyle(.tint)
                         }
                     }
                     .padding(.vertical, 4)
