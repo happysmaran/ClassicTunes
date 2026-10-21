@@ -361,7 +361,8 @@ struct CoverFlowView: View {
                     index: index,
                     currentIndex: currentIndex,
                     geometry: geometry,
-                    isInteracting: isInteracting
+                    isInteracting: isInteracting,
+                    coverWidth: coverWidth
                 )
                 .frame(width: coverWidth, height: frameHeight)
                 .position(x: xPosition, y: itemCenterY)
@@ -556,33 +557,77 @@ final class AlbumListCache {
     }
 }
 
-// Decodes album artwork to a small thumbnail on a background thread and keeps
-// the results in a bounded in-memory cache.
+// Decodes album artwork on a background thread and "bakes" each cover into a
+// single finished image (artwork, rounded corners, glass sheen and hairline
+// border) so the carousel only has to draw one flat image per cover instead
+// of re-compositing a clip mask and two overlays every frame. Effects that
+// depend on distance from center (rotation, shadow, saturation, brightness,
+// reflection fade) stay live in the view. Results are kept in bounded caches.
 enum AlbumArtworkLoader {
-    private static let cache: NSCache<NSString, NSImage> = {
+    // Decoded thumbnails (cost-limited by pixel bytes); needed only to re-bake
+    // when the cover's on-screen size changes.
+    private static let thumbnailCache: NSCache<NSString, NSImage> = {
         let cache = NSCache<NSString, NSImage>()
-        cache.countLimit = 80
+        cache.totalCostLimit = 32 * 1024 * 1024
+        return cache
+    }()
+
+    // Finished covers, keyed by artwork + display size bucket.
+    private static let coverCache: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.totalCostLimit = 96 * 1024 * 1024
         return cache
     }()
 
     // Covers render at most ~200pt tall, so 512px is sharp on Retina displays.
     private static let maxPixelSize = 512
 
-    static func cachedImage(for album: AlbumInfo) -> NSImage? {
-        cache.object(forKey: album.artworkKey as NSString)
+    // Cover sizes are bucketed so the baked corner radius/border stay
+    // proportionally correct without re-baking on every resize tick.
+    private static let sizeBucket: CGFloat = 8
+
+    static func bucketedWidth(_ width: CGFloat) -> CGFloat {
+        guard width > 0 else { return 0 }
+        return max(sizeBucket, (width / sizeBucket).rounded() * sizeBucket)
     }
 
-    static func image(for album: AlbumInfo) async -> NSImage? {
-        if let cached = cachedImage(for: album) { return cached }
-        guard let data = album.artworkData else { return nil }
+    private static func coverKey(for album: AlbumInfo, displayWidth: CGFloat) -> NSString {
+        "\(album.artworkKey)|\(Int(displayWidth))" as NSString
+    }
 
-        let cgImage = await Task.detached(priority: .userInitiated) {
-            downsample(data: data, maxPixelSize: maxPixelSize)
+    static func cachedCover(for album: AlbumInfo, displayWidth: CGFloat) -> NSImage? {
+        guard displayWidth > 0 else { return nil }
+        return coverCache.object(forKey: coverKey(for: album, displayWidth: displayWidth))
+    }
+
+    // Returns the baked cover for `album` at `displayWidth` points (the
+    // cover's long side), or nil if the album has no decodable artwork.
+    static func cover(for album: AlbumInfo, displayWidth: CGFloat) async -> NSImage? {
+        guard displayWidth > 0, let data = album.artworkData else { return nil }
+        let key = coverKey(for: album, displayWidth: displayWidth)
+        if let cached = coverCache.object(forKey: key) { return cached }
+
+        let thumbnailKey = album.artworkKey as NSString
+        let cachedThumbnail = thumbnailCache.object(forKey: thumbnailKey)?
+            .cgImage(forProposedRect: nil, context: nil, hints: nil)
+
+        // Decode (if needed) and bake off the main thread.
+        let result = await Task.detached(priority: .userInitiated) { () -> (thumbnail: CGImage, baked: CGImage)? in
+            let thumbnail = cachedThumbnail ?? downsample(data: data, maxPixelSize: maxPixelSize)
+            guard let thumbnail, let baked = bake(thumbnail, displayWidth: displayWidth) else { return nil }
+            return (thumbnail, baked)
         }.value
-        guard let cgImage else { return nil }
+        guard let result else { return nil }
+        let baked = result.baked
 
-        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-        cache.setObject(image, forKey: album.artworkKey as NSString)
+        let image = NSImage(cgImage: baked, size: NSSize(width: baked.width, height: baked.height))
+        coverCache.setObject(image, forKey: key, cost: baked.width * baked.height * 4)
+        if cachedThumbnail == nil {
+            // Keep the unbaked thumbnail for later re-bakes (e.g. window resize).
+            let thumbnail = result.thumbnail
+            let thumbImage = NSImage(cgImage: thumbnail, size: NSSize(width: thumbnail.width, height: thumbnail.height))
+            thumbnailCache.setObject(thumbImage, forKey: thumbnailKey, cost: thumbnail.width * thumbnail.height * 4)
+        }
         return image
     }
 
@@ -599,6 +644,76 @@ enum AlbumArtworkLoader {
         ]
         return CGImageSourceCreateThumbnailAtIndex(source, 0, thumbOptions as CFDictionary)
     }
+
+    // Draws the finished cover: the artwork clipped to a 3pt rounded rect,
+    // then (unclipped, exactly like the former SwiftUI overlay) the top-down
+    // glass sheen using additive blending, then a 1pt inside hairline border.
+    // Point-based metrics are scaled by pixels-per-point so the result matches
+    // the live-composited look at `displayWidth`.
+    private static func bake(_ image: CGImage, displayWidth: CGFloat) -> CGImage? {
+        let width = image.width
+        let height = image.height
+        let pixelsPerPoint = CGFloat(max(width, height)) / displayWidth
+        let radius = 3 * pixelsPerPoint
+        let lineWidth = 1 * pixelsPerPoint
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ) else { return nil }
+
+        context.interpolationQuality = .high
+
+        // Artwork, clipped to the rounded rect.
+        context.saveGState()
+        context.addPath(CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil))
+        context.clip()
+        context.draw(image, in: rect)
+        context.restoreGState()
+
+        // Glass sheen: white 0.28 → 0.06 (18%) → 0 (40%), top to bottom, plusLighter.
+        let sheenColors: [CGFloat] = [
+            1, 1, 1, 0.28,
+            1, 1, 1, 0.06,
+            1, 1, 1, 0.0
+        ]
+        let sheenLocations: [CGFloat] = [0.0, 0.18, 0.4]
+        if let gradient = CGGradient(
+            colorSpace: colorSpace,
+            colorComponents: sheenColors,
+            locations: sheenLocations,
+            count: 3
+        ) {
+            context.saveGState()
+            context.setBlendMode(.plusLighter)
+            // CoreGraphics' origin is bottom-left, so "top" is y = height.
+            context.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: 0, y: CGFloat(height)),
+                end: CGPoint(x: 0, y: 0),
+                options: []
+            )
+            context.restoreGState()
+        }
+
+        // Hairline border drawn inside the edge (matches `strokeBorder`).
+        let inset = lineWidth / 2
+        let borderRect = rect.insetBy(dx: inset, dy: inset)
+        let borderRadius = max(0, radius - inset)
+        context.setStrokeColor(CGColor(colorSpace: colorSpace, components: [1, 1, 1, 0.08])!)
+        context.setLineWidth(lineWidth)
+        context.addPath(CGPath(roundedRect: borderRect, cornerWidth: borderRadius, cornerHeight: borderRadius, transform: nil))
+        context.strokePath()
+
+        return context.makeImage()
+    }
 }
 
 // Renders a single album cover + its reflection in the carousel, applying
@@ -610,18 +725,28 @@ struct CoverFlowItemView: View {
     let currentIndex: Int
     let geometry: GeometryProxy
     let isInteracting: Bool
+    // Width (points) of the cover area; the baked cover is sized to match.
+    let coverWidth: CGFloat
 
-    // Decoded thumbnail, loaded lazily and asynchronously (nil until ready).
+    // Finished (baked) cover image, loaded lazily and asynchronously (nil
+    // until ready, or if the album has no artwork).
     @State private var artwork: NSImage?
 
-    init(album: AlbumInfo, index: Int, currentIndex: Int, geometry: GeometryProxy, isInteracting: Bool) {
+    init(album: AlbumInfo, index: Int, currentIndex: Int, geometry: GeometryProxy, isInteracting: Bool, coverWidth: CGFloat) {
         self.album = album
         self.index = index
         self.currentIndex = currentIndex
         self.geometry = geometry
         self.isInteracting = isInteracting
-        // Seed from the cache so already-decoded covers appear immediately.
-        _artwork = State(initialValue: AlbumArtworkLoader.cachedImage(for: album))
+        self.coverWidth = coverWidth
+        // Seed from the cache so already-baked covers appear immediately.
+        let displayWidth = AlbumArtworkLoader.bucketedWidth(coverWidth)
+        _artwork = State(initialValue: AlbumArtworkLoader.cachedCover(for: album, displayWidth: displayWidth))
+    }
+
+    // Identity of the baked image: re-runs loading when artwork or size bucket changes.
+    private var bakeID: String {
+        "\(album.artworkKey)|\(Int(AlbumArtworkLoader.bucketedWidth(coverWidth)))"
     }
 
     // Whether this is the cover currently centered in the carousel.
@@ -665,13 +790,15 @@ struct CoverFlowItemView: View {
             // ~40% of its height) so it reads as a quick glossy sheen rather
             // than a full mirror image — closer items get a brighter, taller
             // reflection than items further from center.
+            //
+            // The flip and fade happen *before* the 3D rotation, and the
+            // rotation uses the same angle as the cover with its pivot/eye
+            // level placed at the cover's vertical center (half a cell above
+            // the reflection). That way the reflection is foreshortened exactly
+            // like the cover and shares the cover's bottom edge, instead of
+            // being tilted about its own center (which pulled it away from the
+            // cover on the outer side).
             coverImage
-                .rotation3DEffect(
-                    .degrees(rotationAngle),
-                    axis: (x: 0, y: 1, z: 0),
-                    anchor: rotationAnchor,
-                    perspective: 0.25
-                )
                 .scaleEffect(x: 1, y: -1) // flip vertically
                 .mask(
                     LinearGradient(
@@ -684,16 +811,24 @@ struct CoverFlowItemView: View {
                         endPoint: .bottom
                     )
                 )
+                .rotation3DEffect(
+                    .degrees(rotationAngle),
+                    axis: (x: 0, y: 1, z: 0),
+                    anchor: reflectionRotationAnchor,
+                    perspective: 0.25
+                )
         }
         .saturation(itemSaturation)
         .brightness(itemBrightness)
         .compositingGroup()
         .animation(.easeInOut(duration: 0.3), value: currentIndex)
-        .task(id: album.artworkKey) {
-            if let cached = AlbumArtworkLoader.cachedImage(for: album) {
+        .task(id: bakeID) {
+            let displayWidth = AlbumArtworkLoader.bucketedWidth(coverWidth)
+            guard displayWidth > 0 else { return }
+            if let cached = AlbumArtworkLoader.cachedCover(for: album, displayWidth: displayWidth) {
                 artwork = cached
             } else {
-                artwork = await AlbumArtworkLoader.image(for: album)
+                artwork = await AlbumArtworkLoader.cover(for: album, displayWidth: displayWidth)
             }
         }
         .focusable(false)
@@ -707,47 +842,47 @@ struct CoverFlowItemView: View {
     // intensity/blur increases for the centered item.
     @ViewBuilder
     private var coverImage: some View {
-        Group {
-            if let image = artwork {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFit()
-            } else {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color(white: 0.35),
-                            Color(white: 0.18)
-                        ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .overlay(
-                        VStack(spacing: 4) {
-                            Image(systemName: "music.note")
-                                .font(.system(size: 24))
-                                .foregroundColor(Color(white: 0.6))
-                            Text(album.name)
-                                .font(.caption2)
-                                .foregroundColor(Color(white: 0.7))
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(6)
-                    )
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .overlay(glossOverlay)
-        .overlay(
+        if let image = artwork {
+            // Rounded corners, sheen and border are already baked in.
+            Image(nsImage: image)
+                .resizable()
+                .scaledToFit()
+                .modifier(coverShadow)
+        } else {
             RoundedRectangle(cornerRadius: 3)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-        )
-        .shadow(
-            color: .black.opacity(isCenterItem ? 0.7 : 0.4),
-            radius: isCenterItem ? 14 : 4,
-            x: 0,
-            y: isCenterItem ? 6 : 2
-        )
+                .fill(LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(white: 0.35),
+                        Color(white: 0.18)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .overlay(
+                    VStack(spacing: 4) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color(white: 0.6))
+                        Text(album.name)
+                            .font(.caption2)
+                            .foregroundColor(Color(white: 0.7))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(6)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .overlay(glossOverlay)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .modifier(coverShadow)
+        }
+    }
+
+    // Drop shadow whose intensity/blur grows for the centered item.
+    private var coverShadow: CoverShadow {
+        CoverShadow(isCenter: isCenterItem)
     }
 
     // Soft glass highlight running along the top of the cover, fading out
@@ -792,6 +927,27 @@ struct CoverFlowItemView: View {
         guard !isCenterItem else { return .center }
         let diff = index - currentIndex
         return diff < 0 ? .trailing : .leading
+    }
+
+    // Same horizontal pivot as the cover, but vertically at the cover's center,
+    // which sits half a cell above the reflection (the reflection is directly
+    // below the cover and the same height).
+    private var reflectionRotationAnchor: UnitPoint {
+        UnitPoint(x: rotationAnchor.x, y: -0.5)
+    }
+}
+
+// Shadow applied to each cover; stronger and softer for the centered cover.
+private struct CoverShadow: ViewModifier {
+    let isCenter: Bool
+
+    func body(content: Content) -> some View {
+        content.shadow(
+            color: .black.opacity(isCenter ? 0.7 : 0.4),
+            radius: isCenter ? 14 : 4,
+            x: 0,
+            y: isCenter ? 6 : 2
+        )
     }
 }
 
