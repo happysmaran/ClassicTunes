@@ -227,7 +227,7 @@ struct ClassicTunesApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 1200, minHeight: 900)
+                .frame(minWidth: 1000, minHeight: 600)
                 .background(Color.clear)
                 .edgesIgnoringSafeArea(.top)
                 .environmentObject(appearanceManager)
