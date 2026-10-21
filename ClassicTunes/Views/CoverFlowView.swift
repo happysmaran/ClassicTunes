@@ -37,40 +37,47 @@ struct CoverFlowView: View {
     // + song list), used to detect when vertical space is tight.
     @State private var viewHeight: CGFloat = 0
 
-    // Height of the carousel stage. It is 280pt unless the window is too short
-    // to also leave `CoverFlowMetrics.minSongListHeight` for the song list, in
-    // which case the stage shrinks and the caption/slider block slides up over
-    // the bottom of it (hiding the reflections behind it).
-    private var stageHeight: CGFloat {
+    // Base height of the carousel stage. It is 280pt unless the window is too
+    // short to also leave `CoverFlowMetrics.minSongListHeight` for the song
+    // list, in which case the stage shrinks and the caption/slider block slides
+    // up over the bottom of it (hiding the reflections behind it).
+    private var baseStageHeight: CGFloat {
         guard viewHeight > 0 else { return CoverFlowMetrics.fullStageHeight }
         let budget = viewHeight - CoverFlowMetrics.reservedBelowStage
         return min(CoverFlowMetrics.fullStageHeight, max(CoverFlowMetrics.minStageHeight, budget))
     }
 
     // Height the layout actually gives the black box behind the carousel
-    // (measured), and the height its content naturally needs.
+    // (measured), and the smallest height its content needs.
     @State private var boxHeight: CGFloat = 0
     private var naturalBoxHeight: CGFloat {
-        stageHeight + CoverFlowMetrics.captionAndSliderHeight
+        baseStageHeight + CoverFlowMetrics.captionAndSliderHeight + CoverFlowMetrics.bottomMargin
     }
 
-    // When the box is taller than its content, split the spare room above and
-    // below so the carousel sits centered instead of pinned to the top.
-    private var topInset: CGFloat {
-        max(0, boxHeight - naturalBoxHeight) / 2
+    // Height of the region above the caption/slider block (the gradient area).
+    private var stageRegionHeight: CGFloat {
+        let box = max(boxHeight, naturalBoxHeight)
+        return box - CoverFlowMetrics.captionAndSliderHeight - CoverFlowMetrics.bottomMargin
+    }
+
+    // The caption and slider are pinned to the bottom of the box, a fixed
+    // distance from its edge. Any spare height goes to the stage, so covers grow
+    // on large windows (up to `maxStageHeight`); beyond that the extra is just
+    // more backdrop above the stage.
+    private var stageHeight: CGFloat {
+        min(CoverFlowMetrics.maxStageHeight, max(baseStageHeight, stageRegionHeight))
     }
 
     // 0 with plenty of vertical space, ramping to 1 as the stage is squeezed
     // (over the first 40pt of lost height, so the change is gradual).
     private var stageSqueeze: CGFloat {
-        min(1, max(0, (CoverFlowMetrics.fullStageHeight - stageHeight) / 40))
+        min(1, max(0, (CoverFlowMetrics.fullStageHeight - baseStageHeight) / 40))
     }
 
-    // How far to push the covers toward the bottom of the stage (and back them
-    // with the caption block so the reflections are hidden): when vertical space
-    // is tight, or when the window is narrow enough to count as compact. In the
-    // compact case the covers are already shrunk, and sitting lower gives them
-    // a balanced buffer above instead of a bare strip of stage.
+    // How strongly to back the caption/slider block with black so the
+    // reflections that run behind it are hidden: when vertical space is tight,
+    // or when the window is narrow enough to count as compact. (This no longer
+    // moves the covers; their vertical position comes only from `topMargin`.)
     private var dropAmount: CGFloat {
         max(stageSqueeze, CoverFlowMetrics.compactness(forWidth: containerSize.width))
     }
@@ -87,14 +94,16 @@ struct CoverFlowView: View {
         // bigger than the centered cover. Shrink the covers just enough that
         // the magnified edges fit under the usual top gap, fading the shrink
         // in as the window gets narrower so larger windows are unchanged.
-        let topGap = min(containerSize.height * 0.12, 24)
-        let fitSize = topGap / ((CoverFlowMetrics.edgeMagnification - 1) / 2)
+        let fitSize = CoverFlowMetrics.compactFitGap / ((CoverFlowMetrics.edgeMagnification - 1) / 2)
         let compactness = CoverFlowMetrics.compactness(forWidth: containerSize.width)
         let compactSize = baseSize + (min(baseSize, fitSize) - baseSize) * compactness
 
-        // Hard limit for unusually short stages: the magnified edge must fit
-        // in the stage height regardless of window width.
-        let stageLimit = max(0, (containerSize.height - 6) / CoverFlowMetrics.edgeMagnification)
+        // Hard limit: with the top margin reserved (see `coverFlowContent`), the
+        // magnified outer edges must still fit inside the stage height,
+        // regardless of window width.
+        let backdropAboveStage = max(0, stageRegionHeight - stageHeight)
+        let stageLimit = max(0, (containerSize.height - 4 - CoverFlowMetrics.topMargin + backdropAboveStage)
+            / CoverFlowMetrics.edgeMagnification)
         return min(compactSize, stageLimit)
     }
 
@@ -149,7 +158,7 @@ struct CoverFlowView: View {
             // whatever height the layout gives it, but its own minimum is just the
             // natural height of the stage + caption + slider. The visible content
             // is an overlay so it never feeds back into the box's size, which lets
-            // us measure the box and place the content within it.
+            // us measure the box and lay the content out within it.
             Color.black
                 .frame(maxWidth: .infinity, minHeight: naturalBoxHeight)
                 .background(
@@ -162,16 +171,15 @@ struct CoverFlowView: View {
                     }
                 )
                 .overlay(alignment: .top) {
-                    ZStack(alignment: .top) {
-                        // The Backgrounds (Back)
-                        // A dark gradient behind the carousel, fading to solid
-                        // black further down behind the text/slider. When the box
-                        // has spare room, the gradient grows to cover the extra
-                        // space above the (centered) content.
-                        backgroundColor
-                            .frame(maxWidth: .infinity)
-                            .frame(height: stageHeight + topInset)
-
+                    // The Backgrounds (Back)
+                    // A dark gradient behind the carousel, fading to solid black
+                    // further down behind the text/slider.
+                    backgroundColor
+                        .frame(maxWidth: .infinity)
+                        .frame(height: stageRegionHeight)
+                }
+                .overlay(alignment: .bottom) {
+                    VStack(spacing: 0) {
                         // CoverFlow & Reflections (Middle)
                         // The actual 3D carousel content, sized from the available geometry.
                         GeometryReader { geometry in
@@ -181,36 +189,32 @@ struct CoverFlowView: View {
                                     containerSize = newSize
                                 }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: stageHeight)
-                        .padding(.top, topInset)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: stageHeight)
 
                         // Text & Slider (Front)
-                        // Foreground layer: album name/artist caption plus the scrub slider,
-                        // positioned below the carousel area (Color.clear reserves that space).
+                        // Foreground layer: album name/artist caption plus the scrub
+                        // slider, pinned to the bottom of the box.
                         VStack(spacing: 0) {
-                            Color.clear
-                                .frame(height: stageHeight + topInset)
-
-                            VStack(spacing: 0) {
-                                albumInfoSection
-                                sliderSection
-                            }
-                            // When the covers are dropped the reflections sit behind this block, so
-                            // give it a black backing (fading in at its top edge) to hide
-                            // them. Fully transparent when there is room.
-                            .background(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: .black.opacity(0), location: 0),
-                                        .init(color: .black.opacity(dropAmount), location: 0.25),
-                                        .init(color: .black.opacity(dropAmount), location: 1)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
+                            albumInfoSection
+                            sliderSection
                         }
+                        // When the covers are dropped the reflections sit behind this block, so
+                        // give it a black backing (fading in at its top edge) to hide
+                        // them. Fully transparent when there is room.
+                        .background(
+                            LinearGradient(
+                                stops: [
+                                    .init(color: .black.opacity(0), location: 0),
+                                    .init(color: .black.opacity(dropAmount), location: 0.25),
+                                    .init(color: .black.opacity(dropAmount), location: 1)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                     }
+                    .padding(.bottom, CoverFlowMetrics.bottomMargin)
                 }
             .contentShape(Rectangle())
 
@@ -429,14 +433,17 @@ struct CoverFlowView: View {
         // height rather than a fixed point offset, so the stack of
         // cover+reflection stays inside the visible stage instead of
         // sliding off it on unusually short/tall windows.
-        let topGap = min(size.height * 0.12, 24)
-        // When space is tight or the window is compact, drop the covers toward the bottom of it
-        // (leaving just room for the tilted covers' enlarged lower edges) so the
-        // reflections end up behind the caption/slider block.
-        let defaultCoverCenter = topGap + coverWidth / 2
-        let lowestCoverCenter = size.height - 4 - coverWidth * CoverFlowMetrics.edgeMagnification / 2
-        let drop = max(0, lowestCoverCenter - defaultCoverCenter) * dropAmount
-        let itemCenterY = topGap + frameHeight / 2 + drop
+        // Side covers are tilted toward the camera, so their outer top corners
+        // are drawn higher than the cover itself (by up to `edgeMagnification`).
+        // Whatever the window size, keep the highest of those corners at least
+        // `topMargin` below the top border of the box, at every size. Backdrop
+        // above the stage (when the stage is capped) counts toward that margin.
+        let backdropAboveStage = max(0, stageRegionHeight - stageHeight)
+        let topGap = max(0, coverWidth * (CoverFlowMetrics.edgeMagnification - 1) / 2
+            + CoverFlowMetrics.topMargin - backdropAboveStage)
+        // The covers are placed purely by the top margin above; nothing else
+        // shifts them vertically, so that margin is the same at every size.
+        let itemCenterY = topGap + frameHeight / 2
 
         return ZStack {
             // Soft pool of light on the "floor" directly beneath the centered cover
@@ -579,6 +586,18 @@ enum CoverFlowMetrics {
     // `minSongListHeight` before the stage is allowed to shrink.
     static let fullStageHeight: CGFloat = 280
     static let minStageHeight: CGFloat = 170
+    // On roomy windows the stage may grow past `fullStageHeight` (bigger covers)
+    // up to this height; the caption/slider block stays pinned to the bottom,
+    // `bottomMargin` from the edge.
+    static let maxStageHeight: CGFloat = 520
+    static let bottomMargin: CGFloat = 16
+    // Minimum space between the highest corner of any tilted cover and the top
+    // border of the carousel box.
+    static let topMargin: CGFloat = 20
+    // Reference room used only to decide how much to shrink covers on compact
+    // windows (cover size at which the tilted edges' overshoot equals this gap).
+    // Positioning always uses `topMargin`.
+    static let compactFitGap: CGFloat = 24
     static let minSongListHeight: CGFloat = 160
     static let captionAndSliderHeight: CGFloat = 63 + 40
     static let reservedBelowStage: CGFloat = captionAndSliderHeight + 28 + minSongListHeight
