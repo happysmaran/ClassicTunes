@@ -216,6 +216,12 @@ struct CoverFlowView: View {
                     }
                     .padding(.bottom, CoverFlowMetrics.bottomMargin)
                 }
+                // The outermost covers fade away into the distance at each side.
+                .overlay(alignment: .top) {
+                    edgeFade
+                        .frame(height: stageRegionHeight)
+                        .allowsHitTesting(false)
+                }
             .contentShape(Rectangle())
 
             controlsSection
@@ -293,6 +299,44 @@ struct CoverFlowView: View {
         }
         .focusable(false)
         .buttonStyle(PlainButtonStyle())
+    }
+
+    // Fades the carousel out at the left and right edges. It re-draws the stage
+    // backdrop (so it blends seamlessly) through a mask that is opaque at the
+    // edges and clear toward the middle, on top of the covers. Cheap: two small
+    // gradients, nothing is rendered offscreen per cover.
+    private var edgeFade: some View {
+        let width = max(CoverFlowMetrics.edgeFadeMinWidth,
+                        min(CoverFlowMetrics.edgeFadeMaxWidth,
+                            containerSize.width * CoverFlowMetrics.edgeFadeFraction))
+        return backgroundColor
+            .mask(
+                HStack(spacing: 0) {
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0),
+                            .init(color: .black.opacity(0.6), location: 0.35),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: width)
+
+                    Spacer(minLength: 0)
+
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0),
+                            .init(color: .black.opacity(0.6), location: 0.35),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .trailing,
+                        endPoint: .leading
+                    )
+                    .frame(width: width)
+                }
+            )
     }
 
     // Dark vertical gradient used behind the carousel stage, with a soft
@@ -591,6 +635,10 @@ enum CoverFlowMetrics {
     // `bottomMargin` from the edge.
     static let maxStageHeight: CGFloat = 520
     static let bottomMargin: CGFloat = 16
+    // Width of the fade at each side, as a fraction of the stage width, clamped.
+    static let edgeFadeFraction: CGFloat = 0.09
+    static let edgeFadeMinWidth: CGFloat = 48
+    static let edgeFadeMaxWidth: CGFloat = 160
     // Minimum space between the highest corner of any tilted cover and the top
     // border of the carousel box.
     static let topMargin: CGFloat = 20
