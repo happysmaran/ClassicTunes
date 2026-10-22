@@ -16,9 +16,8 @@ struct SettingsView: View {
     @State private var showClearHistoryConfirm = false
     @State private var showResetAppearanceConfirm = false
 
-    // todo
-    // Playback-related settings (crossfade, sound enhancer) — declared but
-    // not yet wired into a UI section below (marked "todo" by the original author).
+    // Crossfade is wired up in the Playback section; the sound enhancer is declared
+    // but not yet wired into a UI section (marked "todo" by the original author).
     @AppStorage("isCrossfadeEnabled") private var isCrossfadeEnabled: Bool = false
     @AppStorage("crossfadeDuration") private var crossfadeDuration: Double = 6.0
     @AppStorage("isSoundEnhancerEnabled") private var isSoundEnhancerEnabled: Bool = false
@@ -116,6 +115,17 @@ struct SettingsView: View {
                 Section(header: Text("settings.playback")) {
                     Toggle("settings.playback.resumeLast", isOn: $resumeLastSongOnLaunch)
                     Toggle("settings.playback.pauseOnOutputChange", isOn: $pauseOnOutputDeviceChange)
+                    Toggle("settings.playback.crossfade", isOn: $isCrossfadeEnabled)
+                    HStack {
+                        Text("1 s").font(.caption).foregroundStyle(.secondary)
+                        Slider(value: $crossfadeDuration, in: 1...12)
+                        Text("12 s").font(.caption).foregroundStyle(.secondary)
+                    }
+                    .disabled(!isCrossfadeEnabled)
+                    .opacity(isCrossfadeEnabled ? 1 : 0.5)
+                    Text(String(format: NSLocalizedString("settings.playback.crossfadeHelp", comment: ""), Int(crossfadeDuration.rounded())))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
 
                 Section(header: Text("settings.data")) {

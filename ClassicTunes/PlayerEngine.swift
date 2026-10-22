@@ -51,7 +51,8 @@ final class PlayerEngine: ObservableObject {
     @Published var volume: Double {
         didSet {
             UserDefaults.standard.set(volume, forKey: "playerVolume")
-            player?.volume = Float(volume)
+            // During a crossfade the fade timer owns the player volumes.
+            if fadeTimer == nil { player?.volume = Float(volume) }
             updateNowPlayingInfo()
         }
     }
@@ -64,6 +65,16 @@ final class PlayerEngine: ObservableObject {
     var manualQueue: [Song] = []
     var playedShuffleSongs: [Song] = []
     var isNavigatingBackward = false
+
+    // Crossfade bookkeeping: while fading, the previous song's player keeps playing
+    // in `fadingOutPlayer` as the new song's player fades in.
+    private var crossfadeObserverToken: Any?
+    private var crossfadeAttemptedItem: AVPlayerItem?
+    private var isCrossfadeArmed = false
+    private var fadingOutPlayer: AVPlayer?
+    private var fadeTimer: Timer?
+    private var fadeStartDate: Date?
+    private var fadeLength: Double = 0
 
     /// Set (and refreshed) by ContentView every time it appears. Lets the
     /// engine ask "what's the current library/playlist/album context" using
@@ -154,7 +165,8 @@ final class PlayerEngine: ObservableObject {
         let item = AVPlayerItem(url: song.url)
         Equalizer.shared.attach(to: item)
         let newPlayer = AVPlayer(playerItem: item)
-        newPlayer.volume = Float(volume)
+        let isCrossfading = fadingOutPlayer != nil
+        newPlayer.volume = isCrossfading ? 0 : Float(volume)
         if seconds > 0 {
             newPlayer.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
         }
@@ -180,7 +192,9 @@ final class PlayerEngine: ObservableObject {
         playbackPosition = (seconds > 0 && playbackDuration > 0) ? min(seconds / playbackDuration, 1) : 0.0
 
         setupTimeObserver(for: newPlayer)
+        setupCrossfadeObserver(for: newPlayer)
         setupPlaybackCompletionHandler(for: item)
+        if isCrossfading { beginFadeTimer() }
         updateNowPlayingInfo()
 
         // A restored (paused) song isn't a new play, so skip play counts/history.
@@ -190,17 +204,88 @@ final class PlayerEngine: ObservableObject {
     }
 
     private func stopCurrentPlayback() {
-        player?.pause()
+        // An automatic crossfade lets the outgoing song keep playing instead of pausing it.
+        let shouldCrossfade = isCrossfadeArmed && player?.rate != 0
+        finishCrossfade()
+
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
+        }
+        if let token = crossfadeObserverToken {
+            player?.removeTimeObserver(token)
+            crossfadeObserverToken = nil
         }
         if let token = playbackEndObserver {
             NotificationCenter.default.removeObserver(token)
             playbackEndObserver = nil
         }
+        if shouldCrossfade {
+            fadingOutPlayer = player
+        } else {
+            player?.pause()
+        }
         playerItem = nil
         player = nil
+    }
+
+    // MARK: - Crossfade
+
+    /// Watches playback and starts the next song early so it overlaps the end of this one.
+    private func setupCrossfadeObserver(for player: AVPlayer) {
+        let interval = CMTime(seconds: 0.25, preferredTimescale: 600)
+        crossfadeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            self?.checkCrossfade(at: time.seconds)
+        }
+    }
+
+    private func checkCrossfade(at position: Double) {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "isCrossfadeEnabled"),
+              !isRepeatOne, !isSeeking, fadeTimer == nil,
+              let player, player.rate != 0,
+              let item = playerItem, item !== crossfadeAttemptedItem else { return }
+
+        let configured = (defaults.object(forKey: "crossfadeDuration") as? Double) ?? 6.0
+        let fade = min(max(configured, 1), 12)
+        let remaining = playbackDuration - position
+        // Skip songs too short to fade (and a duration that hasn't loaded yet).
+        guard playbackDuration > fade * 2, remaining <= fade, remaining > 0.3 else { return }
+
+        // Only try once per song; playNext() does nothing at the end of the list.
+        crossfadeAttemptedItem = item
+        fadeLength = remaining
+        isCrossfadeArmed = true
+        playNext()
+        isCrossfadeArmed = false
+    }
+
+    private func beginFadeTimer() {
+        fadeStartDate = Date()
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            self?.stepFade()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        fadeTimer = timer
+    }
+
+    /// Equal-power curve so the combined loudness stays steady through the fade.
+    private func stepFade() {
+        guard let start = fadeStartDate else { return }
+        let progress = min(Date().timeIntervalSince(start) / max(fadeLength, 0.1), 1)
+        let base = Float(volume)
+        fadingOutPlayer?.volume = base * Float(cos(progress * .pi / 2))
+        player?.volume = base * Float(sin(progress * .pi / 2))
+        if progress >= 1 { finishCrossfade() }
+    }
+
+    private func finishCrossfade() {
+        fadeTimer?.invalidate()
+        fadeTimer = nil
+        fadeStartDate = nil
+        fadingOutPlayer?.pause()
+        fadingOutPlayer = nil
+        player?.volume = Float(volume)
     }
 
     private func setupTimeObserver(for player: AVPlayer) {
@@ -426,19 +511,23 @@ final class PlayerEngine: ObservableObject {
     func togglePlayPause() {
         if player?.rate != 0 {
             player?.pause()
+            fadingOutPlayer?.pause()
         } else {
             player?.play()
+            fadingOutPlayer?.play()
         }
         updateNowPlayingInfo()
     }
 
     func play() {
         player?.play()
+        fadingOutPlayer?.play()
         updateNowPlayingInfo()
     }
 
     func pause() {
         player?.pause()
+        fadingOutPlayer?.pause()
     }
 
     // MARK: - Remote commands / Now Playing

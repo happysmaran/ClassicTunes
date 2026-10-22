@@ -245,6 +245,8 @@
 "settings.playback" = "प्लेबैक";
 "settings.playback.resumeLast" = "लॉन्च पर आख़िरी गीत फिर शुरू करें";
 "settings.playback.pauseOnOutputChange" = "ऑडियो आउटपुट डिवाइस बदलने पर रोकें";
+"settings.playback.crossfade" = "गानों को क्रॉसफ़ेड करें";
+"settings.playback.crossfadeHelp" = "एक गाने से दूसरे में जाते समय गाने %d सेकंड तक ओवरलैप होते हैं।";
 "settings.data" = "डेटा और रीसेट";
 "settings.data.revealPlaylists" = "प्लेलिस्ट Finder में दिखाएँ";
 "settings.data.clearHistory" = "प्ले इतिहास साफ़ करें…";

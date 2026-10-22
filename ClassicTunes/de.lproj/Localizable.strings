@@ -245,6 +245,8 @@
 "settings.playback" = "Wiedergabe";
 "settings.playback.resumeLast" = "Beim Start letzten Titel fortsetzen";
 "settings.playback.pauseOnOutputChange" = "Pausieren, wenn sich das Audioausgabegerät ändert";
+"settings.playback.crossfade" = "Titel überblenden";
+"settings.playback.crossfadeHelp" = "Titel überlappen sich beim Übergang um %d Sekunden.";
 "settings.data" = "Daten & Zurücksetzen";
 "settings.data.revealPlaylists" = "Playlists im Finder zeigen";
 "settings.data.clearHistory" = "Wiedergabeverlauf löschen …";

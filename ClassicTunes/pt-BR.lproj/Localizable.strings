@@ -245,6 +245,8 @@
 "settings.playback" = "Reprodução";
 "settings.playback.resumeLast" = "Retomar a última música ao abrir";
 "settings.playback.pauseOnOutputChange" = "Pausar quando o dispositivo de saída de áudio mudar";
+"settings.playback.crossfade" = "Transição suave entre músicas";
+"settings.playback.crossfadeHelp" = "As músicas se sobrepõem por %d segundos na troca.";
 "settings.data" = "Dados e Redefinição";
 "settings.data.revealPlaylists" = "Mostrar Playlists no Finder";
 "settings.data.clearHistory" = "Limpar Histórico de Reprodução…";

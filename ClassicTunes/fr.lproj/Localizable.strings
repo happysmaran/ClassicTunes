@@ -245,6 +245,8 @@
 "settings.playback" = "Lecture";
 "settings.playback.resumeLast" = "Reprendre le dernier morceau au lancement";
 "settings.playback.pauseOnOutputChange" = "Mettre en pause quand la sortie audio change";
+"settings.playback.crossfade" = "Enchaîner les morceaux en fondu";
+"settings.playback.crossfadeHelp" = "Les morceaux se chevauchent de %d secondes lors de la transition.";
 "settings.data" = "Données et réinitialisation";
 "settings.data.revealPlaylists" = "Afficher les listes dans le Finder";
 "settings.data.clearHistory" = "Effacer l'historique de lecture…";

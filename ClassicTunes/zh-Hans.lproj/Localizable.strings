@@ -245,6 +245,8 @@
 "settings.playback" = "播放";
 "settings.playback.resumeLast" = "启动时继续播放上次的歌曲";
 "settings.playback.pauseOnOutputChange" = "音频输出设备变化时暂停";
+"settings.playback.crossfade" = "歌曲淡入淡出";
+"settings.playback.crossfadeHelp" = "切换歌曲时，两首歌会重叠 %d 秒。";
 "settings.data" = "数据与重置";
 "settings.data.revealPlaylists" = "在访达中显示播放列表";
 "settings.data.clearHistory" = "清除播放历史…";
