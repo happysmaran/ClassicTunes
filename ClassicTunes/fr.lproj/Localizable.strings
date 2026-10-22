@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "Afficher les paroles";
 "menu.hideLyrics"             = "Masquer les paroles";
 "menu.switchToMiniPlayer"     = "Basculer vers le MiniPlayer";
+"menu.showEqualizer"          = "Afficher l’égaliseur";
 "menu.controls"               = "Commandes";
 "menu.play"                   = "Lire";
 "menu.pause"                  = "Pause";

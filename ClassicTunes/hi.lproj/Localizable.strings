@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "बोल दिखाएँ";
 "menu.hideLyrics"             = "बोल छिपाएँ";
 "menu.switchToMiniPlayer"     = "मिनीप्लेयर पर जाएँ";
+"menu.showEqualizer"          = "इक्वलाइज़र दिखाएँ";
 "menu.controls"               = "नियंत्रण";
 "menu.play"                   = "बजाएँ";
 "menu.pause"                  = "रोकें";

@@ -359,6 +359,7 @@ struct ViewCommands: Commands {
     @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
+    @AppStorage("shortcut.showEqualizer") private var shortcutShowEqualizer: String = "⌘⌥E"
 
     var body: some Commands {
         CommandGroup(after: .sidebar) {
@@ -401,6 +402,13 @@ struct ViewCommands: Commands {
             }
             .dynamicShortcut(shortcutSwitchToMiniPlayer)
             .disabled(toggleMiniPlayerAction == nil)
+
+            // Opens the Settings window directly on its Equalizer tab.
+            Button("menu.showEqualizer") {
+                UserDefaults.standard.set("equalizer", forKey: "settingsSelectedTab")
+                openSettingsWindow()
+            }
+            .dynamicShortcut(shortcutShowEqualizer)
         }
     }
 }
@@ -510,6 +518,25 @@ struct HelpCommands: Commands {
             .keyboardShortcut("/", modifiers: [.command, .shift])
             .disabled(showKeyboardShortcutsAction == nil)
         }
+    }
+}
+
+// MARK: - Settings window helper
+
+/// Opens the Settings window by triggering the app menu's "Settings…" (⌘,) item,
+/// which works on every supported macOS version. Falls back to the responder-chain
+/// selectors if that item can't be found.
+func openSettingsWindow() {
+    NSApp.activate(ignoringOtherApps: true)
+    if let appMenu = NSApp.mainMenu?.items.first?.submenu,
+       let item = appMenu.items.first(where: { $0.keyEquivalent == "," }),
+       let action = item.action {
+        NSApp.sendAction(action, to: item.target, from: item)
+        return
+    }
+    let selector = Selector(("showSettingsWindow:"))
+    if !NSApp.sendAction(selector, to: nil, from: nil) {
+        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
     }
 }
 

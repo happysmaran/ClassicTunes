@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "歌詞を表示";
 "menu.hideLyrics"             = "歌詞を非表示";
 "menu.switchToMiniPlayer"     = "MiniPlayerに切り替え";
+"menu.showEqualizer"          = "イコライザを表示";
 "menu.controls"               = "制御";
 "menu.play"                   = "再生";
 "menu.pause"                  = "一時停止";

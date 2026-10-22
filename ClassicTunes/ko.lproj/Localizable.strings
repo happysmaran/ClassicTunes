@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "가사 보기";
 "menu.hideLyrics"             = "가사 가리기";
 "menu.switchToMiniPlayer"     = "MiniPlayer로 전환";
+"menu.showEqualizer"          = "이퀄라이저 보기";
 "menu.controls"               = "제어";
 "menu.play"                   = "재생";
 "menu.pause"                  = "일시 정지";

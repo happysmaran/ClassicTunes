@@ -11,6 +11,8 @@ struct SettingsView: View {
     @AppStorage("musicFolderBookmark") private var musicFolderBookmarkData: Data = Data()
     @AppStorage("resumeLastSongOnLaunch") private var resumeLastSongOnLaunch: Bool = false
     @AppStorage("pauseOnOutputDeviceChange") private var pauseOnOutputDeviceChange: Bool = false
+    // Selected Settings tab; persisted so menu commands can open a specific tab ("general", "backgrounds", "equalizer", "shortcuts").
+    @AppStorage("settingsSelectedTab") private var selectedTab: String = "general"
     @State private var showClearHistoryConfirm = false
     @State private var showResetAppearanceConfirm = false
 
@@ -40,6 +42,7 @@ struct SettingsView: View {
     @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
+    @AppStorage("shortcut.showEqualizer") private var shortcutShowEqualizer: String = "⌘⌥E"
 
     // Playback control shortcuts
     @AppStorage("shortcut.playPause") private var shortcutPlayPause: String = "Space"
@@ -52,7 +55,7 @@ struct SettingsView: View {
     @AppStorage("shortcut.repeat") private var shortcutRepeat: String = "⌘R"
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             // MARK: - General Tab
             Form {
                 Section(header: Text("settings.appearance")) {
@@ -127,6 +130,7 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .frame(width: 480, height: 540)
             .tabItem { Label("General", systemImage: "gearshape") }
+            .tag("general")
             .confirmationDialog("settings.data.clearHistoryConfirm", isPresented: $showClearHistoryConfirm, titleVisibility: .visible) {
                 Button("settings.data.clear", role: .destructive) { clearPlayHistory() }
             } message: {
@@ -152,6 +156,13 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .frame(width: 480, height: 540)
             .tabItem { Label("settings.backgrounds", systemImage: "photo") }
+            .tag("backgrounds")
+
+            // MARK: - Equalizer Tab
+            EqualizerSettingsView()
+                .frame(width: 480, height: 540)
+                .tabItem { Label("Equalizer", systemImage: "slider.vertical.3") }
+                .tag("equalizer")
 
             // MARK: - Shortcuts Tab
             // Scrollable list of shortcut groups, each rendered as a card-like
@@ -177,6 +188,7 @@ struct SettingsView: View {
                         ShortcutAssignerRow(title: "menu.toggleUpNext", shortcut: $shortcutToggleUpNext)
                         ShortcutAssignerRow(title: "menu.toggleLyrics", shortcut: $shortcutToggleLyrics)
                         ShortcutAssignerRow(title: "menu.switchToMiniPlayer", shortcut: $shortcutSwitchToMiniPlayer)
+                        ShortcutAssignerRow(title: "menu.showEqualizer", shortcut: $shortcutShowEqualizer)
                     }
 
                     shortcutSection(title: "shortcuts.group.controls") {
@@ -217,6 +229,7 @@ struct SettingsView: View {
             }
             .frame(width: 480, height: 540)
             .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            .tag("shortcuts")
         }
         .preferredColorScheme(appearanceManager.currentColorScheme())
         .tint(appearanceManager.themeColor)
@@ -260,6 +273,7 @@ struct SettingsView: View {
         shortcutToggleUpNext = "⌘U"
         shortcutToggleLyrics = "⌘L"
         shortcutSwitchToMiniPlayer = "⌘⇧M"
+        shortcutShowEqualizer = "⌘⌥E"
         shortcutPlayPause = "Space"
         shortcutNextSong = "⌘→"
         shortcutPreviousSong = "⌘←"

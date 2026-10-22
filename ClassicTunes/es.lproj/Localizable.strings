@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "Mostrar letra";
 "menu.hideLyrics"             = "Ocultar letra";
 "menu.switchToMiniPlayer"     = "Cambiar a MiniPlayer";
+"menu.showEqualizer"          = "Mostrar ecualizador";
 "menu.controls"               = "Controles";
 "menu.play"                   = "Reproducir";
 "menu.pause"                  = "Pausa";

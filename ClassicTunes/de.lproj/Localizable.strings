@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "Songtext einblenden";
 "menu.hideLyrics"             = "Songtext ausblenden";
 "menu.switchToMiniPlayer"     = "Zum MiniPlayer wechseln";
+"menu.showEqualizer"          = "Equalizer anzeigen";
 "menu.controls"               = "Steuerung";
 "menu.play"                   = "Wiedergabe";
 "menu.pause"                  = "Pause";

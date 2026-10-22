@@ -152,6 +152,7 @@ final class PlayerEngine: ObservableObject {
         stopCurrentPlayback()
 
         let item = AVPlayerItem(url: song.url)
+        Equalizer.shared.attach(to: item)
         let newPlayer = AVPlayer(playerItem: item)
         newPlayer.volume = Float(volume)
         if seconds > 0 {

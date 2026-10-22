@@ -177,6 +177,7 @@
 "menu.showLyrics"             = "Показать текст песни";
 "menu.hideLyrics"             = "Скрыть текст песни";
 "menu.switchToMiniPlayer"     = "Перейти в MiniPlayer";
+"menu.showEqualizer"          = "Показать эквалайзер";
 "menu.controls"               = "Управление";
 "menu.play"                   = "Воспроизвести";
 "menu.pause"                  = "Пауза";

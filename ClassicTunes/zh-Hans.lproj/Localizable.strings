@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "显示歌词";
 "menu.hideLyrics"             = "隐藏歌词";
 "menu.switchToMiniPlayer"     = "切换到迷你播放器";
+"menu.showEqualizer"          = "显示均衡器";
 "menu.controls"               = "控制";
 "menu.play"                   = "播放";
 "menu.pause"                  = "暂停";

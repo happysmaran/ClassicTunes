@@ -23,6 +23,7 @@ struct KeyboardShortcutsView: View {
     @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
+    @AppStorage("shortcut.showEqualizer") private var shortcutShowEqualizer: String = "⌘⌥E"
     
     // MARK: - Control Key Backing Storage
     @AppStorage("shortcut.playPause") private var shortcutPlayPause: String = "Space"
@@ -60,7 +61,8 @@ struct KeyboardShortcutsView: View {
                 ("menu.showAsCoverFlow", shortcutShowAsCoverFlow),
                 ("menu.toggleUpNext", shortcutToggleUpNext),
                 ("menu.toggleLyrics", shortcutToggleLyrics),
-                ("menu.switchToMiniPlayer", shortcutSwitchToMiniPlayer)
+                ("menu.switchToMiniPlayer", shortcutSwitchToMiniPlayer),
+                ("menu.showEqualizer", shortcutShowEqualizer)
             ]),
             ShortcutGroup(title: "shortcuts.group.controls", items: [
                 ("menu.playPause", shortcutPlayPause),

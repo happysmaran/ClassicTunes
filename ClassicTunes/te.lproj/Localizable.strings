@@ -178,6 +178,7 @@
 "menu.showLyrics"             = "సాహిత్యం చూపించు";
 "menu.hideLyrics"             = "సాహిత్యం దాచు";
 "menu.switchToMiniPlayer"     = "మినిప్లేయర్‌కి మారు";
+"menu.showEqualizer"          = "ఈక్వలైజర్ చూపించు";
 "menu.controls"               = "నియంత్రణలు";
 "menu.play"                   = "ప్లే చేయి";
 "menu.pause"                  = "పాజ్ చేయి";
