@@ -20,6 +20,9 @@ struct MiniPlayerView: View {
     let onNext: () -> Void
     let onSeek: (Double) -> Void
     let onClose: () -> Void
+    // Up Next queue, revealed when the window is resized taller than its default height.
+    let upcomingSongs: [Song]
+    let onPlayUpcoming: (Song) -> Void
 
     // Custom initializer needed because the bindings are declared with
     // underscored backing storage (_selectedSong, etc.) for explicit wiring.
@@ -33,7 +36,9 @@ struct MiniPlayerView: View {
         onPrevious: @escaping () -> Void,
         onNext: @escaping () -> Void,
         onSeek: @escaping (Double) -> Void,
-        onClose: @escaping () -> Void
+        onClose: @escaping () -> Void,
+        upcomingSongs: [Song] = [],
+        onPlayUpcoming: @escaping (Song) -> Void = { _ in }
     ) {
         _selectedSong = selectedSong
         _isPlaying = isPlaying
@@ -45,6 +50,8 @@ struct MiniPlayerView: View {
         self.onNext = onNext
         self.onSeek = onSeek
         self.onClose = onClose
+        self.upcomingSongs = upcomingSongs
+        self.onPlayUpcoming = onPlayUpcoming
     }
 
     // True while the user is actively dragging the scrub bar; used to
@@ -58,14 +65,26 @@ struct MiniPlayerView: View {
     private var theme: Color { appearanceManager.themeColor }
     private var isDark: Bool { colorScheme == .dark }
 
+    // Default (collapsed) height of the player bar; growing the window past this reveals the queue.
+    static let barHeight: CGFloat = 72
+    static let width: CGFloat = 420
+
     var body: some View {
-        HStack(spacing: 12) {
-            transportControls
-            lcdDisplay
-            closeButton
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                transportControls
+                lcdDisplay
+                closeButton
+            }
+            .padding(.horizontal, 12)
+            .frame(height: Self.barHeight)
+
+            upNextQueue
         }
-        .padding(.horizontal, 12)
-        .frame(width: 420, height: 72)
+        // Width is fixed; height starts at the bar height (the minimum) and can grow to show the queue.
+        .frame(minWidth: Self.width, maxWidth: Self.width,
+               minHeight: Self.barHeight, maxHeight: .infinity, alignment: .top)
+        .clipped()
         .background(metalBackground)
         .tint(theme)
         .environment(\.themeColor, theme)
@@ -151,6 +170,73 @@ struct MiniPlayerView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Up Next queue
+
+    private var upNextQueue: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(Color.black.opacity(isDark ? 0.6 : 0.35))
+                .frame(height: 1)
+            Text("Up Next")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+
+            if upcomingSongs.isEmpty {
+                Text("Nothing queued")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(upcomingSongs.enumerated()), id: \.element.id) { index, song in
+                            queueRow(song, index: index)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxHeight: .infinity)
+        .background(Color.black.opacity(isDark ? 0.25 : 0.06))
+    }
+
+    private func queueRow(_ song: Song, index: Int) -> some View {
+        Button { onPlayUpcoming(song) } label: {
+            HStack(spacing: 8) {
+                Group {
+                    if let image = song.artworkImage {
+                        Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
+                    } else {
+                        Rectangle().fill(Color.gray.opacity(0.4))
+                            .overlay(Image(systemName: "music.note").font(.system(size: 9)).foregroundStyle(.secondary))
+                    }
+                }
+                .frame(width: 26, height: 26)
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(song.title).font(.system(size: 11, weight: .medium)).lineLimit(1)
+                    Text(song.artist).font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                if let duration = song.duration {
+                    Text(formatPlaybackTime(duration))
+                        .font(.system(size: 9).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(index.isMultiple(of: 2) ? Color.clear : Color.black.opacity(isDark ? 0.15 : 0.04))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - LCD display
 
     private var lcdDisplay: some View {
@@ -164,11 +250,12 @@ struct MiniPlayerView: View {
                             .foregroundStyle(Color.black.opacity(0.9))
                             .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
                             .lineLimit(1)
-                        Text(song.artist)
+                        AnimatedLabel(texts: [song.artist, song.album])
                             .font(.system(size: 10))
                             .foregroundStyle(Color.black.opacity(0.9))
                             .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
                             .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     .frame(maxWidth: .infinity)
 
@@ -261,7 +348,9 @@ struct MiniPlayerHost: View {
             onPrevious: engine.playPrevious,
             onNext: engine.playNext,
             onSeek: engine.handleSeek,
-            onClose: onClose
+            onClose: onClose,
+            upcomingSongs: engine.upcomingSongs,
+            onPlayUpcoming: engine.playSongFromUpNext
         )
     }
 }

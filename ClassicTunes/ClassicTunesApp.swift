@@ -398,10 +398,15 @@ struct ViewCommands: Commands {
             Divider()
 
             Button("menu.switchToMiniPlayer") {
-                toggleMiniPlayerAction?()
+                if let toggleMiniPlayerAction {
+                    toggleMiniPlayerAction()
+                } else {
+                    // The main window isn't focused (e.g. the mini player is key), so there's no
+                    // focused action; the main view listens for this to switch back.
+                    NotificationCenter.default.post(name: .toggleMiniPlayerRequested, object: nil)
+                }
             }
             .dynamicShortcut(shortcutSwitchToMiniPlayer)
-            .disabled(toggleMiniPlayerAction == nil)
 
             // Opens the Settings window directly on its Equalizer tab.
             Button("menu.showEqualizer") {
@@ -562,4 +567,8 @@ extension View {
         
         return self.keyboardShortcut(key, modifiers: modifiers)
     }
+}
+
+extension Notification.Name {
+    static let toggleMiniPlayerRequested = Notification.Name("ToggleMiniPlayerRequested")
 }

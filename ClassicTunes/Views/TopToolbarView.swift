@@ -132,7 +132,7 @@ struct TopToolbarView: View {
                 .frame(maxWidth: 240)
 
             AnimatedLabel(texts: [song.artist, song.album])
-                .font(.caption2)
+                .font(.system(size: 10))
                 .foregroundColor(Color.black.opacity(0.9))
                 .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
                 .lineLimit(1)

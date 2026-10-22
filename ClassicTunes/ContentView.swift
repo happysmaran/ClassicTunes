@@ -335,15 +335,15 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            if isMiniPlayerActive {
-                // Empty view when mini player is active
-                EmptyView()
-            } else {
-                fullPlayerView
+        // The full player stays in the hierarchy while the mini player is active (its window is
+        // just hidden), so view state such as the highlighted row survives the round trip.
+        fullPlayerView
+            .tint(appearanceManager.themeColor)
+            .task {
+                for await _ in NotificationCenter.default.notifications(named: .toggleMiniPlayerRequested) {
+                    toggleMiniPlayer()
+                }
             }
-        }
-        .tint(appearanceManager.themeColor)
     }
 
     // The full (non-mini-player) layout, with all modifiers applied in
@@ -1225,14 +1225,21 @@ struct ContentView: View {
 
         let hostingController = NSHostingController(rootView: miniPlayerView.environmentObject(appearanceManager))
 
+        // The window is vertically resizable: dragging it taller than the default bar reveals Up Next.
+        // The hosting controller derives the window's min/max size from the SwiftUI view,
+        // so the content always lays out to match the window as it is resized.
+        hostingController.sizingOptions = [.minSize, .maxSize]
+
         let window = NSWindow(
-            contentRect: NSRect(x: 100, y: 100, width: 300, height: 100),
-            styleMask: [.titled, .closable, .miniaturizable, .nonactivatingPanel],
+            contentRect: NSRect(x: 100, y: 100, width: MiniPlayerView.width, height: MiniPlayerView.barHeight),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
 
         window.contentViewController = hostingController
+        window.setContentSize(NSSize(width: MiniPlayerView.width, height: MiniPlayerView.barHeight))
+        window.contentMinSize = NSSize(width: MiniPlayerView.width, height: MiniPlayerView.barHeight)
         window.title = "MiniPlayer"
         window.isReleasedWhenClosed = false
         window.center()
