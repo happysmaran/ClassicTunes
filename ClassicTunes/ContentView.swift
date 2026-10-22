@@ -1817,7 +1817,7 @@ struct UpNextView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(AquaSidebarBackground())
     }
 
     // MARK: - Drop zone strip between rows
@@ -1992,6 +1992,7 @@ struct LyricsView: View {
             Text("bottomBar.lyrics")
                 .font(.headline)
                 .padding(.horizontal)
+                .padding(.top, 16)
 
             if let song = currentSong {
                 HStack(spacing: 12) {
@@ -2046,8 +2047,8 @@ struct LyricsView: View {
 
             Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(AquaSidebarBackground())
     }
 }
 

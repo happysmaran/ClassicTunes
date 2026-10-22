@@ -174,18 +174,16 @@ struct SidebarView: View {
     }
 }
 
-// The classic Mac OS X "Aqua" source-list panel: a soft brushed vertical
-// gradient (rather than a flat fill) with a thin bright top hairline and a
-// darker trailing-edge seam separating it from the content pane — the same
-// subtle depth cues Leopard/Tiger-era Finder and iTunes sidebars used.
+// Classic Mac OS X "Aqua" source-list panel
 struct AquaSidebarBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var gradientColors: [Color] {
         if colorScheme == .dark {
-            return [Color(white: 0.16), Color(white: 0.11)]
+            return [Color(red: 0.16, green: 0.19, blue: 0.25), Color(red: 0.12, green: 0.15, blue: 0.20)]
         } else {
-            return [Color(white: 0.96), Color(white: 0.87)]
+            // iTunes 8–9 source list: a cool blue-gray rather than neutral gray.
+            return [Color(red: 0.85, green: 0.89, blue: 0.93), Color(red: 0.78, green: 0.83, blue: 0.89)]
         }
     }
 

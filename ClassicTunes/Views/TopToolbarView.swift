@@ -194,26 +194,25 @@ struct TopToolbarView: View {
     }
 
     // MARK: - Styling & Button Builders
-    @ViewBuilder
     private var toolbarBackground: some View {
-        if colorScheme == .dark {
+        let isDark = colorScheme == .dark
+        let gradientColors: [Color] = isDark
+            ? [Color(white: 0.34), Color(white: 0.24), Color(white: 0.18)]
+            : [Color(white: 0.93), Color(white: 0.80), Color(white: 0.70)]
+
+        return ZStack {
+            LinearGradient(colors: gradientColors, startPoint: .top, endPoint: .bottom)
             LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color(nsColor: .controlBackgroundColor)
-                ]),
+                colors: [Color.white.opacity(isDark ? 0.08 : 0.35), Color.white.opacity(0)],
                 startPoint: .top,
-                endPoint: .bottom
+                endPoint: .center
             )
-        } else {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color(nsColor: .underPageBackgroundColor)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
+        }
+        .overlay(alignment: .top) {
+            Rectangle().fill(Color.white.opacity(isDark ? 0.25 : 0.7)).frame(height: 1)
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.black.opacity(isDark ? 0.6 : 0.4)).frame(height: 1)
         }
     }
 
