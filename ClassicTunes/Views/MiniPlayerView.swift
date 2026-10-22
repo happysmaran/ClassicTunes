@@ -1,8 +1,10 @@
 import SwiftUI
+import AVFoundation
 
-// A small floating "mini player" window/panel: shows the current song's
-// artwork, title/artist, transport controls (prev/play-pause/next), a close
-// button, and a scrub bar with elapsed/remaining time labels.
+// A small floating "mini player" in the style of the classic iTunes MiniPlayer:
+// a brushed-metal bar with round transport buttons on the left and an inset
+// "LCD" display (artwork, title/artist, scrub bar and times) on the right.
+// Accent colors come from the app's theme color.
 struct MiniPlayerView: View {
     // Currently playing song (nil shows a placeholder Apple logo state).
     @Binding var selectedSong: Song?
@@ -45,239 +47,276 @@ struct MiniPlayerView: View {
         self.onClose = onClose
     }
 
-    // True while the user is actively dragging the scrub slider; used to
+    // True while the user is actively dragging the scrub bar; used to
     // avoid fighting with external playback-position updates mid-drag.
     @State private var isSeeking = false
+    // Local mirror of `isPlaying` so the play/pause icon refreshes immediately.
+    @State private var displayPlaying = false
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appearanceManager: AppearanceManager
+
+    private var theme: Color { appearanceManager.themeColor }
+    private var isDark: Bool { colorScheme == .dark }
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                // Song info capsule
-                ZStack {
-                    // Rounded "pill" background behind the song info/controls,
-                    // styled with a soft green gradient reminiscent of classic iTunes.
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(red: 0.88, green: 0.94, blue: 0.88),
-                                Color(red: 0.76, green: 0.85, blue: 0.76)
-                            ]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
-                        )
-                        .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 1)
-                        .frame(height: 60)
+        HStack(spacing: 12) {
+            transportControls
+            lcdDisplay
+            closeButton
+        }
+        .padding(.horizontal, 12)
+        .frame(width: 420, height: 72)
+        .background(metalBackground)
+        .tint(theme)
+        .environment(\.themeColor, theme)
+        .onAppear { displayPlaying = isPlaying }
+        // Position ticks and song changes also resync the icon.
+        .onChange(of: playbackPosition) { _ in displayPlaying = isPlaying }
+        .onChange(of: selectedSong) { _ in displayPlaying = isPlaying }
+    }
 
-                    if let song = selectedSong {
-                        // Song is selected: show artwork, title/artist, and controls.
-                        HStack(spacing: 12) {
-                            // Album art
-                            if let image = song.artworkImage {
-                                Image(nsImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 50, height: 50)
-                                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                            } else {
-                                // Fallback placeholder when there's no artwork.
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.gray)
-                                    .frame(width: 50, height: 50)
-                            }
+    // MARK: - Chrome
 
-                            // Song info with truncation
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(song.title)
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.black.opacity(0.9))
-                                    .shadow(color: .white.opacity(0.8), radius: 0.5, x: 0, y: 1)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
+    // Brushed-metal bar, matching the app's light/dark chrome.
+    private var metalBackground: some View {
+        LinearGradient(
+            colors: isDark
+                ? [Color(white: 0.30), Color(white: 0.19)]
+                : [Color(white: 0.93), Color(white: 0.78)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.white.opacity(isDark ? 0.12 : 0.7))
+                .frame(height: 1)
+        }
+    }
 
-                                Text(song.artist)
-                                    .font(.caption2)
-                                    .foregroundColor(Color.black.opacity(0.9))
-                                    .shadow(color: .white.opacity(0.8), radius: 0.5, x: 0, y: 1)
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                            .frame(maxWidth: 180) // Limit width for proper truncation
-
-                            Spacer()
-
-                            // Controls
-                            // Transport controls: previous / play-pause / next.
-                            // Each button shares the same "glassy" circular
-                            // background styling, varying only by icon/action.
-                            HStack(spacing: 8) {
-                                Button(action: onPrevious) {
-                                    Image(systemName: "backward.fill")
-                                        .padding(6)
-                                        .background(
-                                            Circle()
-                                                .fill(colorScheme == .dark ?
-                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
-                                                    AnyShapeStyle(LinearGradient(
-                                                        gradient: Gradient(colors: [
-                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
-                                                            Color(nsColor: .separatorColor).opacity(0.25)
-                                                        ]),
-                                                        startPoint: .top,
-                                                        endPoint: .bottom
-                                                    ))
-                                                )
-                                                .overlay(
-                                                    Circle()
-                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
-                                                )
-                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
-                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-
-                                // Play/pause button — icon swaps based on isPlaying.
-                                Button(action: onPlayPause) {
-                                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                        .padding(6)
-                                        .background(
-                                            Circle()
-                                                .fill(colorScheme == .dark ?
-                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
-                                                    AnyShapeStyle(LinearGradient(
-                                                        gradient: Gradient(colors: [
-                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
-                                                            Color(nsColor: .separatorColor).opacity(0.25)
-                                                        ]),
-                                                        startPoint: .top,
-                                                        endPoint: .bottom
-                                                    )
-                                                ))
-                                                .overlay(
-                                                    Circle()
-                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
-                                                )
-                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
-                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-
-                                Button(action: onNext) {
-                                    Image(systemName: "forward.fill")
-                                        .padding(6)
-                                        .background(
-                                            Circle()
-                                                .fill(colorScheme == .dark ?
-                                                    AnyShapeStyle(Color(nsColor: .controlBackgroundColor)) :
-                                                    AnyShapeStyle(LinearGradient(
-                                                        gradient: Gradient(colors: [
-                                                            Color(nsColor: .controlBackgroundColor).opacity(0.95),
-                                                            Color(nsColor: .separatorColor).opacity(0.25)
-                                                        ]),
-                                                        startPoint: .top,
-                                                        endPoint: .bottom
-                                                    )
-                                                ))
-                                                .overlay(
-                                                    Circle()
-                                                        .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
-                                                )
-                                                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
-                                                .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.2), radius: 0.5, x: 0, y: -0.5)
-                                        )
-                                        .foregroundColor(.primary)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-
-                            // Close button - consistent color regardless of mode
-                            Button(action: onClose) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        .padding(.horizontal)
-                    } else {
-                        // No song selected: show a simple placeholder Apple logo.
-                        HStack {
-                            Spacer()
-                            Image(systemName: "applelogo")
-                                .font(.title)
-                                .foregroundColor(.gray)
-                            Spacer()
-                        }
-                    }
-                }
+    private var transportControls: some View {
+        HStack(spacing: 6) {
+            roundButton("backward.fill", action: onPrevious)
+            roundButton(displayPlaying ? "pause.fill" : "play.fill") {
+                onPlayPause()
+                displayPlaying = isPlaying
             }
-            .padding(.horizontal)
+            roundButton("forward.fill", action: onNext)
+        }
+        .disabled(selectedSong == nil)
+    }
 
-            // Progress bar
-            // Only show the scrub bar / time labels once a song is loaded.
-            if selectedSong != nil {
-                VStack(spacing: 4) {
-                    Slider(
-                        value: Binding(
-                            get: { playbackPosition },
-                            set: { newValue in
-                                // Mark as seeking while the user drags, and
-                                // optimistically update the displayed position.
-                                isSeeking = true
-                                playbackPosition = newValue
-                            }
-                        ),
-                        in: 0...1,
-                        onEditingChanged: { editing in
-                            // When the drag ends, commit the seek via the callback.
-                            if !editing {
-                                onSeek(playbackPosition)
-                                isSeeking = false
-                            }
-                        }
-                    )
-                    .disabled(playbackDuration <= 0)
-                    .background(
-                        Capsule()
-                            .fill(.tint.opacity(0.3))
-                            .frame(height: 4)
-                    )
-                    .frame(height: 4)
+    // Round transport button using the same styling as the main toolbar's playback buttons.
+    private func roundButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .padding(8)
+                .background(
+                    Circle()
+                        .fill(buttonBackground)
+                        .overlay(
+                            Circle()
+                                .stroke(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.8)
+                        )
+                        .shadow(color: Color.black.opacity(isDark ? 0.3 : 0.25), radius: 1.5, x: 0, y: 1)
+                        .shadow(color: Color.white.opacity(isDark ? 0.15 : 0.3), radius: 0.5, x: 0, y: -0.5)
+                )
+                .foregroundColor(.primary)
+        }
+        .buttonStyle(.plain)
+    }
 
-                    // Time labels
-                    // Elapsed time (left) and total duration (right).
-                    HStack {
-                        Text(timeString(from: playbackPosition * playbackDuration))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text(timeString(from: playbackDuration))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+    private var buttonBackground: AnyShapeStyle {
+        if isDark {
+            return AnyShapeStyle(Color(nsColor: .controlBackgroundColor))
+        } else {
+            return AnyShapeStyle(LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(nsColor: .controlBackgroundColor).opacity(0.95),
+                    Color(nsColor: .separatorColor).opacity(0.25)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            ))
+        }
+    }
+
+    private var closeButton: some View {
+        Button(action: onClose) {
+            Image(systemName: "xmark")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(Color.secondary)
+                .frame(width: 18, height: 18)
+                .background(Circle().fill(Color.primary.opacity(0.1)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - LCD display
+
+    private var lcdDisplay: some View {
+        HStack(spacing: 8) {
+            if let song = selectedSong {
+                artwork(for: song)
+                VStack(spacing: 2) {
+                    VStack(spacing: 0) {
+                        Text(song.title)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.black.opacity(0.9))
+                            .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
+                            .lineLimit(1)
+                        Text(song.artist)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.black.opacity(0.9))
+                            .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
+                            .lineLimit(1)
                     }
+                    .frame(maxWidth: .infinity)
+
+                    HStack(spacing: 6) {
+                        Text(timeString(from: playbackPosition * playbackDuration))
+                        scrubBar
+                        Text("-" + timeString(from: max(playbackDuration - playbackPosition * playbackDuration, 0)))
+                    }
+                    .font(.system(size: 9).monospacedDigit())
+                    .foregroundStyle(Color.black.opacity(0.7))
+                    .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
                 }
-                .padding(.horizontal)
+            } else {
+                Image(systemName: "applelogo")
+                    .font(.title2)
+                    .foregroundStyle(Color.gray)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .frame(width: 400, height: 120)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity)
+        .frame(height: 50)
+        // Same green pill as the main window's now-playing display.
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.88, green: 0.94, blue: 0.88),
+                        Color(red: 0.76, green: 0.85, blue: 0.76)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                ))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 1)
+        )
     }
 
-    // Formats a duration in seconds as "M:SS" for display.
-    private func timeString(from seconds: Double) -> String {
-        let totalSeconds = Int(seconds)
-        let minutes = totalSeconds / 60
-        let seconds = totalSeconds % 60
-        return String(format: "%d:%02d", minutes, seconds)
+    @ViewBuilder
+    private func artwork(for song: Song) -> some View {
+        Group {
+            if let image = song.artworkImage {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.4))
+                    .overlay(Image(systemName: "music.note").foregroundStyle(.secondary))
+            }
+        }
+        .frame(width: 38, height: 38)
+        .clipShape(RoundedRectangle(cornerRadius: 3))
+        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.black.opacity(0.35), lineWidth: 0.5))
     }
+
+    private var scrubBar: some View {
+        ThemedScrubBar(
+            position: $playbackPosition,
+            isEnabled: playbackDuration > 0,
+            isSeeking: $isSeeking,
+            onSeek: onSeek
+        )
+    }
+
+    private func timeString(from seconds: Double) -> String {
+        formatPlaybackTime(seconds)
+    }
+}
+
+// Hosts the mini player and observes the engine so its bindings keep refreshing
+// even though it lives in its own window outside the main view hierarchy.
+struct MiniPlayerHost: View {
+    @ObservedObject var engine: PlayerEngine
+    let onClose: () -> Void
+
+    var body: some View {
+        MiniPlayerView(
+            selectedSong: $engine.selectedSong,
+            isPlaying: Binding(get: { (engine.player?.rate ?? 0) != 0 }, set: { shouldPlay in
+                if shouldPlay { engine.play() } else { engine.pause() }
+            }),
+            volume: $engine.volume,
+            playbackPosition: $engine.playbackPosition,
+            playbackDuration: $engine.playbackDuration,
+            onPlayPause: engine.togglePlayPause,
+            onPrevious: engine.playPrevious,
+            onNext: engine.playNext,
+            onSeek: engine.handleSeek,
+            onClose: onClose
+        )
+    }
+}
+
+// Thin Aqua-style progress bar filled with the theme color; click or drag to seek.
+// Shared by the mini player and the main window's now-playing display.
+struct ThemedScrubBar: View {
+    @Binding var position: Double
+    var isEnabled: Bool = true
+    @Binding var isSeeking: Bool
+    let onSeek: (Double) -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.themeColor) private var themeColor
+
+    var body: some View {
+        GeometryReader { proxy in
+            let fraction = min(max(position, 0), 1)
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.black.opacity(colorScheme == .dark ? 0.5 : 0.18))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.25), lineWidth: 0.5))
+                Capsule()
+                    .fill(LinearGradient(
+                        colors: [themeColor.shaded(0.4), themeColor],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ))
+                    .frame(width: max(proxy.size.width * fraction, 0))
+            }
+            .frame(height: 6)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        guard isEnabled, proxy.size.width > 0 else { return }
+                        isSeeking = true
+                        position = min(max(value.location.x / proxy.size.width, 0), 1)
+                    }
+                    .onEnded { _ in
+                        // Commit the seek once the drag ends.
+                        if isSeeking {
+                            onSeek(position)
+                            isSeeking = false
+                        }
+                    }
+            )
+        }
+        .frame(height: 12)
+    }
+}
+
+// Formats a duration in seconds as "M:SS" for display.
+func formatPlaybackTime(_ seconds: Double) -> String {
+    let totalSeconds = Int(seconds.isFinite ? max(seconds, 0) : 0)
+    return String(format: "%d:%02d", totalSeconds / 60, totalSeconds % 60)
 }

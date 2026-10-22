@@ -124,7 +124,7 @@ struct TopToolbarView: View {
     private func songInfoView(_ song: Song) -> some View {
         VStack(spacing: 2) {
             Text(song.title)
-                .font(.subheadline)
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(Color.black.opacity(0.9))
                 .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
                 .lineLimit(1)
@@ -138,30 +138,22 @@ struct TopToolbarView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
 
-            Slider(
-                value: Binding(
-                    get: { playbackPosition },
-                    set: { newValue in
-                        isSeeking = true
-                        playbackPosition = newValue
-                    }
-                ),
-                in: 0...1,
-                onEditingChanged: { editing in
-                    if !editing {
-                        onSeek(playbackPosition)
-                        isSeeking = false
-                    }
-                }
-            )
+            // Elapsed time, scrub bar and remaining time, as in the mini player.
+            HStack(spacing: 6) {
+                Text(formatPlaybackTime(playbackPosition * playbackDuration))
+                ThemedScrubBar(
+                    position: $playbackPosition,
+                    isEnabled: playbackDuration > 0,
+                    isSeeking: $isSeeking,
+                    onSeek: onSeek
+                )
+                Text("-" + formatPlaybackTime(playbackDuration - playbackPosition * playbackDuration))
+            }
+            .font(.system(size: 9).monospacedDigit())
+            .foregroundColor(Color.black.opacity(0.7))
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
             .frame(width: 280)
-            .background(
-                Capsule()
-                    .fill(.tint.opacity(0.3))
-                    .frame(height: 4)
-            )
-            .frame(height: 4)
-            .padding(.top, 4)
+            .padding(.top, 2)
         }
         .padding(.horizontal)
     }

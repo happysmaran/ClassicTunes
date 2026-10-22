@@ -1213,8 +1213,6 @@ struct ContentView: View {
     }
 
     private func openMiniPlayer() {
-        guard engine.selectedSong != nil else { return }
-
         isMiniPlayerActive = true
 
         // Hide main window
@@ -1223,24 +1221,9 @@ struct ContentView: View {
         }
 
         // Create and show mini player window
-        let miniPlayerView = MiniPlayerView(
-            selectedSong: $engine.selectedSong,
-            isPlaying: Binding(get: { (engine.player?.rate ?? 0) != 0 }, set: { shouldPlay in
-                if shouldPlay { engine.play() } else { engine.pause() }
-            }),
-            volume: $engine.volume,
-            playbackPosition: $engine.playbackPosition,
-            playbackDuration: $engine.playbackDuration,
-            onPlayPause: {
-                engine.togglePlayPause()
-            },
-            onPrevious: engine.playPrevious,
-            onNext: engine.playNext,
-            onSeek: engine.handleSeek,
-            onClose: closeMiniPlayer
-        )
+        let miniPlayerView = MiniPlayerHost(engine: engine, onClose: closeMiniPlayer)
 
-        let hostingController = NSHostingController(rootView: miniPlayerView)
+        let hostingController = NSHostingController(rootView: miniPlayerView.environmentObject(appearanceManager))
 
         let window = NSWindow(
             contentRect: NSRect(x: 100, y: 100, width: 300, height: 100),
