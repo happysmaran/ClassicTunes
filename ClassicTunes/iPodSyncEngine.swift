@@ -317,7 +317,7 @@ final class iPodSyncEngine: ObservableObject {
 
         do {
             let fm = FileManager.default
-            let musicDir = try musicFolder(on: device)
+            _ = try musicFolder(on: device)
             let itunesDir = try iTunesFolder(on: device)
             
             let controlDir = (grantedVolumeURL ?? device.volumeURL)
@@ -433,7 +433,7 @@ final class iPodSyncEngine: ObservableObject {
     func addTrack(_ song: Song, to device: iPodDevice) async throws {
         var db = try readDatabase(from: device)
 
-        let musicDir  = try musicFolder(on: device)
+        _ = try musicFolder(on: device)
         let itunesDir = try iTunesFolder(on: device)
         let fm        = FileManager.default
 
@@ -471,7 +471,7 @@ final class iPodSyncEngine: ObservableObject {
         guard trackIndex < db.tracks.count else { return }
 
         let fm       = FileManager.default
-        let musicDir = try musicFolder(on: device)
+        _ = try musicFolder(on: device)
         let itunesDir = try iTunesFolder(on: device)
 
         // Remove the audio file

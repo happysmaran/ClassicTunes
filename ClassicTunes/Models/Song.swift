@@ -3,7 +3,7 @@ import AVFoundation
 import AppKit
 
 // Represents a single audio track within the application along with its associated metadata and artwork.
-struct Song: Identifiable, Codable, Hashable {
+nonisolated struct Song: Identifiable, Codable, Hashable {
     
     // The unique identifier for the song instance.
     let id: UUID

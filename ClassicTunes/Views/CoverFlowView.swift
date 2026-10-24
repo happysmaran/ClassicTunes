@@ -793,7 +793,7 @@ enum AlbumArtworkLoader {
     }()
 
     // Covers render at most ~200pt tall, so 512px is sharp on Retina displays.
-    private static let maxPixelSize = 512
+    private nonisolated static let maxPixelSize = 512
 
     // Cover sizes are bucketed so the baked corner radius/border stay
     // proportionally correct without re-baking on every resize tick.
@@ -846,7 +846,7 @@ enum AlbumArtworkLoader {
 
     // Uses ImageIO's thumbnail generation to decode directly to the target
     // pixel size, far cheaper than decoding full-size then resizing.
-    private static func downsample(data: Data, maxPixelSize: Int) -> CGImage? {
+    private nonisolated static func downsample(data: Data, maxPixelSize: Int) -> CGImage? {
         let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
         guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions as CFDictionary) else { return nil }
         let thumbOptions: [CFString: Any] = [
@@ -863,7 +863,7 @@ enum AlbumArtworkLoader {
     // glass sheen using additive blending, then a 1pt inside hairline border.
     // Point-based metrics are scaled by pixels-per-point so the result matches
     // the live-composited look at `displayWidth`.
-    private static func bake(_ image: CGImage, displayWidth: CGFloat) -> CGImage? {
+    private nonisolated static func bake(_ image: CGImage, displayWidth: CGFloat) -> CGImage? {
         let width = image.width
         let height = image.height
         let pixelsPerPoint = CGFloat(max(width, height)) / displayWidth

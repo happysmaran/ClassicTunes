@@ -30,7 +30,7 @@ final class StableVolumeIndex: ObservableObject {
     // Never turn a song down by more than this many dB.
     private static let maxAttenuation: Float = 12
     // Length of the section of each song that gets measured.
-    private static let sampleSeconds: Double = 30
+    private nonisolated static let sampleSeconds: Double = 30
     // Songs measured at the same time while building the index.
     private static let concurrency = 2
 
@@ -94,7 +94,7 @@ final class StableVolumeIndex: ObservableObject {
                 guard next < urls.count else { return }
                 let url = urls[next]
                 next += 1
-                group.addTask(priority: .utility) { (url.path, Self.analyze(url)) }
+                group.addTask(priority: .utility) { (url.path, await Self.analyze(url)) }
             }
             for _ in 0..<Self.concurrency { launchNext() }
 
@@ -124,7 +124,7 @@ final class StableVolumeIndex: ObservableObject {
         if isCurrent(url), let entry = entries[url.path] {
             return Self.gain(for: entry.level)
         }
-        let entry = await Task.detached(priority: .utility) { Self.analyze(url) }.value
+        let entry = await Task.detached(priority: .utility) { await Self.analyze(url) }.value
         entries[url.path] = entry
         return Self.gain(for: entry.level)
     }
@@ -151,19 +151,19 @@ final class StableVolumeIndex: ObservableObject {
         return (values?.contentModificationDate?.timeIntervalSince1970 ?? 0, values?.fileSize ?? 0)
     }
 
-    private nonisolated static func analyze(_ url: URL) -> Entry {
+    private nonisolated static func analyze(_ url: URL) async -> Entry {
         let print = fingerprint(of: url)
-        return Entry(level: measureLevel(of: url), modified: print.modified, size: print.size)
+        return Entry(level: await measureLevel(of: url), modified: print.modified, size: print.size)
     }
 
     // Reads a slice from the middle of the song and returns its RMS level in dBFS.
     // Returns nil if the song can't be analyzed (or is pure silence).
-    private nonisolated static func measureLevel(of url: URL) -> Float? {
+    private nonisolated static func measureLevel(of url: URL) async -> Float? {
         let asset = AVURLAsset(url: url)
-        guard let track = asset.tracks(withMediaType: .audio).first,
+        guard let track = try? await asset.loadTracks(withMediaType: .audio).first,
               let reader = try? AVAssetReader(asset: asset) else { return nil }
 
-        let total = asset.duration.seconds
+        let total = (try? await asset.load(.duration))?.seconds ?? .nan
         if total.isFinite, total > sampleSeconds {
             let start = (total - sampleSeconds) / 2
             reader.timeRange = CMTimeRange(
