@@ -52,7 +52,7 @@ final class PlayerEngine: ObservableObject {
         didSet {
             UserDefaults.standard.set(volume, forKey: "playerVolume")
             // During a crossfade the fade timer owns the player volumes.
-            if fadeTimer == nil { player?.volume = Float(volume) }
+            if fadeTimer == nil { player?.volume = effectiveVolume }
             updateNowPlayingInfo()
         }
     }
@@ -76,6 +76,19 @@ final class PlayerEngine: ObservableObject {
     private var fadeStartDate: Date?
     private var fadeLength: Double = 0
 
+    // Stable Volume: per-song gain (<= 1) that evens out loudness between songs.
+    private var songGain: Float = 1
+    private var fadingOutGain: Float = 1
+    private var lastStableVolumeState = false
+
+    private var isStableVolumeEnabled: Bool {
+        UserDefaults.standard.bool(forKey: "isStableVolumeEnabled")
+    }
+
+    /// Gain applied to the current song on top of the user's volume.
+    private var gainFactor: Float { isStableVolumeEnabled ? songGain : 1 }
+    private var effectiveVolume: Float { Float(volume) * gainFactor }
+
     /// Set (and refreshed) by ContentView every time it appears. Lets the
     /// engine ask "what's the current library/playlist/album context" using
     /// whatever is currently visible.
@@ -93,6 +106,26 @@ final class PlayerEngine: ObservableObject {
         volume = (UserDefaults.standard.object(forKey: "playerVolume") as? Double) ?? 0.5
         setupRemoteCommands()
         observeDefaultOutputDevice()
+        lastStableVolumeState = isStableVolumeEnabled
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self, self.isStableVolumeEnabled != self.lastStableVolumeState else { return }
+            self.lastStableVolumeState = self.isStableVolumeEnabled
+            self.refreshStableVolume()
+        }
+    }
+
+    // MARK: - Stable Volume
+
+    /// Measures the current song (cached after the first time) and applies its gain.
+    private func refreshStableVolume() {
+        if fadeTimer == nil { player?.volume = effectiveVolume }
+        guard isStableVolumeEnabled, let song = selectedSong else { return }
+        Task { @MainActor [weak self] in
+            let gain = await StableVolumeIndex.shared.gain(for: song.url)
+            guard let self, self.selectedSong?.id == song.id else { return }
+            self.songGain = gain
+            if self.fadeTimer == nil { self.player?.volume = self.effectiveVolume }
+        }
     }
 
     // MARK: - Settings-driven behavior
@@ -166,6 +199,7 @@ final class PlayerEngine: ObservableObject {
         Equalizer.shared.attach(to: item)
         let newPlayer = AVPlayer(playerItem: item)
         let isCrossfading = fadingOutPlayer != nil
+        songGain = 1
         newPlayer.volume = isCrossfading ? 0 : Float(volume)
         if seconds > 0 {
             newPlayer.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
@@ -190,6 +224,8 @@ final class PlayerEngine: ObservableObject {
         }
 
         playbackPosition = (seconds > 0 && playbackDuration > 0) ? min(seconds / playbackDuration, 1) : 0.0
+
+        refreshStableVolume()
 
         setupTimeObserver(for: newPlayer)
         setupCrossfadeObserver(for: newPlayer)
@@ -222,6 +258,7 @@ final class PlayerEngine: ObservableObject {
         }
         if shouldCrossfade {
             fadingOutPlayer = player
+            fadingOutGain = gainFactor
         } else {
             player?.pause()
         }
@@ -274,8 +311,8 @@ final class PlayerEngine: ObservableObject {
         guard let start = fadeStartDate else { return }
         let progress = min(Date().timeIntervalSince(start) / max(fadeLength, 0.1), 1)
         let base = Float(volume)
-        fadingOutPlayer?.volume = base * Float(cos(progress * .pi / 2))
-        player?.volume = base * Float(sin(progress * .pi / 2))
+        fadingOutPlayer?.volume = base * fadingOutGain * Float(cos(progress * .pi / 2))
+        player?.volume = base * gainFactor * Float(sin(progress * .pi / 2))
         if progress >= 1 { finishCrossfade() }
     }
 
@@ -285,7 +322,7 @@ final class PlayerEngine: ObservableObject {
         fadeStartDate = nil
         fadingOutPlayer?.pause()
         fadingOutPlayer = nil
-        player?.volume = Float(volume)
+        player?.volume = effectiveVolume
     }
 
     private func setupTimeObserver(for player: AVPlayer) {
@@ -499,7 +536,7 @@ final class PlayerEngine: ObservableObject {
 
     func handleSeek(_ value: Double) {
         if value == -1 {
-            player?.volume = Float(volume)
+            player?.volume = effectiveVolume
         } else {
             let seconds = value * playbackDuration
             let time = CMTime(seconds: seconds, preferredTimescale: 600)

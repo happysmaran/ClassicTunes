@@ -246,6 +246,9 @@
 "settings.playback.resumeLast" = "起動時に最後の曲を再開";
 "settings.playback.pauseOnOutputChange" = "オーディオ出力デバイスが変わったら一時停止";
 "settings.playback.crossfade" = "曲をクロスフェード";
+"settings.playback.stableVolume" = "安定した音量";
+"settings.playback.stableVolumeProgress" = "曲を分析中… %d / %d";
+"settings.playback.stableVolumeSummary" = "%d曲を調整済み";
 "settings.playback.crossfadeHelp" = "曲の切り替え時に %d 秒間重なります。";
 "settings.data" = "データとリセット";
 "settings.data.revealPlaylists" = "プレイリストをFinderで表示";

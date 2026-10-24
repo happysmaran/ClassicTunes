@@ -245,6 +245,9 @@
 "settings.playback.resumeLast" = "Продолжить последний трек при запуске";
 "settings.playback.pauseOnOutputChange" = "Приостанавливать при смене устройства вывода звука";
 "settings.playback.crossfade" = "Плавный переход между песнями";
+"settings.playback.stableVolume" = "Стабильная громкость";
+"settings.playback.stableVolumeProgress" = "Анализ песен… %d из %d";
+"settings.playback.stableVolumeSummary" = "Скорректировано песен: %d";
 "settings.playback.crossfadeHelp" = "Песни накладываются друг на друга на %d с при переходе.";
 "settings.data" = "Данные и сброс";
 "settings.data.revealPlaylists" = "Показать плейлисты в Finder";

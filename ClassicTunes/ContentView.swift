@@ -534,6 +534,7 @@ struct ContentView: View {
                 if device == nil { isDeviceSelected = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext")), perform: handleAddToUpNextNotification)
+            .onChange(of: songs.map(\.url)) { urls in StableVolumeIndex.shared.sync(with: urls) }
             .onReceive(NotificationCenter.default.publisher(for: .ChooseMusicFolderRequested)) { _ in showFileImporter = true }
             .onReceive(NotificationCenter.default.publisher(for: .RescanLibraryRequested)) { _ in rescanLibrary() }
             .onReceive(NotificationCenter.default.publisher(for: .PlayHistoryDidClear), perform: handlePlayHistoryCleared)

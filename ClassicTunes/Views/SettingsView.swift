@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage("pauseOnOutputDeviceChange") private var pauseOnOutputDeviceChange: Bool = false
     // Selected Settings tab; persisted so menu commands can open a specific tab ("general", "backgrounds", "equalizer", "shortcuts").
     @AppStorage("settingsSelectedTab") private var selectedTab: String = "general"
+    @ObservedObject private var stableVolumeIndex = StableVolumeIndex.shared
     @State private var showClearHistoryConfirm = false
     @State private var showResetAppearanceConfirm = false
 
@@ -20,6 +21,7 @@ struct SettingsView: View {
     // but not yet wired into a UI section (marked "todo" by the original author).
     @AppStorage("isCrossfadeEnabled") private var isCrossfadeEnabled: Bool = false
     @AppStorage("crossfadeDuration") private var crossfadeDuration: Double = 6.0
+    @AppStorage("isStableVolumeEnabled") private var isStableVolumeEnabled: Bool = false
     @AppStorage("isSoundEnhancerEnabled") private var isSoundEnhancerEnabled: Bool = false
     @AppStorage("soundEnhancerIntensity") private var soundEnhancerIntensity: Double = 5.0
 
@@ -115,6 +117,11 @@ struct SettingsView: View {
                 Section(header: Text("settings.playback")) {
                     Toggle("settings.playback.resumeLast", isOn: $resumeLastSongOnLaunch)
                     Toggle("settings.playback.pauseOnOutputChange", isOn: $pauseOnOutputDeviceChange)
+                    Toggle("settings.playback.stableVolume", isOn: $isStableVolumeEnabled)
+                        .onChange(of: isStableVolumeEnabled) { _ in stableVolumeIndex.resync() }
+                    if isStableVolumeEnabled {
+                        stableVolumeStatus
+                    }
                     Toggle("settings.playback.crossfade", isOn: $isCrossfadeEnabled)
                     HStack {
                         Text("1 s").font(.caption).foregroundStyle(.secondary)
@@ -266,6 +273,23 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
             )
+        }
+    }
+
+    // Progress of the Stable Volume index while it builds, then a short summary of what it found.
+    @ViewBuilder
+    private var stableVolumeStatus: some View {
+        if stableVolumeIndex.isAnalyzing {
+            VStack(alignment: .leading, spacing: 4) {
+                ProgressView(value: Double(stableVolumeIndex.completed), total: Double(max(stableVolumeIndex.total, 1)))
+                Text(String(format: NSLocalizedString("settings.playback.stableVolumeProgress", comment: ""), stableVolumeIndex.completed, stableVolumeIndex.total))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Text(String(format: NSLocalizedString("settings.playback.stableVolumeSummary", comment: ""), stableVolumeIndex.adjustedCount))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 

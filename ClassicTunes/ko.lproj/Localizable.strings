@@ -246,6 +246,9 @@
 "settings.playback.resumeLast" = "실행 시 마지막 곡 이어서 재생";
 "settings.playback.pauseOnOutputChange" = "오디오 출력 장치가 바뀌면 일시 정지";
 "settings.playback.crossfade" = "곡 크로스페이드";
+"settings.playback.stableVolume" = "안정적인 볼륨";
+"settings.playback.stableVolumeProgress" = "곡 분석 중… %d/%d";
+"settings.playback.stableVolumeSummary" = "%d곡 조정됨";
 "settings.playback.crossfadeHelp" = "곡이 바뀔 때 %d초 동안 겹쳐서 재생됩니다.";
 "settings.data" = "데이터 및 재설정";
 "settings.data.revealPlaylists" = "Finder에서 플레이리스트 보기";

@@ -247,6 +247,9 @@
 "settings.playback.resumeLast" = "Resume last song on launch";
 "settings.playback.pauseOnOutputChange" = "Pause when the audio output device changes";
 "settings.playback.crossfade" = "Crossfade songs";
+"settings.playback.stableVolume" = "Stable Volume";
+"settings.playback.stableVolumeProgress" = "Analyzing songs… %d of %d";
+"settings.playback.stableVolumeSummary" = "%d songs adjusted";
 "settings.playback.crossfadeHelp" = "Songs overlap by %d seconds when one ends and the next begins.";
 "settings.data" = "Data & Reset";
 "settings.data.revealPlaylists" = "Reveal Playlists in Finder";

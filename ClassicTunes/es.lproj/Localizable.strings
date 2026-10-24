@@ -246,6 +246,9 @@
 "settings.playback.resumeLast" = "Reanudar la última canción al iniciar";
 "settings.playback.pauseOnOutputChange" = "Pausar cuando cambie el dispositivo de salida de audio";
 "settings.playback.crossfade" = "Fundir canciones";
+"settings.playback.stableVolume" = "Volumen estable";
+"settings.playback.stableVolumeProgress" = "Analizando canciones… %d de %d";
+"settings.playback.stableVolumeSummary" = "%d canciones ajustadas";
 "settings.playback.crossfadeHelp" = "Las canciones se superponen %d segundos al pasar de una a otra.";
 "settings.data" = "Datos y restablecimiento";
 "settings.data.revealPlaylists" = "Mostrar listas en el Finder";

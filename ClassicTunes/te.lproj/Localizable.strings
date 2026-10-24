@@ -246,6 +246,9 @@
 "settings.playback.resumeLast" = "ప్రారంభంలో చివరి పాటను కొనసాగించు";
 "settings.playback.pauseOnOutputChange" = "ఆడియో అవుట్‌పుట్ పరికరం మారినప్పుడు పాజ్ చేయి";
 "settings.playback.crossfade" = "పాటలను క్రాస్‌ఫేడ్ చేయి";
+"settings.playback.stableVolume" = "స్థిర వాల్యూమ్";
+"settings.playback.stableVolumeProgress" = "పాటలను విశ్లేషిస్తున్నాం… %d / %d";
+"settings.playback.stableVolumeSummary" = "%d పాటలు సర్దుబాటు చేయబడ్డాయి";
 "settings.playback.crossfadeHelp" = "పాట మారేటప్పుడు పాటలు %d సెకన్ల పాటు కలుస్తాయి.";
 "settings.data" = "డేటా & రీసెట్";
 "settings.data.revealPlaylists" = "ప్లేలిస్ట్‌లను Finderలో చూపించు";
