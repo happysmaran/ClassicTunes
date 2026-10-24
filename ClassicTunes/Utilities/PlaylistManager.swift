@@ -32,7 +32,7 @@ class PlaylistManager: ObservableObject {
     //   - song: The source `Song` model structure to add.
     //   - playlist: The target `Playlist` entity destination.
     func addSong(_ song: Song, to playlist: Playlist) {
-        guard var target = userPlaylists.first(where: { $0.id == playlist.id }) else { return }
+        guard var target = userPlaylists.first(where: { $0.id == playlist.id }), !target.isSmart else { return }
         guard !target.songs.contains(where: { $0.id == song.id }) else { return }
         target.songs.append(song)
         if let index = userPlaylists.firstIndex(where: { $0.id == playlist.id }) {

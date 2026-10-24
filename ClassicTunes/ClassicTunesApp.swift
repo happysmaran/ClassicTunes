@@ -9,6 +9,9 @@ private struct DeletePlaylistActionKey: FocusedValueKey {
 private struct NewPlaylistActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
+private struct NewSmartPlaylistActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
 private struct ImportMusicActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
@@ -105,6 +108,10 @@ extension FocusedValues {
     var newPlaylistAction: (() -> Void)? {
         get { self[NewPlaylistActionKey.self] }
         set { self[NewPlaylistActionKey.self] = newValue }
+    }
+    var newSmartPlaylistAction: (() -> Void)? {
+        get { self[NewSmartPlaylistActionKey.self] }
+        set { self[NewSmartPlaylistActionKey.self] = newValue }
     }
     var importMusicAction: (() -> Void)? {
         get { self[ImportMusicActionKey.self] }
@@ -277,12 +284,14 @@ struct ClassicTunesApp: App {
 
 struct FileCommands: Commands {
     @FocusedValue(\.newPlaylistAction) private var newPlaylistAction: (() -> Void)?
+    @FocusedValue(\.newSmartPlaylistAction) private var newSmartPlaylistAction: (() -> Void)?
     @FocusedValue(\.importMusicAction) private var importMusicAction: (() -> Void)?
     @FocusedValue(\.importPlaylistAction) private var importPlaylistAction: (() -> Void)?
     @FocusedValue(\.exportPlaylistAction) private var exportPlaylistAction: (() -> Void)?
     @FocusedValue(\.showSongInfoAction) private var showSongInfoAction: (() -> Void)?
 
-    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
+    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘⇧N"
+    @AppStorage("shortcut.newSmartPlaylist") private var shortcutNewSmartPlaylist: String = "⌘⌥N"
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
@@ -295,6 +304,12 @@ struct FileCommands: Commands {
             }
             .dynamicShortcut(shortcutNewPlaylist)
             .disabled(newPlaylistAction == nil)
+
+            Button("menu.newSmartPlaylist") {
+                newSmartPlaylistAction?()
+            }
+            .dynamicShortcut(shortcutNewSmartPlaylist)
+            .disabled(newSmartPlaylistAction == nil)
 
             Divider()
 

@@ -6,6 +6,8 @@ struct SidebarView: View {
     @Binding var userPlaylists: [Playlist]
     @Binding var selectedPlaylistID: UUID?
     @Binding var showNewPlaylistSheet: Bool
+    @Binding var showNewSmartPlaylistSheet: Bool
+    @Binding var smartPlaylistToEdit: Playlist?
     @Binding var libraryActive: Bool
     @Binding var showITunesStore: Bool
     @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
@@ -97,7 +99,7 @@ struct SidebarView: View {
                         libraryActive = false
                         showITunesStore = false
                     }) {
-                        Label(playlist.name, systemImage: playlist.isSystem ? "gearshape" : "music.note.list")
+                        Label(playlist.name, systemImage: playlist.isSystem ? "gearshape" : (playlist.isSmart ? "gearshape.2" : "music.note.list"))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(ITunesSidebarButtonStyle(selected: selectedPlaylistID == playlist.id && !libraryActive))
@@ -105,6 +107,11 @@ struct SidebarView: View {
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(.tint.opacity(dropHoverPlaylistID == playlist.id ? 0.8 : 0), lineWidth: 2)
                     )
+                    .contextMenu {
+                        if playlist.isSmart {
+                            Button("smartPlaylist.edit") { smartPlaylistToEdit = playlist }
+                        }
+                    }
                     .onDrop(of: [UTType.json], isTargeted: Binding(get: { dropHoverPlaylistID == playlist.id }, set: { isTargeted in
                         dropHoverPlaylistID = isTargeted ? playlist.id : nil
                     })) { providers in
@@ -112,6 +119,7 @@ struct SidebarView: View {
                     }
                 }
                 
+                // The sheet lets the user choose between a regular and a smart playlist.
                 Button(action: {
                     showNewPlaylistSheet = true
                 }) {
@@ -133,6 +141,8 @@ struct SidebarView: View {
     // Stupid type-checking thing why aaaaaaaaaaaaaaaaaaaaaaaaaaa
     
     private func handleDrop(providers: [NSItemProvider], for playlist: Playlist) -> Bool {
+        // Smart playlists are rule-driven; songs can't be dropped into them.
+        if userPlaylists.first(where: { $0.id == playlist.id })?.isSmart == true { return false }
         var handled = false
         let group = DispatchGroup()
 

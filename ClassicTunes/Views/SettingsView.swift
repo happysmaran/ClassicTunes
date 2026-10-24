@@ -27,7 +27,8 @@ struct SettingsView: View {
 
     // --- Keyboard shortcut preferences, each persisted individually ---
     // File menu shortcuts
-    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
+    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘⇧N"
+    @AppStorage("shortcut.newSmartPlaylist") private var shortcutNewSmartPlaylist: String = "⌘⌥N"
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
@@ -189,6 +190,7 @@ struct SettingsView: View {
                 VStack(spacing: 20) {
                     shortcutSection(title: "shortcuts.group.file") {
                         ShortcutAssignerRow(title: "menu.newPlaylist", shortcut: $shortcutNewPlaylist)
+                        ShortcutAssignerRow(title: "menu.newSmartPlaylist", shortcut: $shortcutNewSmartPlaylist)
                         ShortcutAssignerRow(title: "menu.importMusic", shortcut: $shortcutImportMusic)
                         ShortcutAssignerRow(title: "menu.importPlaylist", shortcut: $shortcutImportPlaylist)
                         ShortcutAssignerRow(title: "menu.exportPlaylist", shortcut: $shortcutExportPlaylist)
@@ -297,7 +299,8 @@ struct SettingsView: View {
 
     // Restores every shortcut @AppStorage value to its original factory default.
     private func resetToDefaultBindings() {
-        shortcutNewPlaylist = "⌘N"
+        shortcutNewPlaylist = "⌘⇧N"
+        shortcutNewSmartPlaylist = "⌘⌥N"
         shortcutImportMusic = "⌘O"
         shortcutImportPlaylist = "⌘⇧O"
         shortcutExportPlaylist = "⌘⇧E"

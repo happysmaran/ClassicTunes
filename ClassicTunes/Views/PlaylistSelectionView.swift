@@ -18,7 +18,7 @@ struct PlaylistSelectionView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            if playlistManager.userPlaylists.isEmpty {
+            if playlistManager.userPlaylists.filter({ !$0.isSmart }).isEmpty {
                 // No playlists exist yet — show an empty-state message.
                 Text(String(format: NSLocalizedString("playlistSelection.message", comment: "message"), song.title))
                     .foregroundColor(.secondary)
@@ -27,7 +27,7 @@ struct PlaylistSelectionView: View {
             } else {
                 // List every user playlist; tapping a row adds the song to
                 // that playlist and dismisses the sheet.
-                List(playlistManager.userPlaylists) { playlist in
+                List(playlistManager.userPlaylists.filter { !$0.isSmart }) { playlist in
                     HStack {
                         VStack(alignment: .leading) {
                             Text(playlist.name)

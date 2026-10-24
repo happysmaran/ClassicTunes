@@ -6,13 +6,38 @@ struct NewPlaylistSheet: View {
     // A mutable binding reference to the global playlist inventory array[span_3](start_span)[span_3](end_span).
     @Binding var playlists: [Playlist]
     
+    // Called with the finished playlist when the user creates a smart playlist instead.
+    var onSaveSmart: (Playlist) -> Void
+    
     // The structural dismissal action used to close the sheet from the environment pipeline[span_4](start_span)[span_4](end_span).
     @Environment(\.dismiss) private var dismiss
     
     // The state-tracked string value bound to the input text field[span_5](start_span)[span_5](end_span).
     @State private var playlistName = ""
     
+    // Whether the user chose to build a smart playlist (rule-based) instead of a regular one.
+    @State private var isSmart = false
+    
     var body: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $isSmart) {
+                Text("newPlaylist.type.regular").tag(false)
+                Text("newPlaylist.type.smart").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding([.top, .horizontal])
+            .frame(width: isSmart ? 560 : 300)
+            
+            if isSmart {
+                SmartPlaylistEditorSheet(onSave: onSaveSmart)
+            } else {
+                regularPlaylistForm
+            }
+        }
+    }
+    
+    private var regularPlaylistForm: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("newPlaylist.title")
                 .font(.title2)

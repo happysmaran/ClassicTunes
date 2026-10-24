@@ -42,6 +42,8 @@ struct ContentView: View {
     @State private var showITunesStore: Bool = false
 
     @State private var showNewPlaylistSheet = false
+    @State private var showNewSmartPlaylistSheet = false
+    @State private var smartPlaylistToEdit: Playlist?
     @StateObject private var playlistManager = PlaylistManager()
     
     // Persistence keys
@@ -87,6 +89,25 @@ struct ContentView: View {
 
     private var playlists: [Playlist] {
         playlistManager.userPlaylists + systemPlaylists
+    }
+
+    // Looks up a playlist by ID. Smart playlists are evaluated against the current library here,
+    // so display, playback and M3U export all see their live song list.
+    private func playlist(withID id: UUID) -> Playlist? {
+        playlists.first(where: { $0.id == id })?.resolved(against: songs)
+    }
+
+    // Inserts a new smart playlist or replaces the edited one, then persists.
+    private func saveSmartPlaylist(_ playlist: Playlist) {
+        if let index = playlistManager.userPlaylists.firstIndex(where: { $0.id == playlist.id }) {
+            playlistManager.userPlaylists[index] = playlist
+        } else {
+            playlistManager.userPlaylists.append(playlist)
+        }
+        saveUserPlaylists()
+        selectedPlaylistID = playlist.id
+        libraryActive = false
+        showITunesStore = false
     }
 
     private func playlistsFileURL() -> URL? {
@@ -164,7 +185,7 @@ struct ContentView: View {
         // Build base list depending on selected playlist or full library
         let baseUnfiltered: [Song]
         if let playlistID = selectedPlaylistID,
-           let playlist = playlists.first(where: { $0.id == playlistID }) {
+           let playlist = playlist(withID: playlistID) {
             baseUnfiltered = playlist.songs
         } else {
             baseUnfiltered = songs
@@ -294,7 +315,7 @@ struct ContentView: View {
                     // iTunes-style playlist header — only when a playlist is selected
                     // This thing kept showing up in the regular view T-T
                     if let playlistID = selectedPlaylistID,
-                       let playlist = playlists.first(where: { $0.id == playlistID }) {
+                       let playlist = playlist(withID: playlistID) {
                         PlaylistHeaderView(
                             playlist: playlist,
                             onPlay: {
@@ -401,6 +422,8 @@ struct ContentView: View {
                     userPlaylists: $playlistManager.userPlaylists,
                     selectedPlaylistID: $selectedPlaylistID,
                     showNewPlaylistSheet: $showNewPlaylistSheet,
+                    showNewSmartPlaylistSheet: $showNewSmartPlaylistSheet,
+                    smartPlaylistToEdit: $smartPlaylistToEdit,
                     libraryActive: $libraryActive,
                     showITunesStore: $showITunesStore,
                     //connectedDevice: deviceMonitor.connectedDevice,
@@ -524,8 +547,14 @@ struct ContentView: View {
     private func applySheetsAndChanges<V: View>(_ content: V) -> some View {
         content
             .sheet(isPresented: $showNewPlaylistSheet) {
-                NewPlaylistSheet(playlists: $playlistManager.userPlaylists)
+                NewPlaylistSheet(playlists: $playlistManager.userPlaylists, onSaveSmart: saveSmartPlaylist)
                     .onDisappear(perform: saveUserPlaylists)
+            }
+            .sheet(isPresented: $showNewSmartPlaylistSheet) {
+                SmartPlaylistEditorSheet(onSave: saveSmartPlaylist)
+            }
+            .sheet(item: $smartPlaylistToEdit) { playlist in
+                SmartPlaylistEditorSheet(existing: playlist, onSave: saveSmartPlaylist)
             }
             .sheet(item: $songToAddToPlaylist) { song in
                 PlaylistSelectionView(song: song) { playlist in
@@ -559,6 +588,7 @@ struct ContentView: View {
         content
             .focusedSceneValue(\.deletePlaylistAction, deletePlaylistAction())
             .focusedSceneValue(\.newPlaylistAction, newPlaylistAction)
+            .focusedSceneValue(\.newSmartPlaylistAction, newSmartPlaylistAction)
             .focusedSceneValue(\.importMusicAction, importMusicAction)
             .focusedSceneValue(\.importPlaylistAction, importPlaylistAction)
             .focusedSceneValue(\.exportPlaylistAction, exportPlaylistMenuAction())
@@ -592,6 +622,10 @@ struct ContentView: View {
 
     private func newPlaylistAction() {
         showNewPlaylistSheet = true
+    }
+
+    private func newSmartPlaylistAction() {
+        showNewSmartPlaylistSheet = true
     }
 
     private func importMusicAction() {
@@ -1304,7 +1338,7 @@ struct ContentView: View {
 
     private func exportSelectedPlaylist() {
         guard let playlistID = selectedPlaylistID,
-              let playlist = playlists.first(where: { $0.id == playlistID }) else {
+              let playlist = playlist(withID: playlistID) else {
             return
         }
         // Build M3U content

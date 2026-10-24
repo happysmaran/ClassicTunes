@@ -15,6 +15,10 @@ struct Playlist: Identifiable, Codable {
     // A flag indicating whether this is a default, un-deletable system playlist (e.g., "Library", "Purchased").
     var isSystem: Bool = false
     
+    // The rules defining a smart playlist, or `nil` for a regular playlist. Smart playlists don't
+    // store their songs; `songs` is recomputed from the library via `resolved(against:)`.
+    var smartRules: SmartPlaylistRules? = nil
+    
     // Initializes a new Playlist instance.
     //
     // - Parameters:
@@ -22,10 +26,12 @@ struct Playlist: Identifiable, Codable {
     //   - name: The visible title of the playlist.
     //   - songs: An initial array of `Song` objects to include in the playlist.
     //   - isSystem: Explicitly marks if this playlist is a core system playlist. Defaults to `false`.
-    init(id: UUID = UUID(), name: String, songs: [Song], isSystem: Bool = false) {
+    //   - smartRules: Rules making this a smart playlist. Defaults to `nil` (regular playlist).
+    init(id: UUID = UUID(), name: String, songs: [Song], isSystem: Bool = false, smartRules: SmartPlaylistRules? = nil) {
         self.id = id
         self.name = name
         self.songs = songs
         self.isSystem = isSystem
+        self.smartRules = smartRules
     }
 }

@@ -6,7 +6,8 @@ struct KeyboardShortcutsView: View {
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - File Key Backing Storage
-    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘N"
+    @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘⇧N"
+    @AppStorage("shortcut.newSmartPlaylist") private var shortcutNewSmartPlaylist: String = "⌘⌥N"
     @AppStorage("shortcut.importMusic") private var shortcutImportMusic: String = "⌘O"
     @AppStorage("shortcut.importPlaylist") private var shortcutImportPlaylist: String = "⌘⇧O"
     @AppStorage("shortcut.exportPlaylist") private var shortcutExportPlaylist: String = "⌘⇧E"
@@ -47,6 +48,7 @@ struct KeyboardShortcutsView: View {
         [
             ShortcutGroup(title: "shortcuts.group.file", items: [
                 ("menu.newPlaylist", shortcutNewPlaylist),
+                ("menu.newSmartPlaylist", shortcutNewSmartPlaylist),
                 ("menu.importMusic", shortcutImportMusic),
                 ("menu.importPlaylist", shortcutImportPlaylist),
                 ("menu.exportPlaylist", shortcutExportPlaylist),
