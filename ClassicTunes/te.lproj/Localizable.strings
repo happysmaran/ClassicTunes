@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "ఆసిలోస్కోప్";
 "visualizer.style.kaleidoscope" = "కెలిడోస్కోప్";
 "visualizer.style.tunnel" = "సొరంగం";
+"visualizer.style.rhythmPulse" = "రిథమ్ పల్స్";
+"visualizer.style.frequencyMeters" = "బాస్ / మిడ్ / ట్రెబుల్";
+"visualizer.style.spectrogram" = "స్పెక్ట్రోగ్రామ్";
+"visualizer.label.bass" = "బాస్";
+"visualizer.label.mid" = "మిడ్";
+"visualizer.label.treble" = "ట్రెబుల్";
+"visualizer.hint.bass" = "డ్రమ్స్ & బాస్";
+"visualizer.hint.mid" = "గాత్రం & గిటార్లు";
+"visualizer.hint.treble" = "సింబల్స్ & హై-హ్యాట్స్";
+"visualizer.label.beat" = "బీట్";
+"visualizer.label.highPitch" = "ఎత్తైన స్వరం";
+"visualizer.label.lowPitch" = "తక్కువ స్వరం";
+"visualizer.label.now" = "ఇప్పుడు";
+"visualizer.accessibility.label" = "ఆడియో విజువలైజర్";

@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "오실로스코프";
 "visualizer.style.kaleidoscope" = "만화경";
 "visualizer.style.tunnel" = "터널";
+"visualizer.style.rhythmPulse" = "리듬 펄스";
+"visualizer.style.frequencyMeters" = "저음 / 중음 / 고음";
+"visualizer.style.spectrogram" = "스펙트로그램";
+"visualizer.label.bass" = "저음";
+"visualizer.label.mid" = "중음";
+"visualizer.label.treble" = "고음";
+"visualizer.hint.bass" = "드럼과 베이스";
+"visualizer.hint.mid" = "보컬과 기타";
+"visualizer.hint.treble" = "심벌과 하이햇";
+"visualizer.label.beat" = "비트";
+"visualizer.label.highPitch" = "높은 음";
+"visualizer.label.lowPitch" = "낮은 음";
+"visualizer.label.now" = "현재";
+"visualizer.accessibility.label" = "오디오 비주얼라이저";

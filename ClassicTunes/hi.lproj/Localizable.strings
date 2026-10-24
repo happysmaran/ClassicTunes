@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "ऑसिलोस्कोप";
 "visualizer.style.kaleidoscope" = "कैलेडोस्कोप";
 "visualizer.style.tunnel" = "सुरंग";
+"visualizer.style.rhythmPulse" = "लय स्पंदन";
+"visualizer.style.frequencyMeters" = "बास / मिड / ट्रेबल";
+"visualizer.style.spectrogram" = "स्पेक्ट्रोग्राम";
+"visualizer.label.bass" = "बास";
+"visualizer.label.mid" = "मिड";
+"visualizer.label.treble" = "ट्रेबल";
+"visualizer.hint.bass" = "ड्रम और बास";
+"visualizer.hint.mid" = "वोकल और गिटार";
+"visualizer.hint.treble" = "झांझ और हाई-हैट";
+"visualizer.label.beat" = "बीट";
+"visualizer.label.highPitch" = "ऊँचे स्वर";
+"visualizer.label.lowPitch" = "नीचे स्वर";
+"visualizer.label.now" = "अभी";
+"visualizer.accessibility.label" = "ऑडियो विज़ुअलाइज़र";

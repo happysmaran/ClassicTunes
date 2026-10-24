@@ -271,3 +271,17 @@
 "visualizer.style.oscilloscope" = "Осциллограф";
 "visualizer.style.kaleidoscope" = "Калейдоскоп";
 "visualizer.style.tunnel" = "Туннель";
+"visualizer.style.rhythmPulse" = "Ритмический пульс";
+"visualizer.style.frequencyMeters" = "Бас / Середина / Верхи";
+"visualizer.style.spectrogram" = "Спектрограмма";
+"visualizer.label.bass" = "Бас";
+"visualizer.label.mid" = "Середина";
+"visualizer.label.treble" = "Верхи";
+"visualizer.hint.bass" = "Ударные и бас";
+"visualizer.hint.mid" = "Вокал и гитары";
+"visualizer.hint.treble" = "Тарелки и хай-хэт";
+"visualizer.label.beat" = "БИТ";
+"visualizer.label.highPitch" = "Высокие звуки";
+"visualizer.label.lowPitch" = "Низкие звуки";
+"visualizer.label.now" = "Сейчас";
+"visualizer.accessibility.label" = "Аудиовизуализатор";

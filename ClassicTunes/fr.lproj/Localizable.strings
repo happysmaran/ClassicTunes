@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "Oscilloscope";
 "visualizer.style.kaleidoscope" = "Kaléidoscope";
 "visualizer.style.tunnel" = "Tunnel";
+"visualizer.style.rhythmPulse" = "Pulsation rythmique";
+"visualizer.style.frequencyMeters" = "Basses / Médiums / Aigus";
+"visualizer.style.spectrogram" = "Spectrogramme";
+"visualizer.label.bass" = "Basses";
+"visualizer.label.mid" = "Médiums";
+"visualizer.label.treble" = "Aigus";
+"visualizer.hint.bass" = "Batterie et basse";
+"visualizer.hint.mid" = "Voix et guitares";
+"visualizer.hint.treble" = "Cymbales et charleston";
+"visualizer.label.beat" = "TEMPO";
+"visualizer.label.highPitch" = "Sons aigus";
+"visualizer.label.lowPitch" = "Sons graves";
+"visualizer.label.now" = "Maintenant";
+"visualizer.accessibility.label" = "Visualiseur audio";

@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "示波器";
 "visualizer.style.kaleidoscope" = "万花筒";
 "visualizer.style.tunnel" = "隧道";
+"visualizer.style.rhythmPulse" = "节奏脉冲";
+"visualizer.style.frequencyMeters" = "低音 / 中音 / 高音";
+"visualizer.style.spectrogram" = "声谱图";
+"visualizer.label.bass" = "低音";
+"visualizer.label.mid" = "中音";
+"visualizer.label.treble" = "高音";
+"visualizer.hint.bass" = "鼓和贝斯";
+"visualizer.hint.mid" = "人声和吉他";
+"visualizer.hint.treble" = "镲片和踩镲";
+"visualizer.label.beat" = "节拍";
+"visualizer.label.highPitch" = "高音调";
+"visualizer.label.lowPitch" = "低音调";
+"visualizer.label.now" = "当前";
+"visualizer.accessibility.label" = "音频可视化效果";

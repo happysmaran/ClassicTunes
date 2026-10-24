@@ -272,3 +272,17 @@
 "visualizer.style.oscilloscope" = "オシロスコープ";
 "visualizer.style.kaleidoscope" = "万華鏡";
 "visualizer.style.tunnel" = "トンネル";
+"visualizer.style.rhythmPulse" = "リズムパルス";
+"visualizer.style.frequencyMeters" = "低音 / 中音 / 高音";
+"visualizer.style.spectrogram" = "スペクトログラム";
+"visualizer.label.bass" = "低音";
+"visualizer.label.mid" = "中音";
+"visualizer.label.treble" = "高音";
+"visualizer.hint.bass" = "ドラムとベース";
+"visualizer.hint.mid" = "ボーカルとギター";
+"visualizer.hint.treble" = "シンバルとハイハット";
+"visualizer.label.beat" = "ビート";
+"visualizer.label.highPitch" = "高い音";
+"visualizer.label.lowPitch" = "低い音";
+"visualizer.label.now" = "現在";
+"visualizer.accessibility.label" = "オーディオビジュアライザ";
