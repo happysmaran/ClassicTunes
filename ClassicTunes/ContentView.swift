@@ -66,6 +66,7 @@ struct ContentView: View {
     @State private var dropTargetIndex: Int? = nil
 
     // Lyrics states
+    @State private var showVisualizer = false
     @State private var showLyrics = false
     @State private var lyricsText: String = ""
 
@@ -265,6 +266,8 @@ struct ContentView: View {
         Group {
             if showITunesStore {
                 iTunesStoreView()
+            } else if showVisualizer {
+                VisualizerView()
             } else if isCoverFlowActive {
                 // Evaluate the (deduped/filtered) song list once per render.
                 let displayed = displayedSongs
@@ -447,6 +450,16 @@ struct ContentView: View {
     private var bottomBarSection: some View {
         HStack {
             Spacer()
+            Button(action: { showVisualizer.toggle() }) {
+                HStack {
+                    Image(systemName: "waveform")
+                    Text("bottomBar.visualizer")
+                }
+            }
+            .padding(.horizontal)
+            .foregroundColor(showVisualizer ? appearanceManager.themeColor : .primary)
+            .buttonStyle(PlainButtonStyle())
+
             Button(action: toggleLyricsButtonAction) {
                 HStack {
                     Image(systemName: "text.alignleft")

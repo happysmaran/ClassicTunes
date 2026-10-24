@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "అన్ని రూపాన్ని రీసెట్ చేయి…";
 "settings.data.resetAppearanceConfirm" = "రూపాన్ని రీసెట్ చేయాలా?";
 "settings.data.resetAppearanceMessage" = "రూప మోడ్, థీమ్ రంగు, రెండు నేపథ్యాలు డిఫాల్ట్‌కు తిరిగి వస్తాయి.";
+"bottomBar.visualizer"        = "విజువలైజర్";

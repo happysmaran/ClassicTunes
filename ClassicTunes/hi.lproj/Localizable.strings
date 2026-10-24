@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "सारी दिखावट रीसेट करें…";
 "settings.data.resetAppearanceConfirm" = "दिखावट रीसेट करें?";
 "settings.data.resetAppearanceMessage" = "दिखावट मोड, थीम रंग और दोनों पृष्ठभूमियाँ डिफ़ॉल्ट पर लौट जाएँगी।";
+"bottomBar.visualizer"        = "विज़ुअलाइज़र";

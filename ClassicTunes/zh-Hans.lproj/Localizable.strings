@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "重置所有外观…";
 "settings.data.resetAppearanceConfirm" = "重置外观？";
 "settings.data.resetAppearanceMessage" = "外观模式、主题颜色和两个背景将恢复为默认设置。";
+"bottomBar.visualizer"        = "可视化效果";

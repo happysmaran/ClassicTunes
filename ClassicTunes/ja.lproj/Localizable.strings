@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "すべての外観をリセット…";
 "settings.data.resetAppearanceConfirm" = "外観をリセットしますか？";
 "settings.data.resetAppearanceMessage" = "外観モード、テーマカラー、2つの背景が初期設定に戻ります。";
+"bottomBar.visualizer"        = "ビジュアライザ";

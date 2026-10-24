@@ -258,3 +258,4 @@
 "settings.data.resetAppearance" = "Сбросить весь внешний вид…";
 "settings.data.resetAppearanceConfirm" = "Сбросить внешний вид?";
 "settings.data.resetAppearanceMessage" = "Режим оформления, цвет темы и оба фона вернутся к значениям по умолчанию.";
+"bottomBar.visualizer"        = "Визуализатор";

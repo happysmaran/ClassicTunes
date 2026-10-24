@@ -227,10 +227,23 @@ private func tapProcess(
 
     let context = tapContext(tap)
     context.refresh(from: .shared)
-    guard context.enabled, context.isFloat else { return }
+    guard context.isFloat else { return }
 
     let buffers = UnsafeMutableAudioBufferListPointer(bufferList)
     let frames = frameCountOut.pointee
+
+    // Feed the visualizer with the final (post-EQ) signal, first channel only.
+    defer {
+        if AudioAnalyzer.shared.isActive {
+            if context.isInterleaved, let data = buffers.first?.mData?.assumingMemoryBound(to: Float.self) {
+                AudioAnalyzer.shared.analyze(data, count: frames, stride: context.channelCount)
+            } else if let data = buffers.first?.mData?.assumingMemoryBound(to: Float.self) {
+                AudioAnalyzer.shared.analyze(data, count: frames, stride: 1)
+            }
+        }
+    }
+    guard context.enabled else { return }
+
     if context.isInterleaved {
         guard let data = buffers.first?.mData?.assumingMemoryBound(to: Float.self) else { return }
         for channel in 0..<context.channelCount {

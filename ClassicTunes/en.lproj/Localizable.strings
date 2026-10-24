@@ -260,3 +260,4 @@
 "settings.data.resetAppearance" = "Reset All Appearance…";
 "settings.data.resetAppearanceConfirm" = "Reset appearance?";
 "settings.data.resetAppearanceMessage" = "Appearance mode, theme color and both backgrounds will return to their defaults.";
+"bottomBar.visualizer"        = "Visualizer";

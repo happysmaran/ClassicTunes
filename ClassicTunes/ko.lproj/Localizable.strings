@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "모든 외관 재설정…";
 "settings.data.resetAppearanceConfirm" = "외관을 재설정할까요?";
 "settings.data.resetAppearanceMessage" = "외관 모드, 테마 색상, 두 배경이 기본값으로 돌아갑니다.";
+"bottomBar.visualizer"        = "비주얼라이저";

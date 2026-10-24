@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "Gesamtes Erscheinungsbild zurücksetzen …";
 "settings.data.resetAppearanceConfirm" = "Erscheinungsbild zurücksetzen?";
 "settings.data.resetAppearanceMessage" = "Erscheinungsmodus, Designfarbe und beide Hintergründe werden auf die Standardwerte zurückgesetzt.";
+"bottomBar.visualizer"        = "Visualizer";

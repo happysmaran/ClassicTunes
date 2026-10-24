@@ -259,3 +259,4 @@
 "settings.data.resetAppearance" = "Réinitialiser toute l'apparence…";
 "settings.data.resetAppearanceConfirm" = "Réinitialiser l'apparence ?";
 "settings.data.resetAppearanceMessage" = "Le mode d'apparence, la couleur du thème et les deux arrière-plans reprendront leurs valeurs par défaut.";
+"bottomBar.visualizer"        = "Visualiseur";
