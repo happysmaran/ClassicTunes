@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "외관을 재설정할까요?";
 "settings.data.resetAppearanceMessage" = "외관 모드, 테마 색상, 두 배경이 기본값으로 돌아갑니다.";
 "bottomBar.visualizer"        = "비주얼라이저";
+"menu.showVisualizer" = "비주얼라이저 보기";
+"menu.hideVisualizer" = "비주얼라이저 가리기";
+"menu.visualizerStyle" = "비주얼라이저 스타일";
+"menu.toggleVisualizer" = "비주얼라이저 보기/가리기";
+"visualizer.style.classic" = "클래식";
+"visualizer.style.spectrum" = "스펙트럼";
+"visualizer.style.jelly" = "젤리";
+"visualizer.style.particles" = "파티클";

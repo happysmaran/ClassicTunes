@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "Erscheinungsbild zurücksetzen?";
 "settings.data.resetAppearanceMessage" = "Erscheinungsmodus, Designfarbe und beide Hintergründe werden auf die Standardwerte zurückgesetzt.";
 "bottomBar.visualizer"        = "Visualizer";
+"menu.showVisualizer" = "Visualizer einblenden";
+"menu.hideVisualizer" = "Visualizer ausblenden";
+"menu.visualizerStyle" = "Visualizer-Stil";
+"menu.toggleVisualizer" = "Visualizer ein-/ausblenden";
+"visualizer.style.classic" = "Klassisch";
+"visualizer.style.spectrum" = "Spektrum";
+"visualizer.style.jelly" = "Jelly";
+"visualizer.style.particles" = "Partikel";

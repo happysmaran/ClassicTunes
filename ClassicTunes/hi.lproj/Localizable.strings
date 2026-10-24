@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "दिखावट रीसेट करें?";
 "settings.data.resetAppearanceMessage" = "दिखावट मोड, थीम रंग और दोनों पृष्ठभूमियाँ डिफ़ॉल्ट पर लौट जाएँगी।";
 "bottomBar.visualizer"        = "विज़ुअलाइज़र";
+"menu.showVisualizer" = "विज़ुअलाइज़र दिखाएँ";
+"menu.hideVisualizer" = "विज़ुअलाइज़र छिपाएँ";
+"menu.visualizerStyle" = "विज़ुअलाइज़र शैली";
+"menu.toggleVisualizer" = "विज़ुअलाइज़र दिखाएँ/छिपाएँ";
+"visualizer.style.classic" = "क्लासिक";
+"visualizer.style.spectrum" = "स्पेक्ट्रम";
+"visualizer.style.jelly" = "जेली";
+"visualizer.style.particles" = "कण";

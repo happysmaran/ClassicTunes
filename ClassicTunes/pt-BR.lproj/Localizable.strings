@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "Redefinir a aparência?";
 "settings.data.resetAppearanceMessage" = "O modo de aparência, a cor do tema e os dois fundos voltarão aos padrões.";
 "bottomBar.visualizer"        = "Visualizador";
+"menu.showVisualizer" = "Mostrar Visualizador";
+"menu.hideVisualizer" = "Ocultar Visualizador";
+"menu.visualizerStyle" = "Estilo do Visualizador";
+"menu.toggleVisualizer" = "Mostrar/Ocultar Visualizador";
+"visualizer.style.classic" = "Clássico";
+"visualizer.style.spectrum" = "Espectro";
+"visualizer.style.jelly" = "Geleia";
+"visualizer.style.particles" = "Partículas";

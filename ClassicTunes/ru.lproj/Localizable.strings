@@ -259,3 +259,11 @@
 "settings.data.resetAppearanceConfirm" = "Сбросить внешний вид?";
 "settings.data.resetAppearanceMessage" = "Режим оформления, цвет темы и оба фона вернутся к значениям по умолчанию.";
 "bottomBar.visualizer"        = "Визуализатор";
+"menu.showVisualizer" = "Показать визуализатор";
+"menu.hideVisualizer" = "Скрыть визуализатор";
+"menu.visualizerStyle" = "Стиль визуализатора";
+"menu.toggleVisualizer" = "Показать/скрыть визуализатор";
+"visualizer.style.classic" = "Классический";
+"visualizer.style.spectrum" = "Спектр";
+"visualizer.style.jelly" = "Желе";
+"visualizer.style.particles" = "Частицы";

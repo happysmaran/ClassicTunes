@@ -261,3 +261,11 @@
 "settings.data.resetAppearanceConfirm" = "Reset appearance?";
 "settings.data.resetAppearanceMessage" = "Appearance mode, theme color and both backgrounds will return to their defaults.";
 "bottomBar.visualizer"        = "Visualizer";
+"menu.showVisualizer" = "Show Visualizer";
+"menu.hideVisualizer" = "Hide Visualizer";
+"menu.visualizerStyle" = "Visualizer Style";
+"menu.toggleVisualizer" = "Show/Hide Visualizer";
+"visualizer.style.classic" = "Classic";
+"visualizer.style.spectrum" = "Spectrum";
+"visualizer.style.jelly" = "Jelly";
+"visualizer.style.particles" = "Particles";

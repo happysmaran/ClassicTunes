@@ -22,6 +22,7 @@ struct KeyboardShortcutsView: View {
     @AppStorage("shortcut.showAsCoverFlow") private var shortcutShowAsCoverFlow: String = "⌘3"
     @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
+    @AppStorage("shortcut.toggleVisualizer") private var shortcutToggleVisualizer: String = "⌘T"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
     @AppStorage("shortcut.showEqualizer") private var shortcutShowEqualizer: String = "⌘⌥E"
     
@@ -61,6 +62,7 @@ struct KeyboardShortcutsView: View {
                 ("menu.showAsCoverFlow", shortcutShowAsCoverFlow),
                 ("menu.toggleUpNext", shortcutToggleUpNext),
                 ("menu.toggleLyrics", shortcutToggleLyrics),
+                ("menu.toggleVisualizer", shortcutToggleVisualizer),
                 ("menu.switchToMiniPlayer", shortcutSwitchToMiniPlayer),
                 ("menu.showEqualizer", shortcutShowEqualizer)
             ]),

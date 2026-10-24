@@ -450,7 +450,7 @@ struct ContentView: View {
     private var bottomBarSection: some View {
         HStack {
             Spacer()
-            Button(action: { showVisualizer.toggle() }) {
+            Button(action: toggleVisualizerMenuAction) {
                 HStack {
                     Image(systemName: "waveform")
                     Text("bottomBar.visualizer")
@@ -568,6 +568,8 @@ struct ContentView: View {
             .focusedSceneValue(\.showCoverFlowAction, showCoverFlowAction)
             .focusedSceneValue(\.toggleUpNextAction, toggleUpNextMenuAction)
             .focusedSceneValue(\.showUpNextValue, showUpNext)
+            .focusedSceneValue(\.toggleVisualizerAction, toggleVisualizerMenuAction)
+            .focusedSceneValue(\.showVisualizerValue, showVisualizer)
             .focusedSceneValue(\.toggleLyricsAction, toggleLyricsMenuAction)
             .focusedSceneValue(\.showLyricsValue, showLyrics)
             .focusedSceneValue(\.toggleMiniPlayerAction, toggleMiniPlayer)
@@ -631,6 +633,10 @@ struct ContentView: View {
                 engine.updateUpcomingSongs()
             }
         }
+    }
+
+    private func toggleVisualizerMenuAction() {
+        showVisualizer.toggle()
     }
 
     private func toggleLyricsMenuAction() {

@@ -42,6 +42,12 @@ private struct ToggleLyricsActionKey: FocusedValueKey {
 private struct ShowLyricsValueKey: FocusedValueKey {
     typealias Value = Bool
 }
+private struct ToggleVisualizerActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+private struct ShowVisualizerValueKey: FocusedValueKey {
+    typealias Value = Bool
+}
 private struct ToggleMiniPlayerActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
@@ -143,6 +149,14 @@ extension FocusedValues {
     var showLyricsValue: Bool? {
         get { self[ShowLyricsValueKey.self] }
         set { self[ShowLyricsValueKey.self] = newValue }
+    }
+    var toggleVisualizerAction: (() -> Void)? {
+        get { self[ToggleVisualizerActionKey.self] }
+        set { self[ToggleVisualizerActionKey.self] = newValue }
+    }
+    var showVisualizerValue: Bool? {
+        get { self[ShowVisualizerValueKey.self] }
+        set { self[ShowVisualizerValueKey.self] = newValue }
     }
     var toggleMiniPlayerAction: (() -> Void)? {
         get { self[ToggleMiniPlayerActionKey.self] }
@@ -351,8 +365,12 @@ struct ViewCommands: Commands {
     @FocusedValue(\.showUpNextValue) private var showUpNextValue: Bool?
     @FocusedValue(\.toggleLyricsAction) private var toggleLyricsAction: (() -> Void)?
     @FocusedValue(\.showLyricsValue) private var showLyricsValue: Bool?
+    @FocusedValue(\.toggleVisualizerAction) private var toggleVisualizerAction: (() -> Void)?
+    @FocusedValue(\.showVisualizerValue) private var showVisualizerValue: Bool?
     @FocusedValue(\.toggleMiniPlayerAction) private var toggleMiniPlayerAction: (() -> Void)?
 
+    @AppStorage("visualizerStyle") private var visualizerStyle: String = VisualizerStyle.classic.rawValue
+    @AppStorage("shortcut.toggleVisualizer") private var shortcutToggleVisualizer: String = "⌘T"
     @AppStorage("shortcut.showAsList") private var shortcutShowAsList: String = "⌘1"
     @AppStorage("shortcut.showAsAlbums") private var shortcutShowAsAlbums: String = "⌘2"
     @AppStorage("shortcut.showAsCoverFlow") private var shortcutShowAsCoverFlow: String = "⌘3"
@@ -394,6 +412,22 @@ struct ViewCommands: Commands {
             }
             .dynamicShortcut(shortcutToggleLyrics)
             .disabled(toggleLyricsAction == nil)
+
+            Button((showVisualizerValue ?? false) ? "menu.hideVisualizer" : "menu.showVisualizer") {
+                toggleVisualizerAction?()
+            }
+            .dynamicShortcut(shortcutToggleVisualizer)
+            .disabled(toggleVisualizerAction == nil)
+
+            Menu("menu.visualizerStyle") {
+                Picker("menu.visualizerStyle", selection: $visualizerStyle) {
+                    ForEach(VisualizerStyle.allCases) { style in
+                        Text(style.titleKey).tag(style.rawValue)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            }
 
             Divider()
 

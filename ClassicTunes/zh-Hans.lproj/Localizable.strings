@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "重置外观？";
 "settings.data.resetAppearanceMessage" = "外观模式、主题颜色和两个背景将恢复为默认设置。";
 "bottomBar.visualizer"        = "可视化效果";
+"menu.showVisualizer" = "显示可视化效果";
+"menu.hideVisualizer" = "隐藏可视化效果";
+"menu.visualizerStyle" = "可视化效果样式";
+"menu.toggleVisualizer" = "显示/隐藏可视化效果";
+"visualizer.style.classic" = "经典";
+"visualizer.style.spectrum" = "频谱";
+"visualizer.style.jelly" = "果冻";
+"visualizer.style.particles" = "粒子";

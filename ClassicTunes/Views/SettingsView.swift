@@ -43,6 +43,7 @@ struct SettingsView: View {
     @AppStorage("shortcut.toggleUpNext") private var shortcutToggleUpNext: String = "⌘U"
     @AppStorage("shortcut.toggleLyrics") private var shortcutToggleLyrics: String = "⌘L"
     @AppStorage("shortcut.switchToMiniPlayer") private var shortcutSwitchToMiniPlayer: String = "⌘⇧M"
+    @AppStorage("shortcut.toggleVisualizer") private var shortcutToggleVisualizer: String = "⌘T"
     @AppStorage("shortcut.showEqualizer") private var shortcutShowEqualizer: String = "⌘⌥E"
 
     // Playback control shortcuts
@@ -204,6 +205,7 @@ struct SettingsView: View {
                         ShortcutAssignerRow(title: "menu.showAsCoverFlow", shortcut: $shortcutShowAsCoverFlow)
                         ShortcutAssignerRow(title: "menu.toggleUpNext", shortcut: $shortcutToggleUpNext)
                         ShortcutAssignerRow(title: "menu.toggleLyrics", shortcut: $shortcutToggleLyrics)
+                        ShortcutAssignerRow(title: "menu.toggleVisualizer", shortcut: $shortcutToggleVisualizer)
                         ShortcutAssignerRow(title: "menu.switchToMiniPlayer", shortcut: $shortcutSwitchToMiniPlayer)
                         ShortcutAssignerRow(title: "menu.showEqualizer", shortcut: $shortcutShowEqualizer)
                     }

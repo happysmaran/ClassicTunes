@@ -85,16 +85,16 @@ final class AudioAnalyzer {
         for i in 0..<available { input[i] = samples[i * stride] }
         if available < n { for i in available..<n { input[i] = 0 } }
 
-        // Waveform: downsample the raw samples and smooth toward the new values.
+        // Raw values only: the visualizer interpolates and smooths per display frame, which
+        // keeps motion fluid regardless of how large the audio buffers happen to be.
         let step = max(1, available / Self.waveformCount)
         for i in 0..<Self.waveformCount {
-            let value = input[min(i * step, n - 1)]
-            waveform[i] = waveform[i] * 0.4 + value * 0.6
+            waveform[i] = input[min(i * step, n - 1)]
         }
 
         var rms: Float = 0
         vDSP_rmsqv(input, 1, &rms, vDSP_Length(available))
-        level = max(rms, level * 0.85)
+        level = rms
 
         vDSP_vmul(input, 1, window, 1, &input, 1, vDSP_Length(n))
 
@@ -112,8 +112,7 @@ final class AudioAnalyzer {
             }
         }
 
-        // Group bins into log-spaced bands, convert to a 0...1 dB-scaled height, and apply
-        // fast-attack / slow-decay smoothing.
+        // Group bins into log-spaced bands and convert to a 0...1 dB-scaled height.
         for b in 0..<Self.bandCount {
             let lo = bandEdges[b]
             let hi = max(lo + 1, bandEdges[b + 1])
@@ -121,7 +120,7 @@ final class AudioAnalyzer {
             for k in lo..<min(hi, n / 2) { peak = max(peak, magnitudes[k]) }
             let db = 20 * log10(max(peak / Float(n), 1e-7))
             let normalized = min(1, max(0, (db + 80) / 70))
-            bands[b] = normalized > bands[b] ? normalized : bands[b] * 0.88 + normalized * 0.12
+            bands[b] = normalized
         }
     }
 }

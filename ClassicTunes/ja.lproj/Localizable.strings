@@ -260,3 +260,11 @@
 "settings.data.resetAppearanceConfirm" = "外観をリセットしますか？";
 "settings.data.resetAppearanceMessage" = "外観モード、テーマカラー、2つの背景が初期設定に戻ります。";
 "bottomBar.visualizer"        = "ビジュアライザ";
+"menu.showVisualizer" = "ビジュアライザを表示";
+"menu.hideVisualizer" = "ビジュアライザを非表示";
+"menu.visualizerStyle" = "ビジュアライザのスタイル";
+"menu.toggleVisualizer" = "ビジュアライザを表示/非表示";
+"visualizer.style.classic" = "クラシック";
+"visualizer.style.spectrum" = "スペクトラム";
+"visualizer.style.jelly" = "ジェリー";
+"visualizer.style.particles" = "パーティクル";
