@@ -10,6 +10,7 @@
 "sidebar.movies"              = "영화";
 "sidebar.tvShows"             = "TV 프로그램";
 "sidebar.podcasts"            = "팟캐스트";
+"sidebar.books"               = "도서";
 "sidebar.radio"               = "라디오";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "새로운 재생 목록";
@@ -146,6 +147,7 @@
 "store.media.music"           = "음악";
 "store.media.movies"          = "영화";
 "store.media.tvShows"         = "TV 프로그램";
+"store.media.books"          = "도서";
 "store.media.all"             = "전체";
 "store.free"                  = "무료";
 "store.preview"               = "미리 듣기";

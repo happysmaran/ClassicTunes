@@ -10,6 +10,7 @@
 "sidebar.movies"              = "Filme";
 "sidebar.tvShows"             = "TV-Sendungen";
 "sidebar.podcasts"            = "Podcasts";
+"sidebar.books"               = "Bücher";
 "sidebar.radio"               = "Radio";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "Neue Wiedergabeliste";
@@ -146,6 +147,7 @@
 "store.media.music"           = "Musik";
 "store.media.movies"          = "Filme";
 "store.media.tvShows"         = "TV-Sendungen";
+"store.media.books"          = "Bücher";
 "store.media.all"             = "Alle";
 "store.free"                  = "Kostenlos";
 "store.preview"               = "Vorschau";

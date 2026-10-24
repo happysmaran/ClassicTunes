@@ -65,6 +65,12 @@ struct SidebarView: View {
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
+                Button(action: { comingSoonSection = "Books"; showComingSoon = true }) {
+                    Label("sidebar.books", systemImage: "book")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(ITunesSidebarButtonStyle(selected: false))
+
                 Button(action: { comingSoonSection = "Radio"; showComingSoon = true }) {
                     Label("sidebar.radio", systemImage: "radio")
                         .frame(maxWidth: .infinity, alignment: .leading)

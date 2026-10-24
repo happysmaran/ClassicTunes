@@ -10,6 +10,7 @@
 "sidebar.movies"              = "电影";
 "sidebar.tvShows"             = "电视节目";
 "sidebar.podcasts"            = "播客";
+"sidebar.books"               = "图书";
 "sidebar.radio"               = "广播";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "新建播放列表";
@@ -146,6 +147,7 @@
 "store.media.music"           = "音乐";
 "store.media.movies"          = "电影";
 "store.media.tvShows"         = "电视节目";
+"store.media.books"          = "图书";
 "store.media.all"             = "全部";
 "store.free"                  = "免费";
 "store.preview"               = "试听";

@@ -10,6 +10,7 @@
 "sidebar.movies"              = "సినిమాలు";
 "sidebar.tvShows"             = "టీవీ షోలు";
 "sidebar.podcasts"            = "పాడ్‌కాస్ట్‌లు";
+"sidebar.books"               = "పుస్తకాలు";
 "sidebar.radio"               = "రేడియో";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "కొత్త ప్లేలిస్ట్";
@@ -146,6 +147,7 @@
 "store.media.music"           = "సంగీతం";
 "store.media.movies"          = "సినిమాలు";
 "store.media.tvShows"         = "టీవీ షోలు";
+"store.media.books"          = "పుస్తకాలు";
 "store.media.all"             = "అన్నీ";
 "store.free"                  = "ఉచితం";
 "store.preview"               = "ప్రివ్యూ";

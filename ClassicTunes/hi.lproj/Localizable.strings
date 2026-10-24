@@ -10,6 +10,7 @@
 "sidebar.movies"              = "फ़िल्में";
 "sidebar.tvShows"             = "टीवी शो";
 "sidebar.podcasts"            = "पॉडकास्ट";
+"sidebar.books"               = "पुस्तकें";
 "sidebar.radio"               = "रेडियो";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "नई प्लेलिस्ट";
@@ -146,6 +147,7 @@
 "store.media.music"           = "संगीत";
 "store.media.movies"          = "फ़िल्में";
 "store.media.tvShows"         = "टीवी शो";
+"store.media.books"          = "पुस्तकें";
 "store.media.all"             = "सभी";
 "store.free"                  = "निःशुल्क";
 "store.preview"               = "पूर्वावलोकन";

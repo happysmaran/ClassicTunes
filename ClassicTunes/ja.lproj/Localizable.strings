@@ -10,6 +10,7 @@
 "sidebar.movies"              = "映画";
 "sidebar.tvShows"             = "テレビ番組";
 "sidebar.podcasts"            = "ポッドキャスト";
+"sidebar.books"               = "ブック";
 "sidebar.radio"               = "ラジオ";
 "sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "新規プレイリスト";
@@ -146,6 +147,7 @@
 "store.media.music"           = "ミュージック";
 "store.media.movies"          = "映画";
 "store.media.tvShows"         = "テレビ番組";
+"store.media.books"          = "ブック";
 "store.media.all"             = "すべて";
 "store.free"                  = "無料";
 "store.preview"               = "プレビュー";

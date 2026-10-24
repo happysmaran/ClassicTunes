@@ -2,8 +2,6 @@ import SwiftUI
 import AVKit
 import AVFoundation
 import AppKit
-import MediaPlayer
-import Combine
 
 // A data transport container mapping out top-level response payloads returned from the iTunes Search API web endpoint[span_3](start_span)[span_3](end_span).
 struct iTunesSearchResponse: Codable {
@@ -41,6 +39,8 @@ struct iTunesItem: Codable, Identifiable {
     
     let trackPrice: Double?
     let collectionPrice: Double?
+    // Books report their price under a plain `price` key.
+    let price: Double?
     let currency: String?
     
     let primaryGenreName: String?
@@ -82,93 +82,102 @@ struct iTunesStoreView: View {
         (NSLocalizedString("store.media.music", comment: "music"), "music"),
         (NSLocalizedString("store.media.movies", comment: "movies"), "movie"),
         (NSLocalizedString("store.media.tvShows", comment:"tvShows"), "tvShow"),
+        (NSLocalizedString("store.media.books", comment: "books"), "ebook"),
         (NSLocalizedString("store.media.all", comment: "all"), "all")
     ]
     
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appearanceManager: AppearanceManager
+
+    // Matches the forced app appearance when set, otherwise the system one.
+    private var isAppDark: Bool {
+        if let forced = appearanceManager.currentColorScheme() {
+            return forced == .dark
+        }
+        return colorScheme == .dark
+    }
+
+    private var backgroundColor: Color {
+        isAppDark ? Color.itunesWindowBG : Color(nsColor: .windowBackgroundColor)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Classic iTunes-style header
-            HStack {
-                Picker("store.media.label", selection: $selectedMedia) {
-                    ForEach(mediaOptions, id: \.1) { label, value in
-                        Text(label).tag(value)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 320)
-                
-                Spacer()
-                
-                Text("store.title")
-                    .font(.title2.bold())
-                    .foregroundColor(.primary)
-                
-                Spacer()
-            }
-            .padding()
-            .background(Color(nsColor: .windowBackgroundColor))
-            
+            header
             Divider()
-            
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField("store.welcome.subtitle", text: $searchText, onCommit: performSearch)
-                    .textFieldStyle(.plain)
-                    .font(.title3)
-            }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
-            .padding(.horizontal)
-            
-            Divider()
-            
-            if isLoading {
-                ProgressView("store.searching")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if results.isEmpty && !searchText.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    Text("store.noResults.title")
-                        .font(.title2)
-                    Text("store.noResults.subtitle")
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if results.isEmpty {
-                VStack(spacing: 20) {
-                    Image(systemName: "music.note.list")
-                        .font(.system(size: 60))
-                        .foregroundColor(.secondary)
-                    Text("store.welcome.title")
-                        .font(.largeTitle)
-                        .fontWeight(.semibold)
-                    Text("store.welcome.subtitle")
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 20)], spacing: 24) {
-                        ForEach(results) { item in
-                            StoreItemView(item: item)
-                        }
-                    }
-                    .padding()
-                }
-            }
+            content
         }
+        .background(backgroundColor)
         .onChange(of: selectedMedia) { _ in
             if !searchText.isEmpty {
                 performSearch()
             }
         }
     }
-    
+
+    // Title, media picker and search field grouped into one toolbar-like header.
+    private var header: some View {
+        VStack(spacing: 12) {
+            Text("store.title")
+                .font(.title2.weight(.semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 12) {
+                Picker("store.media.label", selection: $selectedMedia) {
+                    ForEach(mediaOptions, id: \.1) { label, value in
+                        Text(label).tag(value)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 400)
+
+                Spacer()
+
+                TextField("store.welcome.subtitle", text: $searchText, onCommit: performSearch)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 220)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(.bar)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if isLoading {
+            ProgressView("store.searching")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if results.isEmpty && !searchText.isEmpty {
+            placeholder(symbol: "magnifyingglass", title: "store.noResults.title", subtitle: "store.noResults.subtitle")
+        } else if results.isEmpty {
+            placeholder(symbol: "music.note.list", title: "store.welcome.title", subtitle: "store.welcome.subtitle")
+        } else {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 20, alignment: .top)], spacing: 20) {
+                    ForEach(results) { item in
+                        StoreItemView(item: item)
+                    }
+                }
+                .padding(20)
+            }
+        }
+    }
+
+    private func placeholder(symbol: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 56, weight: .light))
+                .foregroundStyle(.tertiary)
+            Text(title)
+                .font(.title2.weight(.semibold))
+            Text(subtitle)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     // Assembles an asynchronous HTTP transport worker that dispatches query streams directly to Apple servers[span_16](start_span)[span_16](end_span).
     private func performSearch() {
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -180,9 +189,13 @@ struct iTunesStoreView: View {
         results = []
         
         let term = searchText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let media = selectedMedia == "all" ? "" : "&media=\(selectedMedia)"
+        // The iTunes Search API returns nothing for `media=movie`, so movies are found
+        // through an unfiltered search and filtered by kind afterwards.
+        let isMovieSearch = selectedMedia == "movie"
+        let media = (selectedMedia == "all" || isMovieSearch) ? "" : "&media=\(selectedMedia)"
+        let limit = isMovieSearch ? 200 : 50
         
-        let urlString = "https://itunes.apple.com/search?term=\(term)\(media)&limit=50&country=US"
+        let urlString = "https://itunes.apple.com/search?term=\(term)\(media)&limit=\(limit)&country=US"
         
         guard let url = URL(string: urlString) else {
             isLoading = false
@@ -196,7 +209,9 @@ struct iTunesStoreView: View {
                 if let data = data {
                     do {
                         let decoded = try JSONDecoder().decode(iTunesSearchResponse.self, from: data)
-                        self.results = decoded.results
+                        self.results = isMovieSearch
+                            ? decoded.results.filter { $0.kind == "feature-movie" }
+                            : decoded.results
                     } catch {
                         print("iTunes Search decode error: \(error)")
                     }
@@ -206,145 +221,126 @@ struct iTunesStoreView: View {
     }
 }
 
-// A specialized audio stream singleton engine engineered to buffer, broadcast, and toggle digital preview tracks[span_17](start_span)[span_17](end_span).
-final class PreviewAudioPlayer: ObservableObject {
-    // Global unified environment access hook matching software instance design structures[span_18](start_span)[span_18](end_span).
-    static let shared = PreviewAudioPlayer()
-    
-    private var player: AVPlayer?
-    private var currentlyPlayingURLString: String?
-
-    @Published private var playingURLString: String? = nil
-
-    private init() {}
-
-    // Binds an online streaming source onto hardware playback lines while resetting structural system audio cards[span_19](start_span)[span_19](end_span).
-    //
-    // - Parameters:
-    //   - url: The formatted resource target locator reference targeting binary assets[span_20](start_span)[span_20](end_span).
-    //   - urlString: The flat string variant utilized to index state evaluations uniquely[span_21](start_span)[span_21](end_span).
-    func play(url: URL, urlString: String) {
-        if currentlyPlayingURLString == urlString {
-            stop()
-            return
-        }
-        
-        player?.pause()
-
-        let item = AVPlayerItem(url: url)
-        let newPlayer = AVPlayer(playerItem: item)
-        self.player = newPlayer
-        self.currentlyPlayingURLString = urlString
-        self.playingURLString = urlString
-
-        var info: [String: Any] = [
-            MPMediaItemPropertyTitle: "Sample"
-        ]
-        info[MPNowPlayingInfoPropertyIsLiveStream] = false
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-
-        newPlayer.play()
-    }
-
-    // Explicitly commands active hardware audio channel lines to hold operations and frees operating system system hooks[span_22](start_span)[span_22](end_span).
-    func stop() {
-        player?.pause()
-        player = nil
-        currentlyPlayingURLString = nil
-        playingURLString = nil
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-    }
-    
-    // Evaluates if a specified resource sequence string is currently active within the engine core[span_23](start_span)[span_23](end_span).
-    func isPlaying(urlString: String) -> Bool {
-        return playingURLString == urlString
-    }
-}
-
 // A graphical interface component mapping layout cells, text items, artwork items, and buttons for store data[span_24](start_span)[span_24](end_span).
 struct StoreItemView: View {
     // The structural information source map containing server metadata[span_25](start_span)[span_25](end_span).
     let item: iTunesItem
     
-    @StateObject private var previewPlayer = PreviewAudioPlayer.shared
+    @ObservedObject private var engine = PlayerEngine.shared
     
+    @State private var isHovering = false
+
+    private var priceText: String? {
+        guard let price = item.trackPrice ?? item.collectionPrice ?? item.price, price > 0 else { return nil }
+        return "\(item.currency ?? "$")\(String(format: "%.2f", price))"
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Artwork
-            AsyncImage(url: URL(string: item.bestArtworkURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                        Image(systemName: item.kind == "movie" || item.kind?.contains("tv") == true ? "film" : "music.note")
-                            .font(.largeTitle)
-                            .foregroundColor(.secondary)
-                    )
-            }
-            .frame(width: 140, height: 140)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .shadow(radius: 4)
-            
+        VStack(alignment: .leading, spacing: 6) {
+            artwork
+
             Text(item.displayTitle)
                 .font(.headline)
-                .lineLimit(2)
+                .lineLimit(2, reservesSpace: true)
                 .multilineTextAlignment(.leading)
-            
+
             Text(item.displaySubtitle)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
-            
-            if let price = item.trackPrice ?? item.collectionPrice, price > 0 {
-                Text("\(item.currency ?? "$")\(price, specifier: "%.2f")")
-                    .font(.subheadline)
-                    .foregroundStyle(.tint)
-            } else {
-                Text("store.free")
-                    .font(.subheadline)
-                    .foregroundColor(.green)
-            }
-            
-            HStack {
+
+            Spacer(minLength: 4)
+
+            HStack(spacing: 8) {
                 if let preview = item.previewUrl, (item.kind == "song" || item.kind == "music-video") {
-                    Button(action: {
-                        playPreview(urlString: preview)
-                    }) {
-                        Label(previewPlayer.isPlaying(urlString: preview) ? "Stop" : "Preview",
-                              systemImage: previewPlayer.isPlaying(urlString: preview) ? "stop.fill" : "play.fill")
-                            .font(.caption)
+                    Button(action: { playPreview(urlString: preview) }) {
+                        Image(systemName: engine.previewKey == preview ? "stop.fill" : "play.fill")
+                            .frame(width: 14)
                     }
                     .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help(engine.previewKey == preview ? "Stop" : "Preview")
                 }
-                
-                Spacer()
-                
+
+                Spacer(minLength: 0)
+
                 if let storeURLString = item.trackViewUrl ?? item.collectionViewUrl,
                    let url = URL(string: storeURLString) {
-                    Button("store.viewInStore") {
+                    Button {
                         NSWorkspace.shared.open(url)
+                    } label: {
+                        if let priceText {
+                            Text(priceText)
+                        } else {
+                            Text("store.free")
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .help(Text("store.viewInStore"))
+                } else if let priceText {
+                    Text(priceText)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.tint)
+                } else {
+                    Text("store.free")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.green)
                 }
             }
         }
-        .padding(8)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(12)
+        .padding(10)
+        .frame(maxWidth: .infinity, minHeight: 260, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .shadow(color: .black.opacity(isHovering ? 0.22 : 0.1), radius: isHovering ? 8 : 3, x: 0, y: 1)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+        )
+        .scaleEffect(isHovering ? 1.02 : 1)
+        .animation(.easeOut(duration: 0.15), value: isHovering)
+        .onHover { isHovering = $0 }
     }
-    
-    // Dispatches state validations to safely mount streaming resources on the audio singleton pipeline[span_26](start_span)[span_26](end_span).
+
+    private var artwork: some View {
+        AsyncImage(url: URL(string: item.bestArtworkURL ?? "")) { image in
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } placeholder: {
+            Rectangle()
+                .fill(Color(nsColor: .underPageBackgroundColor))
+                .overlay(
+                    Image(systemName: item.kind?.contains("book") == true ? "book" : (item.kind?.contains("movie") == true || item.kind?.contains("tv") == true ? "film" : "music.note"))
+                        .font(.largeTitle)
+                        .foregroundStyle(.secondary)
+                )
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+    }
+
+    // Starts the preview through the main player, or stops it if it is already the active one.
     private func playPreview(urlString: String) {
         guard let url = URL(string: urlString) else { return }
         
-        if previewPlayer.isPlaying(urlString: urlString) {
-            previewPlayer.stop()
+        if engine.previewKey == urlString {
+            engine.stopPreview()
         } else {
-            previewPlayer.play(url: url, urlString: urlString)
+            engine.playPreview(
+                url: url,
+                key: urlString,
+                title: item.displayTitle,
+                artist: item.displaySubtitle,
+                album: item.collectionName ?? "",
+                genre: item.primaryGenreName ?? "",
+                artworkURL: URL(string: item.bestArtworkURL ?? "")
+            )
         }
     }
 }

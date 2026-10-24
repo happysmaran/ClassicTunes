@@ -15,6 +15,8 @@ final class PlayerEngine: ObservableObject {
 
     @Published var player: AVPlayer?
     @Published var selectedSong: Song?
+    /// Identifies the Tunes Store preview currently loaded (its preview URL), or nil for normal library playback.
+    @Published private(set) var previewKey: String?
     @Published var playbackPosition: Double = 0.0
     @Published var playbackDuration: Double = 1.0
     @Published var upcomingSongs: [Song] = []
@@ -119,7 +121,7 @@ final class PlayerEngine: ObservableObject {
     /// Measures the current song (cached after the first time) and applies its gain.
     private func refreshStableVolume() {
         if fadeTimer == nil { player?.volume = effectiveVolume }
-        guard isStableVolumeEnabled, let song = selectedSong else { return }
+        guard isStableVolumeEnabled, previewKey == nil, let song = selectedSong else { return }
         Task { @MainActor [weak self] in
             let gain = await StableVolumeIndex.shared.gain(for: song.url)
             guard let self, self.selectedSong?.id == song.id else { return }
@@ -184,6 +186,36 @@ final class PlayerEngine: ObservableObject {
         updateUpcomingSongs()
     }
 
+    // MARK: - Store previews
+
+    /// Plays a Tunes Store preview through the main player so it shows in the toolbar,
+    /// responds to system media controls, and skips library bookkeeping (play counts, history).
+    func playPreview(url: URL, key: String, title: String, artist: String, album: String, genre: String, artworkURL: URL?) {
+        let song = Song(url: url, title: title, artist: artist, album: album, genre: genre, duration: 30)
+        currentPlaybackSongs = [song]
+        setupNewPlayback(for: song, previewKey: key)
+
+        guard let artworkURL else { return }
+        Task { @MainActor [weak self] in
+            guard let (data, _) = try? await URLSession.shared.data(from: artworkURL),
+                  let self, self.previewKey == key, var current = self.selectedSong else { return }
+            current.artworkData = data
+            self.selectedSong = current
+            self.updateNowPlayingInfo()
+        }
+    }
+
+    /// Ends the current store preview and clears the player.
+    func stopPreview() {
+        guard previewKey != nil else { return }
+        stopCurrentPlayback()
+        previewKey = nil
+        selectedSong = nil
+        currentPlaybackSongs = []
+        playbackPosition = 0
+        updateNowPlayingInfo()
+    }
+
     func playSongFromUpNext(_ song: Song) {
         manualQueue.removeAll { $0.id == song.id }
         shuffleQueue.removeAll { $0.id == song.id }
@@ -192,8 +224,9 @@ final class PlayerEngine: ObservableObject {
         updateUpcomingSongs()
     }
 
-    private func setupNewPlayback(for song: Song, autoplay: Bool = true, startAt seconds: Double = 0) {
+    private func setupNewPlayback(for song: Song, autoplay: Bool = true, startAt seconds: Double = 0, previewKey: String? = nil) {
         stopCurrentPlayback()
+        self.previewKey = previewKey
 
         let item = AVPlayerItem(url: song.url)
         Equalizer.shared.attach(to: item)
@@ -207,8 +240,10 @@ final class PlayerEngine: ObservableObject {
         if autoplay {
             newPlayer.play()
         }
-        UserDefaults.standard.set(song.url.path, forKey: Self.lastSongPathKey)
-        UserDefaults.standard.set(seconds, forKey: Self.lastPositionKey)
+        if previewKey == nil {
+            UserDefaults.standard.set(song.url.path, forKey: Self.lastSongPathKey)
+            UserDefaults.standard.set(seconds, forKey: Self.lastPositionKey)
+        }
 
         player = newPlayer
         playerItem = item
@@ -234,7 +269,7 @@ final class PlayerEngine: ObservableObject {
         updateNowPlayingInfo()
 
         // A restored (paused) song isn't a new play, so skip play counts/history.
-        if autoplay {
+        if autoplay && previewKey == nil {
             onSongChanged?(song)
         }
     }
@@ -334,7 +369,9 @@ final class PlayerEngine: ObservableObject {
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             guard let self else { return }
             if !self.isSeeking {
-                UserDefaults.standard.set(time.seconds, forKey: Self.lastPositionKey)
+                if self.previewKey == nil {
+                    UserDefaults.standard.set(time.seconds, forKey: Self.lastPositionKey)
+                }
                 self.playbackPosition = time.seconds / max(self.playbackDuration, 0.1)
                 self.updateNowPlayingPlaybackInfo()
             }
@@ -348,7 +385,9 @@ final class PlayerEngine: ObservableObject {
         }
         playbackEndObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
             guard let self else { return }
-            if self.isRepeatOne {
+            if self.previewKey != nil {
+                self.stopPreview()
+            } else if self.isRepeatOne {
                 self.player?.seek(to: .zero)
                 self.player?.play()
                 self.playbackPosition = 0.0
@@ -360,7 +399,7 @@ final class PlayerEngine: ObservableObject {
     }
 
     func playNext() {
-        guard let current = selectedSong else { return }
+        guard previewKey == nil, let current = selectedSong else { return }
 
         if !isShuffleEnabled && !manualQueue.isEmpty {
             let next = manualQueue.removeFirst()
@@ -398,7 +437,7 @@ final class PlayerEngine: ObservableObject {
     }
 
     func playPrevious() {
-        guard let current = selectedSong else { return }
+        guard previewKey == nil, let current = selectedSong else { return }
 
         isNavigatingBackward = true
 
