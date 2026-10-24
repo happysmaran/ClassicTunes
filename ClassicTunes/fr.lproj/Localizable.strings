@@ -268,3 +268,7 @@
 "visualizer.style.spectrum" = "Spectre";
 "visualizer.style.jelly" = "Gelée";
 "visualizer.style.particles" = "Particules";
+"visualizer.style.analyzerBars" = "Barres d’analyseur";
+"visualizer.style.oscilloscope" = "Oscilloscope";
+"visualizer.style.kaleidoscope" = "Kaléidoscope";
+"visualizer.style.tunnel" = "Tunnel";

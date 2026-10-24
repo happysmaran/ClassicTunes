@@ -268,3 +268,7 @@
 "visualizer.style.spectrum" = "频谱";
 "visualizer.style.jelly" = "果冻";
 "visualizer.style.particles" = "粒子";
+"visualizer.style.analyzerBars" = "分析器条形";
+"visualizer.style.oscilloscope" = "示波器";
+"visualizer.style.kaleidoscope" = "万花筒";
+"visualizer.style.tunnel" = "隧道";

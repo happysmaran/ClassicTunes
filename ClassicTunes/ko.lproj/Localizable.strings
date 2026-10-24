@@ -268,3 +268,7 @@
 "visualizer.style.spectrum" = "스펙트럼";
 "visualizer.style.jelly" = "젤리";
 "visualizer.style.particles" = "파티클";
+"visualizer.style.analyzerBars" = "분석기 막대";
+"visualizer.style.oscilloscope" = "오실로스코프";
+"visualizer.style.kaleidoscope" = "만화경";
+"visualizer.style.tunnel" = "터널";

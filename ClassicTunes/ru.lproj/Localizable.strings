@@ -267,3 +267,7 @@
 "visualizer.style.spectrum" = "Спектр";
 "visualizer.style.jelly" = "Желе";
 "visualizer.style.particles" = "Частицы";
+"visualizer.style.analyzerBars" = "Столбцы анализатора";
+"visualizer.style.oscilloscope" = "Осциллограф";
+"visualizer.style.kaleidoscope" = "Калейдоскоп";
+"visualizer.style.tunnel" = "Туннель";

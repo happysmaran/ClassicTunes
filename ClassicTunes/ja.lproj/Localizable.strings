@@ -268,3 +268,7 @@
 "visualizer.style.spectrum" = "スペクトラム";
 "visualizer.style.jelly" = "ジェリー";
 "visualizer.style.particles" = "パーティクル";
+"visualizer.style.analyzerBars" = "アナライザーバー";
+"visualizer.style.oscilloscope" = "オシロスコープ";
+"visualizer.style.kaleidoscope" = "万華鏡";
+"visualizer.style.tunnel" = "トンネル";

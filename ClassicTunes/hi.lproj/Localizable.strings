@@ -268,3 +268,7 @@
 "visualizer.style.spectrum" = "स्पेक्ट्रम";
 "visualizer.style.jelly" = "जेली";
 "visualizer.style.particles" = "कण";
+"visualizer.style.analyzerBars" = "एनालाइज़र बार";
+"visualizer.style.oscilloscope" = "ऑसिलोस्कोप";
+"visualizer.style.kaleidoscope" = "कैलेडोस्कोप";
+"visualizer.style.tunnel" = "सुरंग";
