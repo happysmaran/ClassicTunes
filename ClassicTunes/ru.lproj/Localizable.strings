@@ -4,6 +4,7 @@
 "sidebar.library"             = "МЕДИАТЕКА";
 "sidebar.store"               = "МАГАЗИН";
 "sidebar.playlists"           = "ПЛЕЙЛИСТЫ";
+"sidebar.devices"             = "УСТРОЙСТВА";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "Музыка";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "Выбрать обложку…";
 "songInfo.artwork.remove"     = "Удалить обложку";
 "songInfo.artwork.empty"      = "Перетащите изображение сюда или выберите файл";
+"songInfo.mono"               = "Моно";
+"songInfo.stereo"             = "Стерео";
+"songInfo.channelCount"       = "Каналов: %d";
+"songInfo.kind.aac"           = "Аудиофайл AAC";
+"songInfo.kind.mp3"           = "Аудиофайл MPEG";
+"songInfo.kind.wav"           = "Аудиофайл WAV";
+"songInfo.kind.flac"          = "Аудиофайл FLAC";
+"songInfo.kind.other"         = "Аудиофайл";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Воспроизвести";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld часов";
 "playlistHeader.durationMinutes" = "%lld минута";
 "playlistHeader.durationMinutesPlural" = "%lld минут";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "Недавно воспроизведённые";
+"playlist.system.top25"       = "Топ-25";
+"playlist.system.recentlyAdded"= "Недавно добавленные";
+"playlist.system.classicalMusic"= "Классическая музыка";
+"playlist.system.nineties"    = "Музыка 90-х";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "Изменить фото…";
@@ -136,6 +152,27 @@
 "settings.albumGrid.background" = "Фон";
 "settings.albumGrid.note"     = "Когда приложение использует тёмный вид, сетка альбомов также будет тёмной независимо от этой настройки.";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "Основные";
+"settings.tab.equalizer"      = "Эквалайзер";
+"settings.tab.shortcuts"      = "Сочетания клавиш";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "Включить эквалайзер";
+"equalizer.preset"            = "Пресет";
+"equalizer.custom"            = "Свой";
+"equalizer.hint"              = "Перетащите ползунок, чтобы настроить полосу частот (от −12 до +12 дБ).";
+"equalizer.reset"             = "Сбросить";
+"equalizer.preset.flat"       = "Плоский";
+"equalizer.preset.bassBooster"= "Усиление баса";
+"equalizer.preset.bassReducer"= "Ослабление баса";
+"equalizer.preset.trebleBooster"= "Усиление верхов";
+"equalizer.preset.vocalBooster"= "Усиление вокала";
+"equalizer.preset.rock"       = "Рок";
+"equalizer.preset.pop"        = "Поп";
+"equalizer.preset.classical"  = "Классика";
+"equalizer.preset.electronic" = "Электронная";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "Поиск песен, альбомов, исполнителей, фильмов…";
@@ -154,15 +191,26 @@
 "store.stop"                  = "Стоп";
 "store.viewInStore"           = "Открыть в магазине";
 "store.media.label"           = "Медиа";
+"store.unknown"               = "Неизвестно";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "Текст песни";
+"lyrics.tryingOnline"         = "Текст не найден. Поиск в интернете…";
+"lyrics.noOnline"             = "В интернете текст не найден.";
+"lyrics.errorMetadata"        = "Ошибка загрузки метаданных.";
+"lyrics.lrcUnreadable"        = "Файл .lrc найден, но прочитать его не удалось.";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld песен";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "Все песни";
+"coverFlow.albumSongs"        = "Песни альбома";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "Открыть в мини-плеере";
+"miniPlayer.upNext"           = "Далее";
+"miniPlayer.nothingQueued"    = "Очередь пуста";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Удалить плейлист";
@@ -170,6 +218,7 @@
 "menu.importMusic"            = "Импортировать папку с музыкой…";
 "menu.importPlaylist"         = "Импортировать плейлист (M3U)…";
 "menu.exportPlaylist"         = "Экспортировать плейлист (M3U)…";
+"menu.getInfo"                = "Информация о песне…";
 "menu.find"                   = "Найти";
 "menu.showAsList"             = "списком";
 "menu.showAsAlbums"           = "альбомами";
@@ -202,11 +251,21 @@
 "shortcuts.group.edit"        = "Правка";
 "shortcuts.group.view"        = "Вид";
 "shortcuts.group.controls"    = "Управление";
+"shortcuts.resetHint"         = "Измените настройки выше или вернитесь к стандартным сочетаниям.";
+"shortcuts.resetDefaults"     = "Сбросить по умолчанию";
+"shortcuts.pressKeys"         = "Нажмите клавиши…";
 "menu.playPause"              = "Воспроизведение / Пауза";
 "menu.toggleUpNext"           = "Показать/скрыть «Далее»";
 "menu.toggleLyrics"           = "Показать/скрыть текст песни";
 "menu.toggleMute"             = "Включить/выключить звук";
 "menu.repeat"                 = "Переключить режим повтора";
+
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "Сейчас играет";
+"queue.nextUp"                = "Далее";
+"queue.noUpcoming"            = "Нет следующих песен";
+"queue.dragHere"              = "Перетащите песни сюда, чтобы добавить их в очередь";
+"queue.noSong"                = "Ничего не воспроизводится";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Извлечь iPod";
@@ -215,6 +274,7 @@
 "sync.addSongs"             = "Добавить песни…";
 "sync.dragHere"             = "Добавьте песни из медиатеки,\nчтобы синхронизировать их с этим iPod.";
 "sync.syncNow"              = "Синхронизировать";
+"sync.sync"                   = "Синхронизировать";
 "sync.cancel"               = "Отмена";
 "sync.writing"              = "Запись базы данных…";
 "sync.ejecting"             = "Завершение…";
@@ -230,6 +290,17 @@
 "picker.done"               = "Добавить в список синхронизации";
 "picker.cancel"             = "Отмена";
 "picker.queued"             = "В очереди";
+"device.available"            = "%@ свободно";
+"device.loading"              = "Загрузка песен…";
+"sync.progress"               = "%d из %d";
+"picker.selected"             = "Выбрано: %d";
+"storage.music"               = "Музыка: %@";
+"storage.free"                = "Свободно: %@";
+"storage.total"               = "Всего: %@";
+"sync.access.message"         = "Выберите iPod, чтобы разрешить ClassicTunes синхронизировать на него музыку.";
+"sync.access.messageSync"     = "ClassicTunes нужен доступ к iPod для синхронизации музыки.";
+"sync.access.prompt"          = "Разрешить доступ";
+"sync.access.denied"          = "Доступ к iPod запрещён.";
 
 "settings.songList" = "Список песен";
 "settings.background.custom" = "Свой";
@@ -339,3 +410,6 @@
 "menu.newSmartPlaylist" = "Новый смарт-плейлист…";
 "newPlaylist.type.regular" = "Плейлист";
 "newPlaylist.type.smart" = "Смарт-плейлист";
+
+// MARK: - File choosers
+"panel.choose"                = "Выбрать";

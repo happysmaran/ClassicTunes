@@ -4,6 +4,7 @@
 "sidebar.library"             = "ライブラリ";
 "sidebar.store"               = "ストア";
 "sidebar.playlists"           = "プレイリスト";
+"sidebar.devices"             = "デバイス";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "ミュージック";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "アートワークを選択…";
 "songInfo.artwork.remove"     = "アートワークを削除";
 "songInfo.artwork.empty"      = "ここに画像をドラッグするか、ファイルを選択してください";
+"songInfo.mono"               = "モノラル";
+"songInfo.stereo"             = "ステレオ";
+"songInfo.channelCount"       = "%dチャンネル";
+"songInfo.kind.aac"           = "AACオーディオファイル";
+"songInfo.kind.mp3"           = "MPEGオーディオファイル";
+"songInfo.kind.wav"           = "WAVオーディオファイル";
+"songInfo.kind.flac"          = "FLACオーディオファイル";
+"songInfo.kind.other"         = "オーディオファイル";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "再生";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld時間";
 "playlistHeader.durationMinutes" = "%lld分";
 "playlistHeader.durationMinutesPlural" = "%lld分";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "最近再生した項目";
+"playlist.system.top25"       = "トップ25";
+"playlist.system.recentlyAdded"= "最近追加した項目";
+"playlist.system.classicalMusic"= "クラシック音楽";
+"playlist.system.nineties"    = "90年代の音楽";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "写真を変更…";
@@ -136,6 +152,27 @@
 "settings.albumGrid.background" = "背景";
 "settings.albumGrid.note"     = "アプリがダーク外観のとき、この設定に関わらずアルバムグリッドはダークになります。";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "一般";
+"settings.tab.equalizer"      = "イコライザ";
+"settings.tab.shortcuts"      = "ショートカット";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "イコライザを有効にする";
+"equalizer.preset"            = "プリセット";
+"equalizer.custom"            = "カスタム";
+"equalizer.hint"              = "スライダをドラッグして、その周波数帯域を調整します（−12〜+12 dB）。";
+"equalizer.reset"             = "リセット";
+"equalizer.preset.flat"       = "フラット";
+"equalizer.preset.bassBooster"= "ローブースト";
+"equalizer.preset.bassReducer"= "ロー削減";
+"equalizer.preset.trebleBooster"= "ハイブースト";
+"equalizer.preset.vocalBooster"= "ボーカルブースト";
+"equalizer.preset.rock"       = "ロック";
+"equalizer.preset.pop"        = "ポップ";
+"equalizer.preset.classical"  = "クラシック";
+"equalizer.preset.electronic" = "エレクトロニック";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "曲、アルバム、アーティスト、映画を検索…";
@@ -154,15 +191,26 @@
 "store.stop"                  = "停止";
 "store.viewInStore"           = "Storeで見る";
 "store.media.label"           = "メディア";
+"store.unknown"               = "不明";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "歌詞";
+"lyrics.tryingOnline"         = "歌詞が見つかりません。オンラインで検索中…";
+"lyrics.noOnline"             = "オンラインでも歌詞が見つかりませんでした。";
+"lyrics.errorMetadata"        = "メタデータの読み込み中にエラーが発生しました。";
+"lyrics.lrcUnreadable"        = ".lrcファイルが見つかりましたが、読み込めませんでした。";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld曲";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "すべての曲";
+"coverFlow.albumSongs"        = "アルバムの曲";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "ミニプレーヤーで開く";
+"miniPlayer.upNext"           = "次に再生";
+"miniPlayer.nothingQueued"    = "待機中の曲はありません";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "プレイリストを削除";
@@ -181,7 +229,7 @@
 "menu.hideLyrics"             = "歌詞を非表示";
 "menu.switchToMiniPlayer"     = "MiniPlayerに切り替え";
 "menu.showEqualizer"          = "イコライザを表示";
-"menu.controls"               = "制御";
+"menu.controls"               = "コントロール";
 "menu.play"                   = "再生";
 "menu.pause"                  = "一時停止";
 "menu.nextSong"                = "次の曲";
@@ -202,12 +250,22 @@
 "shortcuts.group.file"        = "ファイル";
 "shortcuts.group.edit"        = "編集";
 "shortcuts.group.view"        = "表示";
-"shortcuts.group.controls"    = "制御";
+"shortcuts.group.controls"    = "コントロール";
+"shortcuts.resetHint"         = "上のコントロールを変更するか、標準の設定に戻します。";
+"shortcuts.resetDefaults"     = "初期設定に戻す";
+"shortcuts.pressKeys"         = "キーを押してください…";
 "menu.playPause"              = "再生 / 一時停止";
 "menu.toggleUpNext"           = "「次に再生」を表示/非表示";
 "menu.toggleLyrics"           = "歌詞を表示/非表示";
 "menu.toggleMute"             = "消音 / 消音解除";
 "menu.repeat"                 = "リピートモードを切り替え";
+
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "再生中";
+"queue.nextUp"                = "次に再生";
+"queue.noUpcoming"            = "次の曲はありません";
+"queue.dragHere"              = "曲をここにドラッグして待機リストに追加";
+"queue.noSong"                = "再生中の曲はありません";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPodを取り出す";
@@ -216,6 +274,7 @@
 "sync.addSongs"             = "曲を追加…";
 "sync.dragHere"             = "このiPodに同期するには、\nライブラリから曲を追加してください。";
 "sync.syncNow"              = "同期";
+"sync.sync"                   = "同期";
 "sync.cancel"               = "キャンセル";
 "sync.writing"              = "データベースを書き込み中…";
 "sync.ejecting"             = "終了処理中…";
@@ -231,6 +290,17 @@
 "picker.done"               = "同期リストに追加";
 "picker.cancel"             = "キャンセル";
 "picker.queued"             = "待機中";
+"device.available"            = "%@ 使用可能";
+"device.loading"              = "曲を読み込み中…";
+"sync.progress"               = "%d / %d";
+"picker.selected"             = "%d件選択中";
+"storage.music"               = "ミュージック: %@";
+"storage.free"                = "空き: %@";
+"storage.total"               = "合計: %@";
+"sync.access.message"         = "ClassicTunesがiPodに曲を同期できるよう、iPodを選択してください。";
+"sync.access.messageSync"     = "曲を同期するには、ClassicTunesがiPodにアクセスできる必要があります。";
+"sync.access.prompt"          = "アクセスを許可";
+"sync.access.denied"          = "iPodへのアクセスが拒否されました。";
 
 "settings.songList" = "曲リスト";
 "settings.background.custom" = "カスタム";
@@ -251,7 +321,7 @@
 "settings.playback.stableVolume" = "安定した音量";
 "settings.playback.stableVolumeProgress" = "曲を分析中… %d / %d";
 "settings.playback.stableVolumeSummary" = "%d曲を調整済み";
-"settings.playback.crossfadeHelp" = "曲の切り替え時に %d 秒間重なります。";
+"settings.playback.crossfadeHelp" = "曲の切り替え時に%d秒間重なります。";
 "settings.data" = "データとリセット";
 "settings.data.revealPlaylists" = "プレイリストをFinderで表示";
 "settings.data.clearHistory" = "再生履歴を消去…";
@@ -340,3 +410,6 @@
 "menu.newSmartPlaylist" = "新規スマートプレイリスト…";
 "newPlaylist.type.regular" = "プレイリスト";
 "newPlaylist.type.smart" = "スマートプレイリスト";
+
+// MARK: - File choosers
+"panel.choose"                = "選択";

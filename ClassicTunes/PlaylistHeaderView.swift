@@ -90,16 +90,23 @@ struct PlaylistHeaderView: View {
         let hours = Int(total) / 3600
         let minutes = (Int(total) % 3600) / 60
         if hours > 0 {
-            return "\(hours) hour\(hours == 1 ? "" : "s"), \(minutes) minute\(minutes == 1 ? "" : "s")"
+            return Self.localizedCount(hours, singular: "playlistHeader.durationHours", plural: "playlistHeader.durationHoursPlural")
+                + ", " + Self.localizedCount(minutes, singular: "playlistHeader.durationMinutes", plural: "playlistHeader.durationMinutesPlural")
         } else {
-            return "\(minutes) minute\(minutes == 1 ? "" : "s")"
+            return Self.localizedCount(minutes, singular: "playlistHeader.durationMinutes", plural: "playlistHeader.durationMinutesPlural")
         }
     }
 
     // Formats the playlist's song count with correct singular/plural wording.
     private var songCountString: String {
         let count = playlist.songs.count
-        return "\(count) song\(count == 1 ? "" : "s")"
+        return Self.localizedCount(count, singular: "playlistHeader.songCount", plural: "playlistHeader.songCountPlural")
+    }
+
+    // Singular and plural wording live in separate keys because several target languages
+    // cannot derive one form from the other by appending a suffix.
+    private static func localizedCount(_ n: Int, singular: String, plural: String) -> String {
+        String(format: NSLocalizedString(n == 1 ? singular : plural, comment: ""), n)
     }
 
     var body: some View {
@@ -112,7 +119,7 @@ struct PlaylistHeaderView: View {
                 // Title + controls + metadata
                 VStack(alignment: .leading, spacing: 6) {
                     // Playlist name
-                    Text(playlist.name)
+                    Text(playlist.displayName)
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(colorScheme == .dark ? .white : .black)
                         .lineLimit(1)

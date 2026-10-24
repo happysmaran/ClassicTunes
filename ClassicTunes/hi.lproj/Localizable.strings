@@ -4,6 +4,7 @@
 "sidebar.library"             = "लाइब्रेरी";
 "sidebar.store"               = "स्टोर";
 "sidebar.playlists"           = "प्लेलिस्ट";
+"sidebar.devices"             = "डिवाइस";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "संगीत";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "आर्टवर्क चुनें…";
 "songInfo.artwork.remove"     = "आर्टवर्क हटाएँ";
 "songInfo.artwork.empty"      = "यहाँ इमेज खींचें, या कोई फ़ाइल चुनें";
+"songInfo.mono"               = "मोनो";
+"songInfo.stereo"             = "स्टीरियो";
+"songInfo.channelCount"       = "%d चैनल";
+"songInfo.kind.aac"           = "AAC ऑडियो फ़ाइल";
+"songInfo.kind.mp3"           = "MPEG ऑडियो फ़ाइल";
+"songInfo.kind.wav"           = "WAV ऑडियो फ़ाइल";
+"songInfo.kind.flac"          = "FLAC ऑडियो फ़ाइल";
+"songInfo.kind.other"         = "ऑडियो फ़ाइल";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "चलाएँ";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld घंटे";
 "playlistHeader.durationMinutes" = "%lld मिनट";
 "playlistHeader.durationMinutesPlural" = "%lld मिनट";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "हाल में चलाए गए";
+"playlist.system.top25"       = "शीर्ष 25";
+"playlist.system.recentlyAdded"= "हाल में जोड़े गए";
+"playlist.system.classicalMusic"= "शास्त्रीय संगीत";
+"playlist.system.nineties"    = "90 के दशक का संगीत";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "फ़ोटो बदलें…";
@@ -108,7 +124,7 @@
 
 // MARK: - Playlist selection sheet
 "playlistSelection.title"     = "प्लेलिस्ट में जोड़ें";
-"playlistSelection.message"   = "'%@' जोड़ने के लिए प्लेलिस्ट चुनें:";
+"playlistSelection.message"   = "'%@' को जोड़ने के लिए प्लेलिस्ट चुनें:";
 "playlistSelection.empty"     = "कोई प्लेलिस्ट उपलब्ध नहीं";
 "playlistSelection.cancel"    = "रद्द करें";
 "playlistSelection.songCount" = "%lld गाने";
@@ -136,6 +152,27 @@
 "settings.albumGrid.background" = "पृष्ठभूमि";
 "settings.albumGrid.note"     = "जब ऐप गहरी दिखावट में हो, तो इस सेटिंग की परवाह किए बिना एल्बम ग्रिड गहरा रहेगा।";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "सामान्य";
+"settings.tab.equalizer"      = "इक्वलाइज़र";
+"settings.tab.shortcuts"      = "शॉर्टकट";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "इक्वलाइज़र चालू करें";
+"equalizer.preset"            = "प्रीसेट";
+"equalizer.custom"            = "कस्टम";
+"equalizer.hint"              = "उस आवृत्ति बैंड को समायोजित करने के लिए स्लाइडर खींचें (−12 से +12 dB)।";
+"equalizer.reset"             = "रीसेट";
+"equalizer.preset.flat"       = "फ़्लैट";
+"equalizer.preset.bassBooster"= "बास बूस्टर";
+"equalizer.preset.bassReducer"= "बास रिड्यूसर";
+"equalizer.preset.trebleBooster"= "ट्रेबल बूस्टर";
+"equalizer.preset.vocalBooster"= "वोकल बूस्टर";
+"equalizer.preset.rock"       = "रॉक";
+"equalizer.preset.pop"        = "पॉप";
+"equalizer.preset.classical"  = "शास्त्रीय";
+"equalizer.preset.electronic" = "इलेक्ट्रॉनिक";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "गाने, एल्बम, कलाकार, फ़िल्में खोजें…";
@@ -154,15 +191,26 @@
 "store.stop"                  = "रोकें";
 "store.viewInStore"           = "स्टोर में देखें";
 "store.media.label"           = "मीडिया";
+"store.unknown"               = "अज्ञात";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "गीत के बोल";
+"lyrics.tryingOnline"         = "गीत के बोल नहीं मिले। ऑनलाइन खोजा जा रहा है…";
+"lyrics.noOnline"             = "ऑनलाइन गीत के बोल नहीं मिले।";
+"lyrics.errorMetadata"        = "मेटाडेटा लोड करने में त्रुटि।";
+"lyrics.lrcUnreadable"        = ".lrc फ़ाइल मिली, लेकिन उसे पढ़ा नहीं जा सका।";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld गाने";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "सभी गाने";
+"coverFlow.albumSongs"        = "एल्बम के गाने";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "मिनी प्लेयर में खोलें";
+"miniPlayer.upNext"           = "आगे";
+"miniPlayer.nothingQueued"    = "कतार में कुछ नहीं";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "प्लेलिस्ट हटाएँ";
@@ -191,7 +239,7 @@
 "menu.mute"                   = "म्यूट करें";
 "menu.unmute"                 = "अनम्यूट करें";
 "menu.shuffle"                = "शफल";
-"menu.repeatAll"              = "दहराएँ";
+"menu.repeatAll"              = "दोहराएँ";
 "menu.repeatOne"              = "एक गाना दोहराएँ";
 "menu.repeatOff"              = "दोहराना बंद करें";
 "menu.keyboardShortcuts"      = "कीबोर्ड शॉर्टकट…";
@@ -203,19 +251,30 @@
 "shortcuts.group.edit"        = "एडिट";
 "shortcuts.group.view"        = "व्यू";
 "shortcuts.group.controls"    = "नियंत्रण";
+"shortcuts.resetHint"         = "ऊपर दिए गए नियंत्रण बदलें या मानक लेआउट पर वापस जाएँ।";
+"shortcuts.resetDefaults"     = "डिफ़ॉल्ट पर रीसेट करें";
+"shortcuts.pressKeys"         = "कुंजियाँ दबाएँ…";
 "menu.playPause"              = "बजाएँ / रोकें";
 "menu.toggleUpNext"           = "अगली कतार दिखाएँ/छिपाएँ";
 "menu.toggleLyrics"           = "बोल दिखाएँ/छिपाएँ";
 "menu.toggleMute"             = "म्यूट / अनम्यूट";
 "menu.repeat"                 = "रिपीट मोड बदलें";
 
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "अभी चल रहा है";
+"queue.nextUp"                = "आगे";
+"queue.noUpcoming"            = "आगे कोई गाना नहीं";
+"queue.dragHere"              = "गानों को कतार में जोड़ने के लिए यहाँ खींचें";
+"queue.noSong"                = "कोई गाना नहीं चल रहा";
+
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPod बाहर निकालें";
 "device.trackCount"         = "iPod पर %d गाने";
 "device.empty"              = "इस iPod पर कोई गाने नहीं हैं।";
 "sync.addSongs"             = "गाने जोड़ें…";
-"sync.dragHere"             = "इस iPod से सिंक करने के लिए\nअपनी लाइब्रेरी से गाने यहाँ लाएँ।";
+"sync.dragHere"             = "इस iPod पर सिंक करने के लिए\nअपनी लाइब्रेरी से गाने जोड़ें।";
 "sync.syncNow"              = "सिंक करें";
+"sync.sync"                   = "सिंक करें";
 "sync.cancel"               = "रद्द करें";
 "sync.writing"              = "डेटाबेस लिखा जा रहा है…";
 "sync.ejecting"             = "समाप्त किया जा रहा है…";
@@ -231,6 +290,17 @@
 "picker.done"               = "सिंक सूची में जोड़ें";
 "picker.cancel"             = "रद्द करें";
 "picker.queued"             = "कतार में है";
+"device.available"            = "%@ उपलब्ध";
+"device.loading"              = "गाने लोड हो रहे हैं…";
+"sync.progress"               = "%d में से %d";
+"picker.selected"             = "%d चयनित";
+"storage.music"               = "संगीत: %@";
+"storage.free"                = "खाली: %@";
+"storage.total"               = "कुल: %@";
+"sync.access.message"         = "अपना iPod चुनें ताकि ClassicTunes उस पर संगीत सिंक कर सके।";
+"sync.access.messageSync"     = "संगीत सिंक करने के लिए ClassicTunes को आपके iPod तक पहुँच चाहिए।";
+"sync.access.prompt"          = "पहुँच दें";
+"sync.access.denied"          = "iPod तक पहुँच अस्वीकृत की गई।";
 
 "settings.songList" = "गीत सूची";
 "settings.background.custom" = "कस्टम";
@@ -340,3 +410,6 @@
 "menu.newSmartPlaylist" = "नई स्मार्ट प्लेलिस्ट…";
 "newPlaylist.type.regular" = "प्लेलिस्ट";
 "newPlaylist.type.smart" = "स्मार्ट प्लेलिस्ट";
+
+// MARK: - File choosers
+"panel.choose"                = "चुनें";

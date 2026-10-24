@@ -446,7 +446,7 @@ struct CoverFlowView: View {
             }) {
                 HStack {
                     Image(systemName: showAllSongs ? "music.note.list" : "square.on.square")
-                    Text(showAllSongs ? "All Songs" : "Album Songs")
+                    Text(showAllSongs ? LocalizedStringKey("coverFlow.allSongs") : LocalizedStringKey("coverFlow.albumSongs"))
                 }
                 .font(.caption)
                 .padding(.horizontal, 8)

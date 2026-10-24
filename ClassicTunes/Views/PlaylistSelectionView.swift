@@ -30,7 +30,7 @@ struct PlaylistSelectionView: View {
                 List(playlistManager.userPlaylists.filter { !$0.isSmart }) { playlist in
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(playlist.name)
+                            Text(playlist.displayName)
                                 .font(.body)
 
                             Text(String(format: NSLocalizedString("playlistSelection.songCount", comment: "songCount"), playlist.songs.count))

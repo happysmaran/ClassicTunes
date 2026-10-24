@@ -19,6 +19,16 @@ struct Playlist: Identifiable, Codable {
     // store their songs; `songs` is recomputed from the library via `resolved(against:)`.
     var smartRules: SmartPlaylistRules? = nil
     
+    // System playlists are created with English names that act as stable identifiers, so the
+    // UI shows this localized label instead of `name`.
+    var displayName: String {
+        guard isSystem else { return name }
+        let keys = ["Recently Played": "recentlyPlayed", "Top 25 Most Played": "top25",
+                    "Recently Added": "recentlyAdded", "Classical Music": "classicalMusic", "90s Music": "nineties"]
+        guard let key = keys[name] else { return name }
+        return NSLocalizedString("playlist.system.\(key)", comment: "")
+    }
+
     // Initializes a new Playlist instance.
     //
     // - Parameters:

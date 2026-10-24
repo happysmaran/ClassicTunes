@@ -832,7 +832,7 @@ struct ContentView: View {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        panel.prompt = "Choose"
+        panel.prompt = NSLocalizedString("panel.choose", comment: "")
         panel.begin { response in
             defer { self.showFileImporter = false }
             if response == .OK, let url = panel.url {
@@ -1132,13 +1132,13 @@ struct ContentView: View {
                         Task {
                             // Give checkForExternalLRC a moment to update state
                             try? await Task.sleep(nanoseconds: 50_000_000)
-                            if self.lyricsText == "No lyrics found." || self.lyricsText == "No lyrics found. Trying online..." {
+                            if self.lyricsText == NSLocalizedString("lyrics.tryingOnline", comment: "") {
                                 if let fetched = await self.fetchLyricsFromLRCLib(for: song) {
                                     await MainActor.run { self.lyricsText = fetched }
                                 } else {
                                     await MainActor.run {
-                                        if self.lyricsText.isEmpty || self.lyricsText.contains("Trying online") {
-                                            self.lyricsText = "No online lyrics found."
+                                        if self.lyricsText.isEmpty || self.lyricsText == NSLocalizedString("lyrics.tryingOnline", comment: "") {
+                                            self.lyricsText = NSLocalizedString("lyrics.noOnline", comment: "")
                                         }
                                     }
                                 }
@@ -1148,7 +1148,7 @@ struct ContentView: View {
                 }
             } catch {
                 print("Extraction failed: \(error)")
-                await MainActor.run { self.lyricsText = "Error loading metadata." }
+                await MainActor.run { self.lyricsText = NSLocalizedString("lyrics.errorMetadata", comment: "") }
             }
         }
     }
@@ -1163,10 +1163,10 @@ struct ContentView: View {
             do {
                 self.lyricsText = try String(contentsOf: lrcURL, encoding: .utf8)
             } catch {
-                self.lyricsText = "Found .lrc file but could not read it."
+                self.lyricsText = NSLocalizedString("lyrics.lrcUnreadable", comment: "")
             }
         } else {
-            self.lyricsText = "No lyrics found. Trying online..."
+            self.lyricsText = NSLocalizedString("lyrics.tryingOnline", comment: "")
         }
     }
 
@@ -1214,8 +1214,8 @@ struct ContentView: View {
 
         // If all attempts failed
         await MainActor.run {
-            if self.lyricsText.isEmpty || self.lyricsText.contains("Trying online") {
-                self.lyricsText = "No online lyrics found."
+            if self.lyricsText.isEmpty || self.lyricsText == NSLocalizedString("lyrics.tryingOnline", comment: "") {
+                self.lyricsText = NSLocalizedString("lyrics.noOnline", comment: "")
             }
         }
         return nil
@@ -1766,7 +1766,7 @@ struct UpNextView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Now Playing")
+            Text("queue.nowPlaying")
                 .font(.headline)
                 .padding(.horizontal)
                 .padding(.top, 16)
@@ -1788,7 +1788,7 @@ struct UpNextView: View {
             }
 
             if !upcomingSongs.isEmpty {
-                Text("Next Up")
+                Text("queue.nextUp")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
@@ -1831,10 +1831,10 @@ struct UpNextView: View {
                         Image(systemName: "plus.circle")
                             .font(.system(size: 32))
                             .foregroundColor(.secondary)
-                        Text("No upcoming songs")
+                        Text("queue.noUpcoming")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        Text("Drag songs here to queue them")
+                        Text("queue.dragHere")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -1851,7 +1851,7 @@ struct UpNextView: View {
                         .scaledToFit()
                         .frame(width: 80, height: 80)
                         .opacity(0.9)
-                    Text("No song playing")
+                    Text("queue.noSong")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

@@ -49,31 +49,31 @@ struct SidebarView: View {
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: libraryActive && selectedPlaylistID == nil))
 
-                Button(action: { comingSoonSection = "Movies"; showComingSoon = true }) {
+                Button(action: { comingSoonSection = NSLocalizedString("sidebar.movies", comment: ""); showComingSoon = true }) {
                     Label("sidebar.movies", systemImage: "film")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
-                Button(action: { comingSoonSection = "TV Shows"; showComingSoon = true }) {
+                Button(action: { comingSoonSection = NSLocalizedString("sidebar.tvShows", comment: ""); showComingSoon = true }) {
                     Label("sidebar.tvShows", systemImage: "tv")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
-                Button(action: { comingSoonSection = "Podcasts"; showComingSoon = true }) {
+                Button(action: { comingSoonSection = NSLocalizedString("sidebar.podcasts", comment: ""); showComingSoon = true }) {
                     Label("sidebar.podcasts", systemImage: "mic")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
-                Button(action: { comingSoonSection = "Books"; showComingSoon = true }) {
+                Button(action: { comingSoonSection = NSLocalizedString("sidebar.books", comment: ""); showComingSoon = true }) {
                     Label("sidebar.books", systemImage: "book")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(ITunesSidebarButtonStyle(selected: false))
 
-                Button(action: { comingSoonSection = "Radio"; showComingSoon = true }) {
+                Button(action: { comingSoonSection = NSLocalizedString("sidebar.radio", comment: ""); showComingSoon = true }) {
                     Label("sidebar.radio", systemImage: "radio")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -99,7 +99,7 @@ struct SidebarView: View {
                         libraryActive = false
                         showITunesStore = false
                     }) {
-                        Label(playlist.name, systemImage: playlist.isSystem ? "gearshape" : (playlist.isSmart ? "gearshape.2" : "music.note.list"))
+                        Label(playlist.displayName, systemImage: playlist.isSystem ? "gearshape" : (playlist.isSmart ? "gearshape.2" : "music.note.list"))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(ITunesSidebarButtonStyle(selected: selectedPlaylistID == playlist.id && !libraryActive))

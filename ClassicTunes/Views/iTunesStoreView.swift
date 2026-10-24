@@ -59,9 +59,9 @@ struct iTunesItem: Codable, Identifiable {
     // Normalizes descriptive strings depending on underlying media types to display clear view values[span_12](start_span)[span_12](end_span).
     var displayTitle: String {
         if kind == "album" || kind?.contains("album") == true {
-            return collectionName ?? trackName ?? "Unknown"
+            return collectionName ?? trackName ?? NSLocalizedString("store.unknown", comment: "")
         }
-        return trackName ?? collectionName ?? "Unknown"
+        return trackName ?? collectionName ?? NSLocalizedString("store.unknown", comment: "")
     }
     
     // Exposes fallback creator tags assigned to the localized record[span_13](start_span)[span_13](end_span).
@@ -259,7 +259,7 @@ struct StoreItemView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .help(engine.previewKey == preview ? "Stop" : "Preview")
+                    .help(Text(engine.previewKey == preview ? LocalizedStringKey("store.stop") : LocalizedStringKey("store.preview")))
                 }
 
                 Spacer(minLength: 0)

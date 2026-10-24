@@ -4,6 +4,7 @@
 "sidebar.library"             = "లైబ్రరీ";
 "sidebar.store"               = "స్టోర్";
 "sidebar.playlists"           = "ప్లేలిస్ట్‌లు";
+"sidebar.devices"             = "పరికరాలు";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "సంగీతం";
@@ -25,8 +26,8 @@
 "toolbar.search"              = "వెతకండి";
 
 // MARK: - Bottom bar
-"bottomBar.lyrics"            = "పాట మాటలు";
-"bottomBar.upNext"            = "తర్వాత ఏమిటి";
+"bottomBar.lyrics"            = "సాహిత్యం";
+"bottomBar.upNext"            = "తర్వాత రాబోయేవి";
 "bottomBar.importM3U"         = "M3U దిగుమతి";
 "bottomBar.exportM3U"         = "M3U ఎగుమతి";
 
@@ -53,7 +54,7 @@
 // MARK: - Song Info sheet
 "songInfo.tab.summary"        = "సారాంశం";
 "songInfo.tab.info"           = "సమాచారం";
-"songInfo.tab.lyrics"         = "పాట మాటలు";
+"songInfo.tab.lyrics"         = "సాహిత్యం";
 "songInfo.tab.artwork"        = "ఆర్ట్‌వర్క్";
 "songInfo.name"               = "పేరు";
 "songInfo.artist"             = "కళాకారుడు";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "ఆర్ట్‌వర్క్ ఎంచుకోండి…";
 "songInfo.artwork.remove"     = "ఆర్ట్‌వర్క్ తీసివేయి";
 "songInfo.artwork.empty"      = "ఇక్కడ చిత్రాన్ని లాగండి, లేదా ఫైల్‌ను ఎంచుకోండి";
+"songInfo.mono"               = "మోనో";
+"songInfo.stereo"             = "స్టీరియో";
+"songInfo.channelCount"       = "%d ఛానెల్‌లు";
+"songInfo.kind.aac"           = "AAC ఆడియో ఫైల్";
+"songInfo.kind.mp3"           = "MPEG ఆడియో ఫైల్";
+"songInfo.kind.wav"           = "WAV ఆడియో ఫైల్";
+"songInfo.kind.flac"          = "FLAC ఆడియో ఫైల్";
+"songInfo.kind.other"         = "ఆడియో ఫైల్";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "ప్లే చేయి";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld గంటలు";
 "playlistHeader.durationMinutes" = "%lld నిమిషం";
 "playlistHeader.durationMinutesPlural" = "%lld నిమిషాలు";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "ఇటీవల ప్లే చేసినవి";
+"playlist.system.top25"       = "టాప్ 25";
+"playlist.system.recentlyAdded"= "ఇటీవల జోడించినవి";
+"playlist.system.classicalMusic"= "శాస్త్రీయ సంగీతం";
+"playlist.system.nineties"    = "90ల నాటి సంగీతం";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "ఫోటో మార్చు…";
@@ -136,10 +152,31 @@
 "settings.albumGrid.background" = "నేపథ్యం";
 "settings.albumGrid.note"     = "యాప్ డార్క్ రూపంలో ఉన్నప్పుడు, ఈ సెట్టింగ్ తో నిమిత్తం లేకుండా ఆల్బమ్ గ్రిడ్ డార్క్‌ని ఉపయోగిస్తుంది.";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "సాధారణం";
+"settings.tab.equalizer"      = "ఈక్వలైజర్";
+"settings.tab.shortcuts"      = "షార్ట్‌కట్‌లు";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "ఈక్వలైజర్‌ను ప్రారంభించు";
+"equalizer.preset"            = "ప్రీసెట్";
+"equalizer.custom"            = "కస్టమ్";
+"equalizer.hint"              = "ఆ ఫ్రీక్వెన్సీ బ్యాండ్‌ను సర్దుబాటు చేయడానికి స్లైడర్‌ను లాగండి (−12 నుండి +12 dB).";
+"equalizer.reset"             = "రీసెట్";
+"equalizer.preset.flat"       = "ఫ్లాట్";
+"equalizer.preset.bassBooster"= "బాస్ బూస్టర్";
+"equalizer.preset.bassReducer"= "బాస్ రిడ్యూసర్";
+"equalizer.preset.trebleBooster"= "ట్రెబుల్ బూస్టర్";
+"equalizer.preset.vocalBooster"= "వోకల్ బూస్టర్";
+"equalizer.preset.rock"       = "రాక్";
+"equalizer.preset.pop"        = "పాప్";
+"equalizer.preset.classical"  = "క్లాసికల్";
+"equalizer.preset.electronic" = "ఎలక్ట్రానిక్";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "పాటలు, ఆల్బమ్‌లు, కళాకారులు, సినిమాలు వెతకండి…";
-"store.searching"             = "Tunes Store వెతుకుతోంది…";
+"store.searching"             = "Tunes Storeలో వెతుకుతోంది…";
 "store.noResults.title"       = "ఫలితాలు కనుగొనబడలేదు";
 "store.noResults.subtitle"    = "వేరే కీవర్డులు లేదా మీడియా రకాన్ని ప్రయత్నించండి";
 "store.welcome.title"         = "Tunes Store కి స్వాగతం";
@@ -154,15 +191,26 @@
 "store.stop"                  = "ఆపు";
 "store.viewInStore"           = "స్టోర్‌లో చూడు";
 "store.media.label"           = "మీడియా";
+"store.unknown"               = "తెలియదు";
 
 // MARK: - Lyrics view
-"lyrics.title"                = "పాట మాటలు";
+"lyrics.title"                = "సాహిత్యం";
+"lyrics.tryingOnline"         = "సాహిత్యం కనుగొనబడలేదు. ఆన్‌లైన్‌లో వెతుకుతోంది…";
+"lyrics.noOnline"             = "ఆన్‌లైన్‌లో సాహిత్యం కనుగొనబడలేదు.";
+"lyrics.errorMetadata"        = "మెటాడేటా లోడ్ చేయడంలో లోపం.";
+"lyrics.lrcUnreadable"        = ".lrc ఫైల్ కనుగొనబడింది, కానీ చదవలేకపోయాము.";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld పాటలు";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "అన్ని పాటలు";
+"coverFlow.albumSongs"        = "ఆల్బమ్ పాటలు";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "మినీ ప్లేయర్‌లో తెరవండి";
+"miniPlayer.upNext"           = "తర్వాత";
+"miniPlayer.nothingQueued"    = "క్యూలో ఏమీ లేదు";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "ప్లేలిస్ట్‌ని తొలగించు";
@@ -197,25 +245,36 @@
 "menu.keyboardShortcuts"      = "కీబోర్డ్ షార్ట్‌కట్‌లు…";
 
 // MARK: - Keyboard shortcuts sheet
-"shortcuts.title"             = "キーボードショートカット";
+"shortcuts.title"             = "కీబోర్డ్ షార్ట్‌కట్‌లు";
 "shortcuts.close"             = "మూసివేయి";
 "shortcuts.group.file"        = "ఫైల్";
 "shortcuts.group.edit"        = "ఎడిట్";
 "shortcuts.group.view"        = "వ్యూ";
 "shortcuts.group.controls"    = "నియంత్రణలు";
+"shortcuts.resetHint"         = "పైన ఉన్న నియంత్రణలను మార్చండి లేదా ప్రామాణిక అమరికకు తిరిగి వెళ్లండి.";
+"shortcuts.resetDefaults"     = "డిఫాల్ట్‌లకు రీసెట్ చేయి";
+"shortcuts.pressKeys"         = "కీలను నొక్కండి…";
 "menu.playPause"              = "ప్లే / పాజ్";
 "menu.toggleUpNext"           = "తర్వాత రాబోయేవి చూపించు/దాచు";
 "menu.toggleLyrics"           = "సాహిత్యం చూపించు/దాచు";
 "menu.toggleMute"             = "మ్యూట్ / అన్‌మ్యూట్";
 "menu.repeat"                 = "రిపీట్ మోడ్‌ను మార్చు";
 
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "ఇప్పుడు ప్లే అవుతోంది";
+"queue.nextUp"                = "తర్వాత";
+"queue.noUpcoming"            = "తర్వాత పాటలు లేవు";
+"queue.dragHere"              = "పాటలను క్యూలో చేర్చడానికి ఇక్కడ లాగండి";
+"queue.noSong"                = "ఏ పాటా ప్లే కావడం లేదు";
+
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPodని ఎజెక్ట్ చేయి";
 "device.trackCount"         = "iPodలో %d పాటలు ఉన్నాయి";
 "device.empty"              = "ఈ iPodలో పాటలు లేవు.";
 "sync.addSongs"             = "పాటలను జోడించు…";
-"sync.dragHere"             = "ఈ iPodకి సింక్ చేయడానికి మీ లైబ్రరీ\nనుండి పాటలను ఇక్కడకు చేర్చండి.";
+"sync.dragHere"             = "ఈ iPodకి సింక్ చేయడానికి,\nమీ లైబ్రరీ నుండి పాటలను జోడించండి.";
 "sync.syncNow"              = "సింక్ చేయి";
+"sync.sync"                   = "సింక్ చేయి";
 "sync.cancel"               = "రద్దు చేయి";
 "sync.writing"              = "డేటాబేస్ వ్రాయబడుతోంది…";
 "sync.ejecting"             = "ముగిస్తోంది…";
@@ -231,6 +290,17 @@
 "picker.done"               = "సింక్ లిస్ట్‌కు జోడించు";
 "picker.cancel"             = "రద్దు చేయి";
 "picker.queued"             = "క్యూలో ఉంది";
+"device.available"            = "%@ అందుబాటులో ఉంది";
+"device.loading"              = "పాటలు లోడ్ అవుతున్నాయి…";
+"sync.progress"               = "%d / %d";
+"picker.selected"             = "%d ఎంచుకోబడ్డాయి";
+"storage.music"               = "సంగీతం: %@";
+"storage.free"                = "ఖాళీ: %@";
+"storage.total"               = "మొత్తం: %@";
+"sync.access.message"         = "ClassicTunes సంగీతాన్ని సింక్ చేయడానికి అనుమతించేందుకు మీ iPodను ఎంచుకోండి.";
+"sync.access.messageSync"     = "సంగీతాన్ని సింక్ చేయడానికి ClassicTunesకు మీ iPodకి ప్రాప్యత అవసరం.";
+"sync.access.prompt"          = "ప్రాప్యత ఇవ్వు";
+"sync.access.denied"          = "iPodకి ప్రాప్యత నిరాకరించబడింది.";
 
 "settings.songList" = "పాటల జాబితా";
 "settings.background.custom" = "కస్టమ్";
@@ -258,7 +328,7 @@
 "settings.data.clearHistoryConfirm" = "మొత్తం ప్లే చరిత్రను క్లియర్ చేయాలా?";
 "settings.data.clearHistoryMessage" = "ప్లే కౌంట్‌లు, ఇటీవల ప్లే చేసినవి, టాప్ 25 ఖాళీ అవుతాయి. దీన్ని రద్దు చేయలేరు.";
 "settings.data.clear" = "క్లియర్";
-"settings.data.resetAppearance" = "అన్ని రూపాన్ని రీసెట్ చేయి…";
+"settings.data.resetAppearance" = "మొత్తం రూపాన్ని రీసెట్ చేయి…";
 "settings.data.resetAppearanceConfirm" = "రూపాన్ని రీసెట్ చేయాలా?";
 "settings.data.resetAppearanceMessage" = "రూప మోడ్, థీమ్ రంగు, రెండు నేపథ్యాలు డిఫాల్ట్‌కు తిరిగి వస్తాయి.";
 "bottomBar.visualizer"        = "విజువలైజర్";
@@ -309,7 +379,7 @@
 "smartPlaylist.field.album" = "ఆల్బమ్";
 "smartPlaylist.field.albumArtist" = "ఆల్బమ్ కళాకారుడు";
 "smartPlaylist.field.genre" = "శైలి";
-"smartPlaylist.field.composer" = "సంగీత రచయిత";
+"smartPlaylist.field.composer" = "స్వరకర్త";
 "smartPlaylist.field.grouping" = "సమూహం";
 "smartPlaylist.field.comment" = "వ్యాఖ్య";
 "smartPlaylist.field.year" = "సంవత్సరం";
@@ -340,3 +410,6 @@
 "menu.newSmartPlaylist" = "కొత్త స్మార్ట్ ప్లేలిస్ట్…";
 "newPlaylist.type.regular" = "ప్లేలిస్ట్";
 "newPlaylist.type.smart" = "స్మార్ట్ ప్లేలిస్ట్";
+
+// MARK: - File choosers
+"panel.choose"                = "ఎంచుకో";

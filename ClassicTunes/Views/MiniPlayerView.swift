@@ -177,7 +177,7 @@ struct MiniPlayerView: View {
             Rectangle()
                 .fill(Color.black.opacity(isDark ? 0.6 : 0.35))
                 .frame(height: 1)
-            Text("Up Next")
+            Text("miniPlayer.upNext")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
@@ -186,7 +186,7 @@ struct MiniPlayerView: View {
                 .padding(.vertical, 6)
 
             if upcomingSongs.isEmpty {
-                Text("Nothing queued")
+                Text("miniPlayer.nothingQueued")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

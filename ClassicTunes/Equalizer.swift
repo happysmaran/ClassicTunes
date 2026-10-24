@@ -18,6 +18,16 @@ final class Equalizer: ObservableObject {
         let name: String
         let gains: [Double]
         var id: String { name }
+
+        // `name` stays English because it is the identifier persisted and matched against;
+        // only the label shown in the UI is localized.
+        var localizedName: String {
+            let keys = ["Flat": "flat", "Bass Booster": "bassBooster", "Bass Reducer": "bassReducer",
+                        "Treble Booster": "trebleBooster", "Vocal Booster": "vocalBooster", "Rock": "rock",
+                        "Pop": "pop", "Classical": "classical", "Electronic": "electronic"]
+            guard let key = keys[name] else { return name }
+            return NSLocalizedString("equalizer.preset.\(key)", comment: "")
+        }
     }
 
     static let presets: [Preset] = [

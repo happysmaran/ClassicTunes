@@ -292,8 +292,8 @@ final class iPodSyncEngine: ObservableObject {
     func sync(songs: [Song], to device: iPodDevice) async {
         let accessURL: URL? = await MainActor.run {
             let panel = NSOpenPanel()
-            panel.message = "ClassicTunes needs access to your iPod to sync music."
-            panel.prompt = "Grant Access"
+            panel.message = NSLocalizedString("sync.access.messageSync", comment: "")
+            panel.prompt = NSLocalizedString("sync.access.prompt", comment: "")
             panel.canChooseFiles = false
             panel.canChooseDirectories = true
             panel.canCreateDirectories = false
@@ -305,7 +305,7 @@ final class iPodSyncEngine: ObservableObject {
         
         guard let volumeURL = accessURL else {
                 await MainActor.run {
-                    progress.phase = .failed("Access to iPod was denied.")
+                    progress.phase = .failed(NSLocalizedString("sync.access.denied", comment: ""))
                 }
                 return
             }

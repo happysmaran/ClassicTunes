@@ -148,7 +148,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
             .frame(width: 480, height: 540)
-            .tabItem { Label("General", systemImage: "gearshape") }
+            .tabItem { Label("settings.tab.general", systemImage: "gearshape") }
             .tag("general")
             .confirmationDialog("settings.data.clearHistoryConfirm", isPresented: $showClearHistoryConfirm, titleVisibility: .visible) {
                 Button("settings.data.clear", role: .destructive) { clearPlayHistory() }
@@ -180,7 +180,7 @@ struct SettingsView: View {
             // MARK: - Equalizer Tab
             EqualizerSettingsView()
                 .frame(width: 480, height: 540)
-                .tabItem { Label("Equalizer", systemImage: "slider.vertical.3") }
+                .tabItem { Label("settings.tab.equalizer", systemImage: "slider.vertical.3") }
                 .tag("equalizer")
 
             // MARK: - Shortcuts Tab
@@ -227,11 +227,11 @@ struct SettingsView: View {
                     // Card with a button to restore every shortcut to its factory default.
                     VStack(spacing: 0) {
                         HStack {
-                            Text("Modify your controls above or revert back to standard layouts.")
+                            Text("shortcuts.resetHint")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Button("Reset Defaults") {
+                            Button("shortcuts.resetDefaults") {
                                 resetToDefaultBindings()
                             }
                             .buttonStyle(.bordered)
@@ -249,7 +249,7 @@ struct SettingsView: View {
                 .padding(.bottom, 20)
             }
             .frame(width: 480, height: 540)
-            .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            .tabItem { Label("settings.tab.shortcuts", systemImage: "keyboard") }
             .tag("shortcuts")
         }
         .preferredColorScheme(appearanceManager.currentColorScheme())
@@ -424,7 +424,7 @@ struct ShortcutAssignerRow: View {
                 Button(action: { isListening.toggle() }) {
                     // Shows "Press keys..." while listening, otherwise the
                     // currently assigned shortcut string.
-                    Text(isListening ? "Press keys..." : shortcut)
+                    Text(isListening ? NSLocalizedString("shortcuts.pressKeys", comment: "") : shortcut)
                         .font(.system(.body, design: .monospaced))
                         .frame(width: 110)
                 }

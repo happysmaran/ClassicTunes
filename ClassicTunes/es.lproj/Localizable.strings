@@ -4,6 +4,7 @@
 "sidebar.library"             = "BIBLIOTECA";
 "sidebar.store"               = "TIENDA";
 "sidebar.playlists"           = "LISTAS DE REPRODUCCIÓN";
+"sidebar.devices"             = "DISPOSITIVOS";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "Música";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "Elegir portada…";
 "songInfo.artwork.remove"     = "Quitar portada";
 "songInfo.artwork.empty"      = "Arrastra una imagen aquí o elige un archivo";
+"songInfo.mono"               = "Mono";
+"songInfo.stereo"             = "Estéreo";
+"songInfo.channelCount"       = "%d canales";
+"songInfo.kind.aac"           = "Archivo de audio AAC";
+"songInfo.kind.mp3"           = "Archivo de audio MPEG";
+"songInfo.kind.wav"           = "Archivo de audio WAV";
+"songInfo.kind.flac"          = "Archivo de audio FLAC";
+"songInfo.kind.other"         = "Archivo de audio";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "Reproducir";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld horas";
 "playlistHeader.durationMinutes" = "%lld minuto";
 "playlistHeader.durationMinutesPlural" = "%lld minutos";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "Reproducidas recientemente";
+"playlist.system.top25"       = "Las 25 más reproducidas";
+"playlist.system.recentlyAdded"= "Añadidas recientemente";
+"playlist.system.classicalMusic"= "Música clásica";
+"playlist.system.nineties"    = "Música de los 90";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "Cambiar foto…";
@@ -108,7 +124,7 @@
 
 // MARK: - Playlist selection sheet
 "playlistSelection.title"     = "Añadir a lista de reproducción";
-"playlistSelection.message"   = "Selecciona una lista para añadir \"%@\":";
+"playlistSelection.message"   = "Selecciona una lista para añadir «%@»:";
 "playlistSelection.empty"     = "No hay listas disponibles";
 "playlistSelection.cancel"    = "Cancelar";
 "playlistSelection.songCount" = "%lld canciones";
@@ -136,6 +152,27 @@
 "settings.albumGrid.background" = "Fondo";
 "settings.albumGrid.note"     = "Cuando la app esté en apariencia oscura, la cuadrícula de álbumes usará el modo oscuro independientemente de esta opción.";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "General";
+"settings.tab.equalizer"      = "Ecualizador";
+"settings.tab.shortcuts"      = "Funciones rápidas";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "Activar ecualizador";
+"equalizer.preset"            = "Preajuste";
+"equalizer.custom"            = "Personalizado";
+"equalizer.hint"              = "Arrastra un control deslizante para ajustar esa banda de frecuencia (de −12 a +12 dB).";
+"equalizer.reset"             = "Restablecer";
+"equalizer.preset.flat"       = "Plano";
+"equalizer.preset.bassBooster"= "Más graves";
+"equalizer.preset.bassReducer"= "Menos graves";
+"equalizer.preset.trebleBooster"= "Más agudos";
+"equalizer.preset.vocalBooster"= "Más voces";
+"equalizer.preset.rock"       = "Rock";
+"equalizer.preset.pop"        = "Pop";
+"equalizer.preset.classical"  = "Clásica";
+"equalizer.preset.electronic" = "Electrónica";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "Buscar canciones, álbumes, artistas, películas…";
@@ -154,15 +191,26 @@
 "store.stop"                  = "Detener";
 "store.viewInStore"           = "Ver en la tienda";
 "store.media.label"           = "Medio";
+"store.unknown"               = "Desconocido";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "Letra";
+"lyrics.tryingOnline"         = "No se encontró la letra. Buscando en línea…";
+"lyrics.noOnline"             = "No se encontró la letra en línea.";
+"lyrics.errorMetadata"        = "Error al cargar los metadatos.";
+"lyrics.lrcUnreadable"        = "Se encontró un archivo .lrc, pero no se pudo leer.";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld canciones";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "Todas las canciones";
+"coverFlow.albumSongs"        = "Canciones del álbum";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "Abrir en el minirreproductor";
+"miniPlayer.upNext"           = "A continuación";
+"miniPlayer.nothingQueued"    = "Nada en cola";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "Eliminar lista de reproducción";
@@ -175,8 +223,8 @@
 "menu.showAsList"             = "como lista";
 "menu.showAsAlbums"           = "como álbumes";
 "menu.showAsCoverFlow"        = "como Cover Flow";
-"menu.showUpNext"             = "Mostrar \"A continuación\"";
-"menu.hideUpNext"             = "Ocultar \"A continuación\"";
+"menu.showUpNext"             = "Mostrar «A continuación»";
+"menu.hideUpNext"             = "Ocultar «A continuación»";
 "menu.showLyrics"             = "Mostrar letra";
 "menu.hideLyrics"             = "Ocultar letra";
 "menu.switchToMiniPlayer"     = "Cambiar a MiniPlayer";
@@ -203,11 +251,21 @@
 "shortcuts.group.edit"        = "Edición";
 "shortcuts.group.view"        = "Visualización";
 "shortcuts.group.controls"    = "Controles";
+"shortcuts.resetHint"         = "Modifica los controles de arriba o vuelve a la configuración predeterminada.";
+"shortcuts.resetDefaults"     = "Restablecer valores";
+"shortcuts.pressKeys"         = "Pulsa las teclas…";
 "menu.playPause"              = "Reproducir / Pausa";
-"menu.toggleUpNext"           = "Mostrar/ocultar \"A continuación\"";
+"menu.toggleUpNext"           = "Mostrar/ocultar «A continuación»";
 "menu.toggleLyrics"           = "Mostrar/ocultar letra";
 "menu.toggleMute"             = "Silenciar / Activar sonido";
 "menu.repeat"                 = "Cambiar modo de repetición";
+
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "En reproducción";
+"queue.nextUp"                = "A continuación";
+"queue.noUpcoming"            = "No hay canciones siguientes";
+"queue.dragHere"              = "Arrastra canciones aquí para ponerlas en cola";
+"queue.noSong"                = "Ninguna canción en reproducción";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "Expulsar iPod";
@@ -216,6 +274,7 @@
 "sync.addSongs"             = "Añadir canciones…";
 "sync.dragHere"             = "Arrastra canciones desde tu biblioteca\npara sincronizarlas con este iPod.";
 "sync.syncNow"              = "Sincronizar";
+"sync.sync"                   = "Sincronizar";
 "sync.cancel"               = "Cancelar";
 "sync.writing"              = "Escribiendo base de datos…";
 "sync.ejecting"             = "Finalizando…";
@@ -231,6 +290,17 @@
 "picker.done"               = "Añadir a la lista de sincronización";
 "picker.cancel"             = "Cancelar";
 "picker.queued"             = "En cola";
+"device.available"            = "%@ disponibles";
+"device.loading"              = "Cargando canciones…";
+"sync.progress"               = "%d de %d";
+"picker.selected"             = "%d seleccionadas";
+"storage.music"               = "Música: %@";
+"storage.free"                = "Libre: %@";
+"storage.total"               = "Total: %@";
+"sync.access.message"         = "Selecciona tu iPod para permitir que ClassicTunes sincronice música con él.";
+"sync.access.messageSync"     = "ClassicTunes necesita acceso a tu iPod para sincronizar música.";
+"sync.access.prompt"          = "Conceder acceso";
+"sync.access.denied"          = "Se denegó el acceso al iPod.";
 
 "settings.songList" = "Lista de canciones";
 "settings.background.custom" = "Personalizado";
@@ -247,7 +317,7 @@
 "settings.playback" = "Reproducción";
 "settings.playback.resumeLast" = "Reanudar la última canción al iniciar";
 "settings.playback.pauseOnOutputChange" = "Pausar cuando cambie el dispositivo de salida de audio";
-"settings.playback.crossfade" = "Fundir canciones";
+"settings.playback.crossfade" = "Fundido cruzado entre canciones";
 "settings.playback.stableVolume" = "Volumen estable";
 "settings.playback.stableVolumeProgress" = "Analizando canciones… %d de %d";
 "settings.playback.stableVolumeSummary" = "%d canciones ajustadas";
@@ -340,3 +410,6 @@
 "menu.newSmartPlaylist" = "Nueva lista inteligente…";
 "newPlaylist.type.regular" = "Lista";
 "newPlaylist.type.smart" = "Lista inteligente";
+
+// MARK: - File choosers
+"panel.choose"                = "Elegir";

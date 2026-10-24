@@ -3,7 +3,8 @@
 // MARK: - Sidebar sections
 "sidebar.library"             = "보관함";
 "sidebar.store"               = "스토어";
-"sidebar.playlists"           = "재생 목록";
+"sidebar.playlists"           = "플레이리스트";
+"sidebar.devices"             = "기기";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "음악";
@@ -13,7 +14,7 @@
 "sidebar.books"               = "도서";
 "sidebar.radio"               = "라디오";
 "sidebar.iTunesStore"         = "Tunes Store";
-"sidebar.newPlaylist"         = "새로운 재생 목록";
+"sidebar.newPlaylist"         = "새로운 플레이리스트";
 
 // MARK: - Unavailable alert
 "alert.comingSoon.title"      = "사용 불가";
@@ -45,7 +46,7 @@
 
 // MARK: - Song row context menu
 "contextMenu.playNext"        = "다음에 재생";
-"contextMenu.addToPlaylist"   = "재생 목록에 추가";
+"contextMenu.addToPlaylist"   = "플레이리스트에 추가";
 "contextMenu.findMusicVideo"  = "뮤직비디오 찾기";
 "contextMenu.resetColumns"    = "열 재설정";
 "contextMenu.songInfo"        = "노래 정보…";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "아트워크 선택…";
 "songInfo.artwork.remove"     = "아트워크 제거";
 "songInfo.artwork.empty"      = "여기에 이미지를 드래그하거나 파일을 선택하세요";
+"songInfo.mono"               = "모노";
+"songInfo.stereo"             = "스테레오";
+"songInfo.channelCount"       = "%d채널";
+"songInfo.kind.aac"           = "AAC 오디오 파일";
+"songInfo.kind.mp3"           = "MPEG 오디오 파일";
+"songInfo.kind.wav"           = "WAV 오디오 파일";
+"songInfo.kind.flac"          = "FLAC 오디오 파일";
+"songInfo.kind.other"         = "오디오 파일";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "재생";
@@ -94,22 +103,29 @@
 "playlistHeader.durationMinutes" = "%lld분";
 "playlistHeader.durationMinutesPlural" = "%lld분";
 
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "최근 재생 항목";
+"playlist.system.top25"       = "가장 많이 재생한 25곡";
+"playlist.system.recentlyAdded"= "최근 추가된 항목";
+"playlist.system.classicalMusic"= "클래식 음악";
+"playlist.system.nineties"    = "90년대 음악";
+
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "사진 변경…";
 "artwork.removeCustomPhoto"   = "사용자화 사진 제거";
-"artwork.help"                = "클릭하여 재생 목록 사용자화 사진 설정";
+"artwork.help"                = "클릭하여 플레이리스트 사용자화 사진 설정";
 
 // MARK: - New playlist sheet
-"newPlaylist.title"           = "새로운 재생 목록";
-"newPlaylist.namePlaceholder" = "재생 목록 이름";
+"newPlaylist.title"           = "새로운 플레이리스트";
+"newPlaylist.namePlaceholder" = "플레이리스트 이름";
 "newPlaylist.nameLabel"       = "이름";
 "newPlaylist.cancel"          = "취소";
 "newPlaylist.create"          = "생성";
 
 // MARK: - Playlist selection sheet
-"playlistSelection.title"     = "재생 목록에 추가";
-"playlistSelection.message"   = "'%@'을(를) 추가할 재생 목록 선택:";
-"playlistSelection.empty"     = "사용 가능한 재생 목록 없음";
+"playlistSelection.title"     = "플레이리스트에 추가";
+"playlistSelection.message"   = "'%@'을(를) 추가할 플레이리스트 선택:";
+"playlistSelection.empty"     = "사용 가능한 플레이리스트 없음";
 "playlistSelection.cancel"    = "취소";
 "playlistSelection.songCount" = "%lld곡";
 
@@ -136,6 +152,27 @@
 "settings.albumGrid.background" = "배경";
 "settings.albumGrid.note"     = "앱이 다크 모드일 때 앨범 그리드는 이 설정과 관계없이 다크를 사용합니다.";
 
+// MARK: - Settings tabs
+"settings.tab.general"        = "일반";
+"settings.tab.equalizer"      = "이퀄라이저";
+"settings.tab.shortcuts"      = "단축키";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "이퀄라이저 사용";
+"equalizer.preset"            = "프리셋";
+"equalizer.custom"            = "사용자 지정";
+"equalizer.hint"              = "슬라이더를 드래그하여 해당 주파수 대역을 조정하세요(−12~+12 dB).";
+"equalizer.reset"             = "재설정";
+"equalizer.preset.flat"       = "플랫";
+"equalizer.preset.bassBooster"= "저음 강조";
+"equalizer.preset.bassReducer"= "저음 감소";
+"equalizer.preset.trebleBooster"= "고음 강조";
+"equalizer.preset.vocalBooster"= "보컬 강조";
+"equalizer.preset.rock"       = "록";
+"equalizer.preset.pop"        = "팝";
+"equalizer.preset.classical"  = "클래식";
+"equalizer.preset.electronic" = "일렉트로닉";
+
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "노래, 앨범, 아티스트, 영화 검색…";
@@ -154,15 +191,26 @@
 "store.stop"                  = "정지";
 "store.viewInStore"           = "Store에서 보기";
 "store.media.label"           = "미디어";
+"store.unknown"               = "알 수 없음";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "가사";
+"lyrics.tryingOnline"         = "가사를 찾을 수 없습니다. 온라인에서 검색 중…";
+"lyrics.noOnline"             = "온라인에서도 가사를 찾을 수 없습니다.";
+"lyrics.errorMetadata"        = "메타데이터를 불러오는 중 오류가 발생했습니다.";
+"lyrics.lrcUnreadable"        = ".lrc 파일을 찾았지만 읽을 수 없습니다.";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld곡";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "모든 곡";
+"coverFlow.albumSongs"        = "앨범 수록곡";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "미니 플레이어에서 열기";
+"miniPlayer.upNext"           = "다음 재생";
+"miniPlayer.nothingQueued"    = "대기 중인 곡 없음";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "플레이리스트 삭제";
@@ -203,11 +251,21 @@
 "shortcuts.group.edit"        = "편집";
 "shortcuts.group.view"        = "보기";
 "shortcuts.group.controls"    = "제어";
+"shortcuts.resetHint"         = "위의 제어 항목을 변경하거나 기본 설정으로 되돌립니다.";
+"shortcuts.resetDefaults"     = "기본값으로 재설정";
+"shortcuts.pressKeys"         = "키를 누르세요…";
 "menu.playPause"              = "재생 / 일시 정지";
 "menu.toggleUpNext"           = "다음에 재생할 목록 보기/가리기";
 "menu.toggleLyrics"           = "가사 보기/가리기";
 "menu.toggleMute"             = "소리 끔 / 소리 켬";
 "menu.repeat"                 = "반복 모드 전환";
+
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "지금 재생 중";
+"queue.nextUp"                = "다음 재생";
+"queue.noUpcoming"            = "다음 곡 없음";
+"queue.dragHere"              = "곡을 여기로 드래그하여 대기열에 추가";
+"queue.noSong"                = "재생 중인 곡 없음";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "iPod 추출";
@@ -216,6 +274,7 @@
 "sync.addSongs"             = "노래 추가…";
 "sync.dragHere"             = "이 iPod에 동기화하려면\n보관함에서 노래를 추가하십시오.";
 "sync.syncNow"              = "동기화";
+"sync.sync"                   = "동기화";
 "sync.cancel"               = "취소";
 "sync.writing"              = "데이터베이스 쓰는 중…";
 "sync.ejecting"             = "마무리 중…";
@@ -231,6 +290,17 @@
 "picker.done"               = "동기화 목록에 추가";
 "picker.cancel"             = "취소";
 "picker.queued"             = "대기 중";
+"device.available"            = "%@ 사용 가능";
+"device.loading"              = "곡 불러오는 중…";
+"sync.progress"               = "%d/%d";
+"picker.selected"             = "%d개 선택됨";
+"storage.music"               = "음악: %@";
+"storage.free"                = "남은 공간: %@";
+"storage.total"               = "전체: %@";
+"sync.access.message"         = "ClassicTunes가 음악을 동기화할 수 있도록 iPod을 선택하세요.";
+"sync.access.messageSync"     = "음악을 동기화하려면 ClassicTunes가 iPod에 접근할 수 있어야 합니다.";
+"sync.access.prompt"          = "접근 허용";
+"sync.access.denied"          = "iPod 접근이 거부되었습니다.";
 
 "settings.songList" = "곡 목록";
 "settings.background.custom" = "사용자 지정";
@@ -258,9 +328,9 @@
 "settings.data.clearHistoryConfirm" = "재생 기록을 모두 지울까요?";
 "settings.data.clearHistoryMessage" = "재생 횟수, 최근 재생 항목, 가장 많이 재생한 25곡이 비워집니다. 이 작업은 되돌릴 수 없습니다.";
 "settings.data.clear" = "지우기";
-"settings.data.resetAppearance" = "모든 외관 재설정…";
-"settings.data.resetAppearanceConfirm" = "외관을 재설정할까요?";
-"settings.data.resetAppearanceMessage" = "외관 모드, 테마 색상, 두 배경이 기본값으로 돌아갑니다.";
+"settings.data.resetAppearance" = "모든 화면 모드 재설정…";
+"settings.data.resetAppearanceConfirm" = "화면 모드를 재설정할까요?";
+"settings.data.resetAppearanceMessage" = "화면 모드, 테마 색상, 두 배경이 기본값으로 돌아갑니다.";
 "bottomBar.visualizer"        = "비주얼라이저";
 "menu.showVisualizer" = "비주얼라이저 보기";
 "menu.hideVisualizer" = "비주얼라이저 가리기";
@@ -340,3 +410,6 @@
 "menu.newSmartPlaylist" = "새로운 스마트 플레이리스트…";
 "newPlaylist.type.regular" = "플레이리스트";
 "newPlaylist.type.smart" = "스마트 플레이리스트";
+
+// MARK: - File choosers
+"panel.choose"                = "선택";

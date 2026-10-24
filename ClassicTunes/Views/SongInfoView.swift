@@ -453,9 +453,9 @@ private struct FileSummary {
                let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee {
                 sampleRateDescription = "\(Int(asbd.mSampleRate)) Hz"
                 switch asbd.mChannelsPerFrame {
-                case 1: channelsDescription = "Mono"
-                case 2: channelsDescription = "Stereo"
-                default: channelsDescription = "\(asbd.mChannelsPerFrame) channels"
+                case 1: channelsDescription = NSLocalizedString("songInfo.mono", comment: "")
+                case 2: channelsDescription = NSLocalizedString("songInfo.stereo", comment: "")
+                default: channelsDescription = String(format: NSLocalizedString("songInfo.channelCount", comment: ""), Int(asbd.mChannelsPerFrame))
                 }
             }
         }
@@ -486,11 +486,11 @@ private struct FileSummary {
 
     private static func kindDescription(for url: URL) -> String {
         switch url.pathExtension.lowercased() {
-        case "m4a", "aac": return "AAC audio file"
-        case "mp3": return "MPEG audio file"
-        case "wav": return "WAV audio file"
-        case "flac": return "FLAC audio file"
-        default: return "Audio file"
+        case "m4a", "aac": return NSLocalizedString("songInfo.kind.aac", comment: "")
+        case "mp3": return NSLocalizedString("songInfo.kind.mp3", comment: "")
+        case "wav": return NSLocalizedString("songInfo.kind.wav", comment: "")
+        case "flac": return NSLocalizedString("songInfo.kind.flac", comment: "")
+        default: return NSLocalizedString("songInfo.kind.other", comment: "")
         }
     }
 }

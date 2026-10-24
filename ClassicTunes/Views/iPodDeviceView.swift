@@ -117,7 +117,7 @@ struct iPodDeviceView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                Text("\(capacityString) · \(freeString) available")
+                Text("\(capacityString) · " + String(format: NSLocalizedString("device.available", comment: ""), freeString))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -185,7 +185,7 @@ struct iPodDeviceView: View {
                 if isLoadingTracks {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Loading tracks…")
+                        Text("device.loading")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -301,10 +301,10 @@ struct iPodDeviceView: View {
 
             // Legend
             HStack(spacing: 16) {
-                storageLabel(color: themeColor, text: "Music: \(usedString)")
+                storageLabel(color: themeColor, text: String(format: NSLocalizedString("storage.music", comment: ""), usedString))
                 Spacer()
-                storageLabel(color: Color(nsColor: .separatorColor), text: "Free: \(freeString)")
-                storageLabel(color: .primary.opacity(0.4), text: "Total: \(capacityString)")
+                storageLabel(color: Color(nsColor: .separatorColor), text: String(format: NSLocalizedString("storage.free", comment: ""), freeString))
+                storageLabel(color: .primary.opacity(0.4), text: String(format: NSLocalizedString("storage.total", comment: ""), capacityString))
             }
             .font(.caption2)
         }
@@ -378,7 +378,7 @@ struct iPodDeviceView: View {
                             .font(.subheadline)
                             .foregroundColor(.primary)
 
-                        Text("\(syncEngine.progress.completedTracks) of \(syncEngine.progress.totalTracks)")
+                        Text(String(format: NSLocalizedString("sync.progress", comment: ""), syncEngine.progress.completedTracks, syncEngine.progress.totalTracks))
                             .font(.caption)
                             .foregroundColor(.secondary)
 
@@ -569,8 +569,8 @@ struct iPodDeviceView: View {
         }
 
         let panel = NSOpenPanel()
-        panel.message = "Select your iPod to allow ClassicTunes to sync music to it."
-        panel.prompt = "Grant Access"
+        panel.message = NSLocalizedString("sync.access.message", comment: "")
+        panel.prompt = NSLocalizedString("sync.access.prompt", comment: "")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.directoryURL = device.volumeURL
@@ -757,7 +757,7 @@ struct SongPickerSheet: View {
 
             // Footer
             HStack {
-                Text("\(selected.count) selected")
+                Text(String(format: NSLocalizedString("picker.selected", comment: ""), selected.count))
                     .font(.caption).foregroundColor(.secondary)
                 Spacer()
                 Button("picker.cancel") { dismiss() }

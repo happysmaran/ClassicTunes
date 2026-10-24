@@ -4,6 +4,7 @@
 "sidebar.library"             = "媒体库";
 "sidebar.store"               = "商店";
 "sidebar.playlists"           = "播放列表";
+"sidebar.devices"             = "设备";
 
 // MARK: - Sidebar items
 "sidebar.music"               = "音乐";
@@ -83,6 +84,14 @@
 "songInfo.artwork.choose"     = "选择插图…";
 "songInfo.artwork.remove"     = "移除插图";
 "songInfo.artwork.empty"      = "将图片拖到此处，或选择文件";
+"songInfo.mono"               = "单声道";
+"songInfo.stereo"             = "立体声";
+"songInfo.channelCount"       = "%d 声道";
+"songInfo.kind.aac"           = "AAC 音频文件";
+"songInfo.kind.mp3"           = "MPEG 音频文件";
+"songInfo.kind.wav"           = "WAV 音频文件";
+"songInfo.kind.flac"          = "FLAC 音频文件";
+"songInfo.kind.other"         = "音频文件";
 
 // MARK: - Playlist header
 "playlistHeader.play"         = "播放";
@@ -93,6 +102,13 @@
 "playlistHeader.durationHoursPlural" = "%lld 小时";
 "playlistHeader.durationMinutes" = "%lld 分钟";
 "playlistHeader.durationMinutesPlural" = "%lld 分钟";
+
+// MARK: - System playlists
+"playlist.system.recentlyPlayed"= "最近播放";
+"playlist.system.top25"       = "播放最多的25首";
+"playlist.system.recentlyAdded"= "最近添加";
+"playlist.system.classicalMusic"= "古典音乐";
+"playlist.system.nineties"    = "90年代音乐";
 
 // MARK: - Playlist artwork
 "artwork.changePhoto"         = "更改照片…";
@@ -108,7 +124,7 @@
 
 // MARK: - Playlist selection sheet
 "playlistSelection.title"     = "添加到播放列表";
-"playlistSelection.message"   = "选择要将\"%@\"添加到的播放列表：";
+"playlistSelection.message"   = "选择要将“%@”添加到的播放列表：";
 "playlistSelection.empty"     = "没有可用的播放列表";
 "playlistSelection.cancel"    = "取消";
 "playlistSelection.songCount" = "%lld 首歌曲";
@@ -134,7 +150,28 @@
 "settings.themeColor.pink"    = "粉色";
 "settings.albumGrid"          = "专辑网格";
 "settings.albumGrid.background" = "背景";
-"settings.albumGrid.note"     = "当应用处于深色外观时，专辑网格将无论此设置如何都使用深色。";
+"settings.albumGrid.note"     = "当应用处于深色外观时，无论此设置如何，专辑网格都将使用深色。";
+
+// MARK: - Settings tabs
+"settings.tab.general"        = "通用";
+"settings.tab.equalizer"      = "均衡器";
+"settings.tab.shortcuts"      = "快捷键";
+
+// MARK: - Equalizer
+"equalizer.enable"            = "启用均衡器";
+"equalizer.preset"            = "预设";
+"equalizer.custom"            = "自定";
+"equalizer.hint"              = "拖动滑块以调整该频段（-12 至 +12 dB）。";
+"equalizer.reset"             = "重置";
+"equalizer.preset.flat"       = "平坦";
+"equalizer.preset.bassBooster"= "低音增强";
+"equalizer.preset.bassReducer"= "低音减弱";
+"equalizer.preset.trebleBooster"= "高音增强";
+"equalizer.preset.vocalBooster"= "人声增强";
+"equalizer.preset.rock"       = "摇滚";
+"equalizer.preset.pop"        = "流行";
+"equalizer.preset.classical"  = "古典";
+"equalizer.preset.electronic" = "电子";
 
 // MARK: - Tunes Store
 "store.title"                 = "Tunes Store";
@@ -154,15 +191,26 @@
 "store.stop"                  = "停止";
 "store.viewInStore"           = "在商店中查看";
 "store.media.label"           = "媒体";
+"store.unknown"               = "未知";
 
 // MARK: - Lyrics view
 "lyrics.title"                = "歌词";
+"lyrics.tryingOnline"         = "未找到歌词。正在在线搜索……";
+"lyrics.noOnline"             = "在线上也未找到歌词。";
+"lyrics.errorMetadata"        = "加载元数据时出错。";
+"lyrics.lrcUnreadable"        = "找到了 .lrc 文件，但无法读取。";
 
 // MARK: - Album grid / detail
 "albumDetail.songs"           = "%lld 首歌曲";
 
+// MARK: - Cover Flow
+"coverFlow.allSongs"          = "所有歌曲";
+"coverFlow.albumSongs"        = "专辑歌曲";
+
 // MARK: - Mini player
 "miniPlayer.openIn"           = "在迷你播放器中打开";
+"miniPlayer.upNext"           = "即将播放";
+"miniPlayer.nothingQueued"    = "队列为空";
 
 // MARK: - Menu commands
 "menu.deletePlaylist"         = "删除播放列表";
@@ -203,11 +251,21 @@
 "shortcuts.group.edit"        = "编辑";
 "shortcuts.group.view"        = "显示";
 "shortcuts.group.controls"    = "控制";
+"shortcuts.resetHint"         = "修改上方的控制设置，或恢复为标准布局。";
+"shortcuts.resetDefaults"     = "恢复默认设置";
+"shortcuts.pressKeys"         = "请按下按键…";
 "menu.playPause"              = "播放 / 暂停";
 "menu.toggleUpNext"           = "显示/隐藏待播清单";
 "menu.toggleLyrics"           = "显示/隐藏歌词";
 "menu.toggleMute"             = "静音 / 取消静音";
 "menu.repeat"                 = "切换重复播放模式";
+
+// MARK: - Up Next queue
+"queue.nowPlaying"            = "正在播放";
+"queue.nextUp"                = "即将播放";
+"queue.noUpcoming"            = "没有待播歌曲";
+"queue.dragHere"              = "将歌曲拖到此处以加入队列";
+"queue.noSong"                = "没有正在播放的歌曲";
 
 // MARK: - iPod Syncing Details
 "device.eject"              = "弹出 iPod";
@@ -216,6 +274,7 @@
 "sync.addSongs"             = "添加歌曲…";
 "sync.dragHere"             = "从您的资料库中添加歌曲\n以同步到此 iPod。";
 "sync.syncNow"              = "同步";
+"sync.sync"                   = "同步";
 "sync.cancel"               = "取消";
 "sync.writing"              = "正在写入数据库…";
 "sync.ejecting"             = "正在完成…";
@@ -231,6 +290,17 @@
 "picker.done"               = "添加到同步列表";
 "picker.cancel"             = "取消";
 "picker.queued"             = "已排队";
+"device.available"            = "可用 %@";
+"device.loading"              = "正在载入歌曲…";
+"sync.progress"               = "%d / %d";
+"picker.selected"             = "已选择 %d 首";
+"storage.music"               = "音乐：%@";
+"storage.free"                = "可用：%@";
+"storage.total"               = "总计：%@";
+"sync.access.message"         = "选择你的 iPod，以允许 ClassicTunes 向其同步音乐。";
+"sync.access.messageSync"     = "ClassicTunes 需要访问你的 iPod 才能同步音乐。";
+"sync.access.prompt"          = "授予访问权限";
+"sync.access.denied"          = "访问 iPod 被拒绝。";
 
 "settings.songList" = "歌曲列表";
 "settings.background.custom" = "自定";
@@ -305,11 +375,11 @@
 "smartPlaylist.limitTo" = "限制为";
 "smartPlaylist.songsSelectedBy" = "首歌曲，选择依据：";
 "smartPlaylist.field.title" = "标题";
-"smartPlaylist.field.artist" = "艺术家";
+"smartPlaylist.field.artist" = "艺人";
 "smartPlaylist.field.album" = "专辑";
-"smartPlaylist.field.albumArtist" = "专辑艺术家";
+"smartPlaylist.field.albumArtist" = "专辑艺人";
 "smartPlaylist.field.genre" = "风格";
-"smartPlaylist.field.composer" = "作曲家";
+"smartPlaylist.field.composer" = "作曲者";
 "smartPlaylist.field.grouping" = "分组";
 "smartPlaylist.field.comment" = "注释";
 "smartPlaylist.field.year" = "年份";
@@ -333,10 +403,13 @@
 "smartPlaylist.selection.mostPlayed" = "播放次数最多";
 "smartPlaylist.selection.leastPlayed" = "播放次数最少";
 "smartPlaylist.selection.title" = "标题";
-"smartPlaylist.selection.artist" = "艺术家";
+"smartPlaylist.selection.artist" = "艺人";
 "smartPlaylist.selection.album" = "专辑";
 "smartPlaylist.selection.newestYear" = "最新年份";
 "smartPlaylist.selection.oldestYear" = "最早年份";
 "menu.newSmartPlaylist" = "新建智能播放列表…";
 "newPlaylist.type.regular" = "播放列表";
 "newPlaylist.type.smart" = "智能播放列表";
+
+// MARK: - File choosers
+"panel.choose"                = "选择";

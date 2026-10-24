@@ -8,14 +8,14 @@ struct EqualizerSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Enable Equalizer", isOn: $equalizer.isEnabled)
+                Toggle("equalizer.enable", isOn: $equalizer.isEnabled)
 
-                Picker("Preset", selection: presetBinding) {
+                Picker("equalizer.preset", selection: presetBinding) {
                     if equalizer.currentPreset == nil {
-                        Text("Custom").tag("Custom")
+                        Text("equalizer.custom").tag("Custom")
                     }
                     ForEach(Equalizer.presets) { preset in
-                        Text(preset.name).tag(preset.name)
+                        Text(preset.localizedName).tag(preset.name)
                     }
                 }
             }
@@ -31,11 +31,11 @@ struct EqualizerSettingsView: View {
                 .opacity(equalizer.isEnabled ? 1 : 0.5)
 
                 HStack {
-                    Text("Drag a slider to adjust that frequency band (-12 to +12 dB).")
+                    Text("equalizer.hint")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("Reset") { equalizer.reset() }
+                    Button("equalizer.reset") { equalizer.reset() }
                         .controlSize(.small)
                 }
             }
