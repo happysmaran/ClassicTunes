@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "TV 프로그램";
 "sidebar.podcasts"            = "팟캐스트";
 "sidebar.radio"               = "라디오";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "새로운 재생 목록";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "배경";
 "settings.albumGrid.note"     = "앱이 다크 모드일 때 앨범 그리드는 이 설정과 관계없이 다크를 사용합니다.";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "노래, 앨범, 아티스트, 영화 검색…";
-"store.searching"             = "iTunes Store 검색 중…";
+"store.searching"             = "Tunes Store 검색 중…";
 "store.noResults.title"       = "결과 없음";
 "store.noResults.subtitle"    = "다른 키워드나 미디어 유형을 사용해 보세요";
-"store.welcome.title"         = "iTunes Store에 오신 것을 환영합니다";
+"store.welcome.title"         = "Tunes Store에 오신 것을 환영합니다";
 "store.welcome.subtitle"      = "음악, 앨범, 영화, TV 프로그램 검색";
 "store.media.music"           = "음악";
 "store.media.movies"          = "영화";

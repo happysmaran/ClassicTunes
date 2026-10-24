@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "电视节目";
 "sidebar.podcasts"            = "播客";
 "sidebar.radio"               = "广播";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "新建播放列表";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "背景";
 "settings.albumGrid.note"     = "当应用处于深色外观时，专辑网格将无论此设置如何都使用深色。";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "搜索歌曲、专辑、艺人、电影……";
-"store.searching"             = "正在搜索 iTunes Store……";
+"store.searching"             = "正在搜索 Tunes Store……";
 "store.noResults.title"       = "未找到结果";
 "store.noResults.subtitle"    = "请尝试其他关键词或媒体类型";
-"store.welcome.title"         = "欢迎来到 iTunes Store";
+"store.welcome.title"         = "欢迎来到 Tunes Store";
 "store.welcome.subtitle"      = "搜索音乐、专辑、电影和电视节目";
 "store.media.music"           = "音乐";
 "store.media.movies"          = "电影";

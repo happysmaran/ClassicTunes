@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "टीवी शो";
 "sidebar.podcasts"            = "पॉडकास्ट";
 "sidebar.radio"               = "रेडियो";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "नई प्लेलिस्ट";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "पृष्ठभूमि";
 "settings.albumGrid.note"     = "जब ऐप गहरी दिखावट में हो, तो इस सेटिंग की परवाह किए बिना एल्बम ग्रिड गहरा रहेगा।";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "गाने, एल्बम, कलाकार, फ़िल्में खोजें…";
-"store.searching"             = "iTunes Store खोजा जा रहा है…";
+"store.searching"             = "Tunes Store खोजा जा रहा है…";
 "store.noResults.title"       = "कोई परिणाम नहीं मिला";
 "store.noResults.subtitle"    = "अलग कीवर्ड या मीडिया प्रकार आज़माएँ";
-"store.welcome.title"         = "iTunes Store में आपका स्वागत है";
+"store.welcome.title"         = "Tunes Store में आपका स्वागत है";
 "store.welcome.subtitle"      = "संगीत, एल्बम, फ़िल्में और टीवी शो खोजें";
 "store.media.music"           = "संगीत";
 "store.media.movies"          = "फ़िल्में";

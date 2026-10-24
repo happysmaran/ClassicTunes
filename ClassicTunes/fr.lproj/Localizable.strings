@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "Séries TV";
 "sidebar.podcasts"            = "Podcasts";
 "sidebar.radio"               = "Radio";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "Nouvelle liste de lecture";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "Arrière-plan";
 "settings.albumGrid.note"     = "Lorsque l'app est en apparence sombre, la grille d'albums utilisera le mode sombre quel que soit ce réglage.";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "Rechercher des chansons, albums, artistes, films…";
-"store.searching"             = "Recherche dans l'iTunes Store…";
+"store.searching"             = "Recherche dans le Tunes Store…";
 "store.noResults.title"       = "Aucun résultat";
 "store.noResults.subtitle"    = "Essayez d'autres mots-clés ou un autre type de média";
-"store.welcome.title"         = "Bienvenue sur l'iTunes Store";
+"store.welcome.title"         = "Bienvenue sur le Tunes Store";
 "store.welcome.subtitle"      = "Recherchez de la musique, des albums, des films et des séries";
 "store.media.music"           = "Musique";
 "store.media.movies"          = "Films";

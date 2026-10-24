@@ -13,7 +13,7 @@ struct iTunesSearchResponse: Codable {
     let results: [iTunesItem]
 }
 
-// A flexible, decodable model representation mapping out unified store entity properties from the iTunes Store catalog[span_6](start_span)[span_6](end_span).
+// A flexible, decodable model representation mapping out unified store entity properties from the Tunes Store catalog[span_6](start_span)[span_6](end_span).
 struct iTunesItem: Codable, Identifiable {
     let trackId: Int?
     let collectionId: Int?

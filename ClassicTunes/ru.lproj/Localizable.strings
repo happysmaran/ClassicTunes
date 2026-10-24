@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "ТВ-программы";
 "sidebar.podcasts"            = "Подкасты";
 "sidebar.radio"               = "Радио";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "Новый плейлист";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "Фон";
 "settings.albumGrid.note"     = "Когда приложение использует тёмный вид, сетка альбомов также будет тёмной независимо от этой настройки.";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "Поиск песен, альбомов, исполнителей, фильмов…";
-"store.searching"             = "Поиск в iTunes Store…";
+"store.searching"             = "Поиск в Tunes Store…";
 "store.noResults.title"       = "Ничего не найдено";
 "store.noResults.subtitle"    = "Попробуйте другие ключевые слова или тип медиа";
-"store.welcome.title"         = "Добро пожаловать в iTunes Store";
+"store.welcome.title"         = "Добро пожаловать в Tunes Store";
 "store.welcome.subtitle"      = "Ищите музыку, альбомы, фильмы и ТВ-программы";
 "store.media.music"           = "Музыка";
 "store.media.movies"          = "Фильмы";

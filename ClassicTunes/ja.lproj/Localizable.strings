@@ -11,7 +11,7 @@
 "sidebar.tvShows"             = "テレビ番組";
 "sidebar.podcasts"            = "ポッドキャスト";
 "sidebar.radio"               = "ラジオ";
-"sidebar.iTunesStore"         = "iTunes Store";
+"sidebar.iTunesStore"         = "Tunes Store";
 "sidebar.newPlaylist"         = "新規プレイリスト";
 
 // MARK: - Unavailable alert
@@ -135,13 +135,13 @@
 "settings.albumGrid.background" = "背景";
 "settings.albumGrid.note"     = "アプリがダーク外観のとき、この設定に関わらずアルバムグリッドはダークになります。";
 
-// MARK: - iTunes Store
-"store.title"                 = "iTunes Store";
+// MARK: - Tunes Store
+"store.title"                 = "Tunes Store";
 "store.searchPlaceholder"     = "曲、アルバム、アーティスト、映画を検索…";
-"store.searching"             = "iTunes Storeを検索中…";
+"store.searching"             = "Tunes Storeを検索中…";
 "store.noResults.title"       = "結果が見つかりません";
 "store.noResults.subtitle"    = "別のキーワードまたはメディアタイプをお試しください";
-"store.welcome.title"         = "iTunes Storeへようこそ";
+"store.welcome.title"         = "Tunes Storeへようこそ";
 "store.welcome.subtitle"      = "ミュージック、アルバム、映画、テレビ番組を検索";
 "store.media.music"           = "ミュージック";
 "store.media.movies"          = "映画";

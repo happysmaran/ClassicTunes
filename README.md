@@ -9,7 +9,7 @@ After the UI overhaul of the Music app in macOS 26 diverged from the long-standi
 - Working Cover Flow
 - MiniPlayer
 - Playlists (with smart m3u support)
-- iTunes Store integration
+- Tunes Store integration
 - Lyrics support (with lrclib or metadata)
 - iPod Syncing (1st-2nd gen Shuffles for now)
 - Discord Rich Presence (with MusicPresence)
