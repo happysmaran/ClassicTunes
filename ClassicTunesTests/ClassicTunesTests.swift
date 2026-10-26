@@ -426,12 +426,72 @@ struct SongTests {
         #expect(song.artworkImage == nil)
     }
 
-    @Test func songsWithDistinctIDsAreNotEqual() {
-        let url = URL(fileURLWithPath: "/tmp/a.mp3")
-        let a = Song(url: url, title: "T", artist: "A", album: "B", genre: "G")
-        let b = Song(url: url, title: "T", artist: "A", album: "B", genre: "G")
+    @Test func songsWithDifferentFilesAreNotEqual() {
+        let a = Song(url: URL(fileURLWithPath: "/tmp/a.mp3"), title: "T", artist: "A", album: "B", genre: "G")
+        let b = Song(url: URL(fileURLWithPath: "/tmp/b.mp3"), title: "T", artist: "A", album: "B", genre: "G")
         #expect(a != b)
+        #expect(a.id != b.id)
     }
+
+    @Test func idIsStableForTheSameFile() {
+        let url = URL(fileURLWithPath: "/tmp/music/a.mp3")
+        let first = Song(url: url, title: "T", artist: "A", album: "B", genre: "G")
+        let second = Song(url: url, title: "Other title", artist: "A", album: "B", genre: "G")
+        #expect(first.id == second.id)
+        #expect(first.id == Song.stableID(for: URL(fileURLWithPath: "/tmp/music/../music/a.mp3")))
+    }
+
+    @Test func explicitIDIsRespected() {
+        let id = UUID()
+        let song = Song(id: id, url: URL(fileURLWithPath: "/tmp/a.mp3"), title: "T", artist: "A", album: "B", genre: "G")
+        #expect(song.id == id)
+        #expect(song.withStableID().id == Song.stableID(for: song.url))
+    }
+
+    @Test func artworkIsStoredOutsideTheSong() throws {
+        let png = Self.tinyPNG
+        var song = makeSong()
+        song.artworkData = png
+        #expect(song.artworkKey != nil)
+        #expect(song.artworkData == png)
+        #expect(song.artworkImage != nil)
+
+        // The saved form carries only the key, never the image bytes.
+        let encoded = try JSONEncoder().encode(song)
+        let json = try #require(String(data: encoded, encoding: .utf8))
+        #expect(json.contains("artworkKey"))
+        #expect(!json.contains("\"artworkData\""))
+        #expect(encoded.count < png.count + 1500)
+
+        song.artworkData = nil
+        #expect(song.artworkKey == nil)
+    }
+
+    @Test func sameArtworkOnDifferentSongsSharesOneKey() {
+        var a = makeSong(), b = makeSong()
+        a.artworkData = Self.tinyPNG
+        b.artworkData = Self.tinyPNG
+        #expect(a.artworkKey == b.artworkKey)
+    }
+
+    @Test func decodesSongsSavedByOlderVersions() throws {
+        // Written before `compilation`, `playCount`, `artworkKey` and `dateAdded` existed, with the
+        // artwork embedded in the song as base64.
+        let png = Self.tinyPNG
+        let json = """
+        {"id":"00000000-0000-0000-0000-000000000001","url":"file:///tmp/old.mp3","title":"Old","artist":"A",
+         "album":"B","genre":"G","artworkData":"\(png.base64EncodedString())"}
+        """
+        let song = try JSONDecoder().decode(Song.self, from: Data(json.utf8))
+        #expect(song.title == "Old")
+        #expect(!song.compilation)
+        #expect(song.playCount == 0)
+        #expect(song.artworkKey != nil)
+        #expect(song.artworkData == png)
+    }
+
+    // A 1x1 PNG.
+    static let tinyPNG = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")!
 
     @Test func songSurvivesCodableRoundTrip() throws {
         let original = makeSong(
@@ -592,5 +652,304 @@ struct PlayHistoryTests {
             let playlist = generateTopPlayedPlaylist(from: songs, maxCount: 2)
             #expect(playlist.songs.count == 2)
         }
+    }
+}
+
+// MARK: - Play counts
+
+@MainActor
+@Suite(.serialized)
+struct BulkPlayCountTests {
+
+    @Test func allPlayCountsMatchPerSongCounts() {
+        let defaults = UserDefaults.standard
+        let keys = [playCountKey, playHistoryKey, lastPlayedKey]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        defer {
+            for (key, value) in zip(keys, saved) {
+                if let value { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+            }
+        }
+
+        let a = makeSong(), b = makeSong()
+        incrementPlayCount(for: a)
+        incrementPlayCount(for: a)
+        incrementPlayCount(for: b)
+
+        let counts = getAllPlayCounts()
+        #expect(counts[a.id] == 2)
+        #expect(counts[b.id] == 1)
+        #expect(counts[a.id] == getPlayCount(for: a))
+        // Playing a song also records when it was played.
+        #expect(getLastPlayed(for: a) != nil)
+    }
+
+    @Test func countsSurviveARescanBecauseIDsAreStable() {
+        let defaults = UserDefaults.standard
+        let keys = [playCountKey, playHistoryKey, lastPlayedKey]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        defer {
+            for (key, value) in zip(keys, saved) {
+                if let value { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+            }
+        }
+
+        let url = URL(fileURLWithPath: "/tmp/\(UUID().uuidString).mp3")
+        incrementPlayCount(for: Song(url: url, title: "T", artist: "A", album: "B", genre: "G"))
+        // A later scan builds a brand-new Song value for the same file.
+        let rescanned = Song(url: url, title: "T", artist: "A", album: "B", genre: "G")
+        #expect(getPlayCount(for: rescanned) == 1)
+    }
+}
+
+// MARK: - Playlist persistence
+
+@MainActor
+struct PlaylistStoreTests {
+
+    private func makeStore() throws -> (store: PlaylistStore, directory: URL) {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PlaylistStoreTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return (PlaylistStore(directory: directory), directory)
+    }
+
+    @Test func savedPlaylistsLoadBack() throws {
+        let (store, directory) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let song = makeSong(title: "Kept")
+        let playlist = Playlist(name: "Mix", songs: [song])
+        store.save([playlist])
+
+        let loaded = store.load()
+        #expect(loaded.count == 1)
+        #expect(loaded[0].id == playlist.id)
+        #expect(loaded[0].songs.map(\.title) == ["Kept"])
+    }
+
+    @Test func songsSavedWithRandomIDsAreRelinkedByPath() throws {
+        let (store, directory) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let url = URL(fileURLWithPath: "/tmp/\(UUID().uuidString).mp3")
+        let legacy = Song(id: UUID(), url: url, title: "Legacy", artist: "A", album: "B", genre: "G")
+        store.save([Playlist(name: "Old", songs: [legacy])])
+
+        let loaded = store.load()
+        #expect(loaded[0].songs[0].id == Song.stableID(for: url))
+    }
+
+    @Test func unreadableFileIsSetAsideNotOverwritten() throws {
+        let (store, directory) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let file = directory.appendingPathComponent("userPlaylists.v1.json")
+        try Data("{ not json".utf8).write(to: file)
+
+        #expect(store.load().isEmpty)
+
+        // The broken file was moved aside rather than left to be replaced by the next save.
+        let contents = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        #expect(contents.contains { $0.hasPrefix("userPlaylists.v1.unreadable-") })
+        #expect(!FileManager.default.fileExists(atPath: file.path))
+    }
+
+    @Test func backupIsUsedWhenTheMainFileIsUnreadable() throws {
+        let (store, directory) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let playlist = Playlist(name: "Precious", songs: [makeSong()])
+        store.save([playlist])
+        store.save([playlist])   // The second save leaves the first version as the backup.
+
+        let file = directory.appendingPathComponent("userPlaylists.v1.json")
+        try Data("garbage".utf8).write(to: file)
+
+        let recovered = store.load()
+        #expect(recovered.map(\.name) == ["Precious"])
+    }
+
+    @Test func emptyDirectoryLoadsNothing() throws {
+        let (store, directory) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        #expect(store.load().isEmpty)
+    }
+}
+
+// MARK: - Library scanning
+
+@MainActor
+struct LibraryScannerTests {
+
+    private func makeFolder() throws -> URL {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LibraryScannerTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    @Test func enumerationKeepsOnlyAudioFiles() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        let sub = folder.appendingPathComponent("Album", isDirectory: true)
+        try FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
+        for name in ["a.mp3", "b.M4A", "notes.txt", ".hidden.mp3"] {
+            try Data("x".utf8).write(to: folder.appendingPathComponent(name))
+        }
+        try Data("x".utf8).write(to: sub.appendingPathComponent("c.flac"))
+
+        let names = LibraryScanner.enumerateAudioFiles(in: folder).map { $0.url.lastPathComponent }.sorted()
+        #expect(names == ["a.mp3", "b.M4A", "c.flac"])
+    }
+
+    @Test func unchangedFilesReuseTheirSavedSongWithoutBeingParsed() async throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let indexURL = folder.appendingPathComponent("index.json")
+
+        // Not real audio: parsing it would fail and drop the song, so getting it back proves the
+        // saved entry was used instead.
+        let fileURL = folder.appendingPathComponent("fake.mp3")
+        try Data("not really audio".utf8).write(to: fileURL)
+        let file = try #require(LibraryScanner.enumerateAudioFiles(in: folder).first)
+
+        let cached = Song(url: file.url, title: "From Index", artist: "A", album: "B", genre: "G")
+        var index = LibraryIndex()
+        index.entries[file.url.path] = .init(modified: file.modified, size: file.size, changed: file.changed, song: cached)
+        index.save(to: indexURL)
+
+        let songs = await LibraryScanner.scan(folderURL: folder, indexURL: indexURL)
+        #expect(songs.map(\.title) == ["From Index"])
+    }
+
+    @Test func changedFilesAreNotServedFromTheIndex() async throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let indexURL = folder.appendingPathComponent("index.json")
+
+        let fileURL = folder.appendingPathComponent("fake.mp3")
+        try Data("not really audio".utf8).write(to: fileURL)
+        let file = try #require(LibraryScanner.enumerateAudioFiles(in: folder).first)
+
+        // The saved fingerprint doesn't match the file, so the entry is stale and the (unparseable)
+        // file is re-read and dropped rather than the old title being returned.
+        let cached = Song(url: file.url, title: "Stale", artist: "A", album: "B", genre: "G")
+        var index = LibraryIndex()
+        index.entries[file.url.path] = .init(modified: file.modified - 100, size: file.size, changed: file.changed, song: cached)
+        index.save(to: indexURL)
+
+        let songs = await LibraryScanner.scan(folderURL: folder, indexURL: indexURL)
+        #expect(songs.isEmpty)
+    }
+
+    @Test func deletedFilesAreDroppedFromTheIndex() async throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let indexURL = folder.appendingPathComponent("index.json")
+
+        let gone = Song(url: folder.appendingPathComponent("gone.mp3"), title: "Gone", artist: "A", album: "B", genre: "G")
+        var index = LibraryIndex()
+        index.entries[gone.url.path] = .init(modified: 1, size: 1, song: gone)
+        index.save(to: indexURL)
+
+        let songs = await LibraryScanner.scan(folderURL: folder, indexURL: indexURL)
+        #expect(songs.isEmpty)
+        #expect(LibraryIndex.load(from: indexURL).entries.isEmpty)
+    }
+
+    @Test func missingOrCorruptIndexIsJustAnEmptyIndex() throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        #expect(LibraryIndex.load(from: folder.appendingPathComponent("nope.json")).entries.isEmpty)
+
+        let bad = folder.appendingPathComponent("bad.json")
+        try Data("{{{".utf8).write(to: bad)
+        #expect(LibraryIndex.load(from: bad).entries.isEmpty)
+    }
+}
+
+// MARK: - Change detection & artwork cleanup
+
+@MainActor
+struct ChangeDetectionTests {
+
+    private func makeFolder() throws -> URL {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ChangeDetectionTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    @Test func editThatKeepsModificationDateAndSizeIsStillDetectedByChangeTime() async throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        let fileURL = folder.appendingPathComponent("fake.mp3")
+        try Data("aaaa".utf8).write(to: fileURL)
+        let before = try #require(LibraryScanner.enumerateAudioFiles(in: folder).first)
+        let song = Song(url: before.url, title: "Before", artist: "A", album: "B", genre: "G")
+        let entry = LibraryIndex.Entry(modified: before.modified, size: before.size, changed: before.changed, song: song)
+        #expect(LibraryScanner.isCurrent(entry, for: before))
+
+        // Rewrite with same-size content, then put the modification date back, as `cp -p` would.
+        let originalDate = try #require(try fileURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)
+        try await Task.sleep(for: .milliseconds(20))
+        try Data("bbbb".utf8).write(to: fileURL)
+        try FileManager.default.setAttributes([.modificationDate: originalDate], ofItemAtPath: fileURL.path)
+
+        let after = try #require(LibraryScanner.enumerateAudioFiles(in: folder).first)
+        #expect(after.size == before.size)
+        #expect(abs(after.modified - before.modified) < 0.001)   // Date and size look untouched...
+        #expect(after.changed > before.changed)                  // ...but the change time moved.
+
+        // Even if the modification date had been restored exactly, the change time alone makes the
+        // saved entry stale.
+        let lookalike = LibraryIndex.Entry(modified: after.modified, size: after.size, changed: before.changed, song: song)
+        #expect(!LibraryScanner.isCurrent(lookalike, for: after))
+        let current = LibraryIndex.Entry(modified: after.modified, size: after.size, changed: after.changed, song: song)
+        #expect(LibraryScanner.isCurrent(current, for: after))
+    }
+
+    @Test func indexIsKeptWhenTheMusicFolderIsMissing() async throws {
+        let folder = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let indexURL = folder.appendingPathComponent("index.json")
+
+        let missing = folder.appendingPathComponent("UnmountedDrive", isDirectory: true)
+        let song = Song(url: missing.appendingPathComponent("a.mp3"), title: "Kept", artist: "A", album: "B", genre: "G")
+        var index = LibraryIndex()
+        index.entries[song.url.path] = .init(modified: 1, size: 1, song: song)
+        index.save(to: indexURL)
+
+        let songs = await LibraryScanner.scan(folderURL: missing, indexURL: indexURL)
+        #expect(songs.isEmpty)
+        #expect(LibraryIndex.load(from: indexURL).entries.count == 1)
+    }
+
+    @Test func pruneDeletesOnlyOldUnreferencedArtwork() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ArtworkPruneTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = ArtworkStore(directory: directory)
+
+        let used = store.store(Data("used".utf8))
+        let orphanOld = store.store(Data("orphan-old".utf8))
+        let orphanNew = store.store(Data("orphan-new".utf8))
+        let usedOld = store.store(Data("used-old".utf8))
+
+        // Age two of the files past the grace period.
+        let longAgo = Date().addingTimeInterval(-3 * 24 * 60 * 60)
+        for key in [orphanOld, usedOld] {
+            try FileManager.default.setAttributes([.modificationDate: longAgo], ofItemAtPath: directory.appendingPathComponent(key).path)
+        }
+
+        let removed = store.prune(keeping: [used, usedOld])
+        #expect(removed == 1)
+        #expect(!store.contains(orphanOld))   // old and unreferenced: deleted
+        #expect(store.contains(orphanNew))    // unreferenced but recent: kept
+        #expect(store.contains(used))         // referenced: kept
+        #expect(store.contains(usedOld))      // old but referenced: kept
     }
 }

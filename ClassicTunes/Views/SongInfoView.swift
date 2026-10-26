@@ -52,6 +52,8 @@ struct SongInfoView: View {
     @State private var isLoadingLyrics = false
 
     @State private var isSaving = false
+    // Set when writing the tags to the file failed; shown in an alert.
+    @State private var saveError: String?
 
     init(song: Song, onSave: @escaping (Song) -> Void) {
         self.originalSong = song
@@ -104,6 +106,14 @@ struct SongInfoView: View {
             footer
         }
         .frame(width: 480, height: 520)
+        .alert("songInfo.saveFailed", isPresented: Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )) {
+            Button("alert.ok", role: .cancel) {}
+        } message: {
+            Text(saveError ?? "")
+        }
         .task { await loadSummaryIfNeeded() }
         .onChange(of: selectedTab) { tab in
             if tab == .lyrics {
@@ -347,16 +357,25 @@ struct SongInfoView: View {
         updated.bpm = Int(bpm)
         updated.artworkData = artworkData
 
-        onSave(updated)
         saveLyricsIfNeeded()
 
+        // The library is only updated once the file has been written, so a failed write never leaves
+        // the app showing tags that aren't actually in the file. Only fields that changed are written.
         Task {
             do {
-                try await SongMetadataWriter.write(updated, to: updated.url)
+                try await SongMetadataWriter.write(updated, replacing: originalSong, to: updated.url)
             } catch {
                 print("Failed to write metadata to \(updated.url.lastPathComponent): \(error)")
+                await MainActor.run {
+                    saveError = error.localizedDescription
+                    isSaving = false
+                }
+                return
             }
-            await MainActor.run { dismiss() }
+            await MainActor.run {
+                onSave(updated)
+                dismiss()
+            }
         }
     }
 

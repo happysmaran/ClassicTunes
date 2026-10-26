@@ -5,6 +5,17 @@ import AppKit
 import Combine
 import CoreAudio
 
+/// The playback position, kept apart from `PlayerEngine` on purpose.
+///
+/// It changes every second while a song plays. If it were an ordinary `@Published` property of the
+/// engine, every view observing the engine (notably `ContentView`, which owns the whole library
+/// list) would be re-evaluated on each tick. Only the views that actually draw the position
+/// (the toolbar's now-playing display and the mini player) observe this object.
+final class PlaybackClock: ObservableObject {
+    /// Fraction of the song played, 0...1.
+    @Published var position: Double = 0.0
+}
+
 /// Owns all audio-playback state and logic for the app as a single,
 /// process-lifetime singleton, instead of the older state living in
 /// `ContentView`'s `@State`.
@@ -17,7 +28,15 @@ final class PlayerEngine: ObservableObject {
     @Published var selectedSong: Song?
     /// Identifies the Tunes Store preview currently loaded (its preview URL), or nil for normal library playback.
     @Published private(set) var previewKey: String?
-    @Published var playbackPosition: Double = 0.0
+    /// Observed separately from the engine; see `PlaybackClock`.
+    let clock = PlaybackClock()
+    var playbackPosition: Double {
+        get { clock.position }
+        set { clock.position = newValue }
+    }
+    /// Bumped whenever the player starts or stops. Views that read `player?.rate` used to refresh
+    /// only because the position ticked; this tells them when play/pause actually changes.
+    @Published private(set) var playStateRevision = 0
     @Published var playbackDuration: Double = 1.0
     @Published var upcomingSongs: [Song] = []
     @Published var currentPlaybackSongs: [Song] = []
@@ -62,6 +81,7 @@ final class PlayerEngine: ObservableObject {
     // MARK: - Internal bookkeeping (no UI binding needed)
 
     var playerItem: AVPlayerItem?
+    private var rateObservation: NSKeyValueObservation?
     var timeObserverToken: Any?
     var playbackEndObserver: NSObjectProtocol?
     var manualQueue: [Song] = []
@@ -248,6 +268,9 @@ final class PlayerEngine: ObservableObject {
         player = newPlayer
         playerItem = item
         selectedSong = song
+        rateObservation = newPlayer.observe(\.rate, options: [.new]) { [weak self] _, _ in
+            DispatchQueue.main.async { self?.playStateRevision += 1 }
+        }
 
         if let d = song.duration {
             playbackDuration = d
@@ -675,8 +698,7 @@ final class PlayerEngine: ObservableObject {
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = song.album
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = playbackDuration
 
-        if let artworkData = song.artworkData,
-           let artworkImage = NSImage(data: artworkData) {
+        if let artworkImage = song.artworkImage {
             let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { _ in artworkImage }
             nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
         }

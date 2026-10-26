@@ -215,10 +215,7 @@ struct PlaylistHeaderView: View {
     private func mosaicThumbnail() -> some View {
         let artworks: [NSImage] = playlist.songs
             .prefix(4)
-            .compactMap { song in
-                guard let data = song.artworkData else { return nil }
-                return NSImage(data: data)
-            }
+            .compactMap { $0.artworkThumbnail(maxPixelSize: 300) }
 
         if artworks.isEmpty {
             // Fallback: music note icon

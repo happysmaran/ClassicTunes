@@ -46,9 +46,6 @@ struct ContentView: View {
     @State private var smartPlaylistToEdit: Playlist?
     @StateObject private var playlistManager = PlaylistManager()
     
-    // Persistence keys
-    private let userPlaylistsKey = "userPlaylists.v1"
-
     // Playlist selection
     @State private var showPlaylistSelectionSheet = false
     @State private var songToAddToPlaylist: Song?
@@ -110,75 +107,10 @@ struct ContentView: View {
         showITunesStore = false
     }
 
-    private func playlistsFileURL() -> URL? {
-        do {
-            let fm = FileManager.default
-            let appSupport = try fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            let bundleID = Bundle.main.bundleIdentifier ?? "ClassicTunes"
-            let dir = appSupport.appendingPathComponent(bundleID, isDirectory: true)
-            if !fm.fileExists(atPath: dir.path) {
-                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
-            }
-            return dir.appendingPathComponent("userPlaylists.v1.json")
-        } catch {
-            print("Failed to get Application Support directory: \(error)")
-            return nil
-        }
-    }
-
-    // One-time migration from UserDefaults to file-based storage for legacy users
-    private func migratePlaylistsFromUserDefaultsIfNeeded() {
-        guard let fileURL = playlistsFileURL() else { return }
-        let fm = FileManager.default
-        // If file already exists, assume migrated
-        if fm.fileExists(atPath: fileURL.path) { return }
-
-        guard let data = UserDefaults.standard.data(forKey: userPlaylistsKey) else { return }
-        do {
-            // Validate by decoding before writing to disk
-            let decoder = JSONDecoder()
-            let loaded = try decoder.decode([Playlist].self, from: data)
-            try data.write(to: fileURL, options: [.atomic])
-            // Clear the large value from UserDefaults after successful migration
-            UserDefaults.standard.removeObject(forKey: userPlaylistsKey)
-            playlistManager.userPlaylists = loaded
-            print("Migrated playlists from UserDefaults to \(fileURL.path)")
-        } catch {
-            print("Migration failed, will keep using in-memory data this run: \(error)")
-        }
-    }
-
-    private func loadUserPlaylists() {
-        // Migrate any legacy UserDefaults data if needed
-        migratePlaylistsFromUserDefaultsIfNeeded()
-
-        guard let fileURL = playlistsFileURL() else { return }
-        do {
-            let data = try Data(contentsOf: fileURL)
-            let decoder = JSONDecoder()
-            let loaded = try decoder.decode([Playlist].self, from: data)
-            playlistManager.userPlaylists = loaded
-        } catch {
-            // If file missing or decode fails, leave as-is
-            if (error as NSError).domain != NSCocoaErrorDomain || (error as NSError).code != NSFileReadNoSuchFileError {
-                print("Failed to load playlists from disk: \(error)")
-            }
-        }
-    }
-
+    // Playlist persistence lives in `PlaylistStore` (via `PlaylistManager`), which also handles the
+    // legacy UserDefaults migration, backups and unreadable files.
     private func saveUserPlaylists() {
-        guard let fileURL = playlistsFileURL() else { return }
-        do {
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(playlistManager.userPlaylists)
-            try data.write(to: fileURL, options: [.atomic])
-            // Ensure we do not keep oversized data in UserDefaults
-            if UserDefaults.standard.object(forKey: userPlaylistsKey) != nil {
-                UserDefaults.standard.removeObject(forKey: userPlaylistsKey)
-            }
-        } catch {
-            print("Failed to save playlists to disk: \(error)")
-        }
+        playlistManager.savePlaylists()
     }
     
     private var displayedSongs: [Song] {
@@ -399,7 +331,7 @@ struct ContentView: View {
             playPrevious: engine.playPrevious,
             playNext: engine.playNext,
             volume: $engine.volume,
-            playbackPosition: $engine.playbackPosition,
+            clock: engine.clock,
             playbackDuration: $engine.playbackDuration,
             onSeek: engine.handleSeek,
             isSeeking: $engine.isSeeking,
@@ -576,7 +508,6 @@ struct ContentView: View {
                 if device == nil { isDeviceSelected = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext")), perform: handleAddToUpNextNotification)
-            .onChange(of: songs.map(\.url)) { urls in StableVolumeIndex.shared.sync(with: urls) }
             .onReceive(NotificationCenter.default.publisher(for: .ChooseMusicFolderRequested)) { _ in showFileImporter = true }
             .onReceive(NotificationCenter.default.publisher(for: .RescanLibraryRequested)) { _ in rescanLibrary() }
             .onReceive(NotificationCenter.default.publisher(for: .PlayHistoryDidClear), perform: handlePlayHistoryCleared)
@@ -751,7 +682,6 @@ struct ContentView: View {
     private func handleContentViewAppear() {
         print("Running loadSongsOnce at launch")
         loadSongsOnce()
-        loadUserPlaylists()
 
         // Refresh these every time the view appears (window reopened, mini
         // player closed, etc.) so the engine always asks the currently
@@ -760,8 +690,10 @@ struct ContentView: View {
         engine.contextProvider = { [self] song in playbackContext(for: song) }
         engine.onSongChanged = { [self] song in
             incrementPlayCount(for: song)
-            refreshSongPlayCounts()
-            generateSystemPlaylists()
+            if let index = songs.firstIndex(where: { $0.id == song.id }) {
+                songs[index].playCount = getPlayCount(for: song)
+            }
+            refreshPlaybackSystemPlaylists()
             if showLyrics {
                 loadLyrics(for: song)
             }
@@ -912,9 +844,7 @@ struct ContentView: View {
                         Task {
                             let loaded = await loadSongs(from: folderURL)
                             await MainActor.run {
-                                songs = loaded
-                                refreshSongPlayCounts()
-                                generateSystemPlaylists()
+                                applyLoadedSongs(loaded)
                             }
                         }
                     } catch {
@@ -935,9 +865,7 @@ struct ContentView: View {
         Task {
             let loaded = await loadSongs(from: folderURL)
             await MainActor.run {
-                songs = loaded
-                refreshSongPlayCounts()
-                generateSystemPlaylists()
+                applyLoadedSongs(loaded)
             }
         }
     }
@@ -960,9 +888,7 @@ struct ContentView: View {
                 Task {
                     let loaded = await loadSongs(from: resolvedURL)
                     await MainActor.run {
-                        songs = loaded
-                        refreshSongPlayCounts()
-                        generateSystemPlaylists()
+                        applyLoadedSongs(loaded)
                         engine.restoreLastSong(from: loaded)
                     }
                 }
@@ -986,14 +912,48 @@ struct ContentView: View {
         engine.playSong(song)
     }
 
-    private func refreshSongPlayCounts() {
-        for i in songs.indices {
-            songs[i].playCount = getPlayCount(for: songs[i])
+    // Installs a freshly scanned library: counts, smart lists and the Stable Volume index all depend on it.
+    private func applyLoadedSongs(_ loaded: [Song]) {
+        songs = loaded
+        refreshSongPlayCounts()
+        generateSystemPlaylists()
+        StableVolumeIndex.shared.sync(with: loaded.map(\.url))
+        pruneUnusedArtwork()
+    }
+
+    // Deletes cached artwork that neither the library nor any playlist refers to any more.
+    private func pruneUnusedArtwork() {
+        // An empty library usually means the music folder was unavailable, not that every song was
+        // removed, so don't delete anything on that basis.
+        guard !songs.isEmpty else { return }
+        var referenced = Set(songs.compactMap(\.artworkKey))
+        for playlist in playlistManager.userPlaylists {
+            referenced.formUnion(playlist.songs.compactMap(\.artworkKey))
+        }
+        Task.detached(priority: .utility) {
+            ArtworkStore.shared.prune(keeping: referenced)
         }
     }
 
+    // Copies every song's saved play count onto the library. The counts are read once and the
+    // library is assigned once, instead of reading the counts table and mutating the array per song.
+    private func refreshSongPlayCounts() {
+        let counts = getAllPlayCounts()
+        var updated = songs
+        for index in updated.indices {
+            updated[index].playCount = counts[updated[index].id] ?? 0
+        }
+        songs = updated
+    }
+
+    // The library without repeated entries, in library order.
+    private func uniqueLibrarySongs() -> [Song] {
+        var seen = Set<UUID>()
+        return songs.filter { seen.insert($0.id).inserted }
+    }
+
     private func generateSystemPlaylists() {
-        let uniqueSongs = Array(Dictionary(uniqueKeysWithValues: songs.map { ($0.id, $0) }).values)
+        let uniqueSongs = uniqueLibrarySongs()
         systemPlaylists = [
             generateRecentlyPlayedPlaylist(from: uniqueSongs),
             generateTopPlayedPlaylist(from: uniqueSongs),
@@ -1003,24 +963,16 @@ struct ContentView: View {
         ]
     }
 
-    private func generateTopPlayedPlaylist(from songs: [Song]) -> Playlist {
-        let topPlayedSongs = songs.sorted(by: { $0.playCount > $1.playCount }).prefix(25)
-        return Playlist(name: "Top 25 Most Played", songs: Array(topPlayedSongs), isSystem: true)
-    }
-
-    private func generateRecentlyPlayedPlaylist(from songs: [Song]) -> Playlist {
-        let history = getPlayHistory()
-        var seen = Set<String>()
-        var recentSongs: [Song] = []
-        for songID in history {
-            if seen.contains(songID) { continue }
-            if let song = songs.first(where: { $0.id.uuidString == songID }) {
-                recentSongs.append(song)
-                seen.insert(songID)
-                if recentSongs.count == 25 { break }
-            }
+    // Playing a song only changes "Recently Played" and "Top 25", so rebuild just those two instead
+    // of re-filtering and re-sorting the whole library for every other smart list on each new song.
+    private func refreshPlaybackSystemPlaylists() {
+        guard systemPlaylists.count == 5 else {
+            generateSystemPlaylists()
+            return
         }
-        return Playlist(name: "Recently Played", songs: recentSongs, isSystem: true)
+        let uniqueSongs = uniqueLibrarySongs()
+        systemPlaylists[0] = generateRecentlyPlayedPlaylist(from: uniqueSongs)
+        systemPlaylists[1] = generateTopPlayedPlaylist(from: uniqueSongs)
     }
 
     private func generate90sMusicPlaylist(from songs: [Song]) -> Playlist {
@@ -1048,42 +1000,14 @@ struct ContentView: View {
         return Playlist(name: "Classical Music", songs: sorted, isSystem: true)
     }
 
+    // Uses the creation date captured during the library scan, so no file has to be stat'ed here.
     private func generateRecentlyAddedPlaylist(from songs: [Song]) -> Playlist {
-        let fm = FileManager.default
-        let withDates: [(song: Song, date: Date)] = songs.compactMap { song in
-            guard let attrs = try? fm.attributesOfItem(atPath: song.url.path),
-                  let created = attrs[.creationDate] as? Date else { return nil }
-            return (song, created)
-        }
-        let sorted = withDates
+        let newest = songs
+            .compactMap { song in song.dateAdded.map { (song: song, date: $0) } }
             .sorted { $0.date > $1.date }
             .prefix(25)
             .map { $0.song }
-        return Playlist(name: "Recently Added", songs: sorted, isSystem: true)
-    }
-
-    private func incrementPlayCount(for song: Song) {
-        var playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
-        let songID = song.id.uuidString
-        playCounts[songID, default: 0] += 1
-        UserDefaults.standard.set(playCounts, forKey: "playCounts")
-
-        // Track play history
-        var history = UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
-        history.insert(songID, at: 0)
-        if history.count > 1000 { history = Array(history.prefix(1000)) }
-        UserDefaults.standard.set(history, forKey: "playHistory")
-
-        recordLastPlayed(for: song)
-    }
-
-    private func getPlayCount(for song: Song) -> Int {
-        let playCounts = UserDefaults.standard.dictionary(forKey: "playCounts") as? [String: Int] ?? [:]
-        return playCounts[song.id.uuidString] ?? 0
-    }
-
-    private func getPlayHistory() -> [String] {
-        UserDefaults.standard.stringArray(forKey: "playHistory") ?? []
+        return Playlist(name: "Recently Added", songs: newest, isSystem: true)
     }
 
     private func loadLyrics(for song: Song) {
@@ -1903,7 +1827,7 @@ struct UpNextView: View {
     @ViewBuilder
     private func artworkView(for song: Song, size: CGFloat) -> some View {
         Group {
-            if let data = song.artworkData, let img = NSImage(data: data) {
+            if let img = song.artworkThumbnail(maxPixelSize: Int(size * 3)) {
                 Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
             } else {
                 Image("Icon").resizable().aspectRatio(contentMode: .fill).opacity(0.9)
@@ -1991,7 +1915,7 @@ private struct UpNextSongBlock: View {
                 .frame(width: 18, alignment: .trailing)
 
             Group {
-                if let data = song.artworkData, let img = NSImage(data: data) {
+                if let img = song.artworkThumbnail(maxPixelSize: 108) {
                     Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
                 } else {
                     Image("Icon").resizable().aspectRatio(contentMode: .fill).opacity(0.9)
@@ -2040,8 +1964,7 @@ struct LyricsView: View {
 
             if let song = currentSong {
                 HStack(spacing: 12) {
-                    if let artworkData = song.artworkData,
-                       let image = NSImage(data: artworkData) {
+                    if let image = song.artworkThumbnail(maxPixelSize: 150) {
                         Image(nsImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fill)

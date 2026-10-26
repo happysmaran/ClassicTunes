@@ -80,6 +80,7 @@
 "songInfo.where"              = "Where";
 "songInfo.cancel"             = "Cancel";
 "songInfo.save"               = "OK";
+"songInfo.saveFailed"         = "Couldn't Save Changes";
 "songInfo.unsupportedFormat"  = "Tag changes for this file format are saved in ClassicTunes but not written back to the file.";
 "songInfo.artwork.choose"     = "Choose Artwork…";
 "songInfo.artwork.remove"     = "Remove Artwork";

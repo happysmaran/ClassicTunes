@@ -80,6 +80,7 @@
 "songInfo.where"              = "స్థానం";
 "songInfo.cancel"             = "రద్దు చేయి";
 "songInfo.save"               = "సరే";
+"songInfo.saveFailed"         = "మార్పులను సేవ్ చేయడం సాధ్యం కాలేదు";
 "songInfo.unsupportedFormat"  = "ఈ ఫైల్ ఫార్మాట్ కోసం ట్యాగ్ మార్పులు ClassicTunesలో సేవ్ చేయబడతాయి, కానీ ఫైల్‌లోకి తిరిగి వ్రాయబడవు.";
 "songInfo.artwork.choose"     = "ఆర్ట్‌వర్క్ ఎంచుకోండి…";
 "songInfo.artwork.remove"     = "ఆర్ట్‌వర్క్ తీసివేయి";

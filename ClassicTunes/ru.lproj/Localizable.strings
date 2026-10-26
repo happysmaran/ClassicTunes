@@ -80,6 +80,7 @@
 "songInfo.where"              = "Расположение";
 "songInfo.cancel"             = "Отмена";
 "songInfo.save"               = "ОК";
+"songInfo.saveFailed"         = "Не удалось сохранить изменения";
 "songInfo.unsupportedFormat"  = "Изменения тегов для этого формата файла сохраняются в ClassicTunes, но не записываются обратно в файл.";
 "songInfo.artwork.choose"     = "Выбрать обложку…";
 "songInfo.artwork.remove"     = "Удалить обложку";

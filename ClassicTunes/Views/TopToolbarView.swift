@@ -15,7 +15,8 @@ struct TopToolbarView: View {
     
     // MARK: - Audio Properties
     @Binding var volume: Double
-    @Binding var playbackPosition: Double
+    // Observed here (not by the parent) so the per-second position ticks only redraw this bar.
+    @ObservedObject var clock: PlaybackClock
     @Binding var playbackDuration: Double
     
     // Dynamic adjustment worker syncing position seek changes directly into core player lines.
@@ -147,14 +148,14 @@ struct TopToolbarView: View {
 
             // Elapsed time, scrub bar and remaining time, as in the mini player.
             HStack(spacing: 6) {
-                Text(formatPlaybackTime(playbackPosition * playbackDuration))
+                Text(formatPlaybackTime(clock.position * playbackDuration))
                 ThemedScrubBar(
-                    position: $playbackPosition,
+                    position: $clock.position,
                     isEnabled: playbackDuration > 0,
                     isSeeking: $isSeeking,
                     onSeek: onSeek
                 )
-                Text("-" + formatPlaybackTime(playbackDuration - playbackPosition * playbackDuration))
+                Text("-" + formatPlaybackTime(playbackDuration - clock.position * playbackDuration))
             }
             .font(.system(size: 9).monospacedDigit())
             .foregroundColor(Color.black.opacity(0.7))

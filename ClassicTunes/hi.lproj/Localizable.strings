@@ -80,6 +80,7 @@
 "songInfo.where"              = "स्थान";
 "songInfo.cancel"             = "रद्द करें";
 "songInfo.save"               = "ठीक है";
+"songInfo.saveFailed"         = "बदलाव सहेजे नहीं जा सके";
 "songInfo.unsupportedFormat"  = "इस फ़ाइल फ़ॉर्मेट के लिए टैग बदलाव ClassicTunes में सेव होते हैं, लेकिन फ़ाइल में वापस नहीं लिखे जाते।";
 "songInfo.artwork.choose"     = "आर्टवर्क चुनें…";
 "songInfo.artwork.remove"     = "आर्टवर्क हटाएँ";

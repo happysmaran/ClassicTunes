@@ -80,6 +80,7 @@
 "songInfo.where"              = "位置";
 "songInfo.cancel"             = "取消";
 "songInfo.save"               = "确定";
+"songInfo.saveFailed"         = "无法存储更改";
 "songInfo.unsupportedFormat"  = "此文件格式的标签更改会保存在 ClassicTunes 中，但不会写回文件。";
 "songInfo.artwork.choose"     = "选择插图…";
 "songInfo.artwork.remove"     = "移除插图";

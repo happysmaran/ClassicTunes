@@ -1,13 +1,15 @@
 import Foundation
 import AVFoundation
 import AppKit
+import CryptoKit
 
 // Represents a single audio track within the application along with its associated metadata and artwork.
 nonisolated struct Song: Identifiable, Codable, Hashable {
     
-    // The unique identifier for the song instance.
-    let id: UUID
-    
+    // Identifies the song. Derived from the file's path (see `stableID(for:)`) rather than random, so
+    // play counts, history and playlist membership still match after the library is rescanned.
+    var id: UUID
+
     // The local file system URL pointing to the audio file.
     let url: URL
     
@@ -56,12 +58,20 @@ nonisolated struct Song: Identifiable, Codable, Hashable {
     // The number of times this song has been fully played back.
     var playCount: Int = 0
     
-    // Raw data container for the embedded album artwork image.
-    var artworkData: Data? = nil
+    // Identifies this song's artwork in `ArtworkStore`. The image bytes themselves are not part of the
+    // song, so copies of a song (playlists, queues, drag payloads) stay small.
+    var artworkKey: String? = nil
+
+    // When the file was added to the library (its creation date), captured during the scan so
+    // "Recently Added" doesn't have to stat every file again.
+    var dateAdded: Date? = nil
 
     // Initializes a new Song instance with full control over metadata parameters.
+    //
+    // - Parameter id: Defaults to an ID derived from `url`, so the same file always gets the same ID.
+    // - Parameter artworkData: Stored in `ArtworkStore`; the song keeps only the resulting key.
     init(
-        id: UUID = UUID(),
+        id: UUID? = nil,
         url: URL,
         title: String,
         artist: String,
@@ -78,9 +88,11 @@ nonisolated struct Song: Identifiable, Codable, Hashable {
         bpm: Int? = nil,
         duration: TimeInterval? = nil,
         playCount: Int = 0,
-        artworkData: Data? = nil
+        artworkData: Data? = nil,
+        artworkKey: String? = nil,
+        dateAdded: Date? = nil
     ) {
-        self.id = id
+        self.id = id ?? Song.stableID(for: url)
         self.url = url
         self.title = title
         self.artist = artist
@@ -97,15 +109,121 @@ nonisolated struct Song: Identifiable, Codable, Hashable {
         self.bpm = bpm
         self.duration = duration
         self.playCount = playCount
-        self.artworkData = artworkData
+        self.artworkKey = artworkData.map { ArtworkStore.shared.store($0) } ?? artworkKey
+        self.dateAdded = dateAdded
     }
 }
 
-extension Song {
-    // Constructs an `NSImage` representation of the embedded album artwork, if available.
+// MARK: - Stable identity
+
+nonisolated extension Song {
+    // A deterministic ID for the file at `url`: the same path always yields the same UUID.
+    //
+    // Song IDs used to be random per scan, so everything keyed by ID (play counts, history, playlist
+    // membership) was orphaned on every relaunch. The path is normalized first so the same file
+    // reached through differently-composed Unicode or a `..` segment doesn't get two identities.
+    static func stableID(for url: URL) -> UUID {
+        let path = url.standardizedFileURL.path.precomposedStringWithCanonicalMapping
+        var bytes = Array(SHA256.hash(data: Data(path.utf8)).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50   // UUID version 5 (name-based)
+        bytes[8] = (bytes[8] & 0x3F) | 0x80   // RFC 4122 variant
+        return UUID(uuid: (
+            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
+    }
+
+    // The same song with its ID recomputed from its path. Used to migrate songs that were saved
+    // (in playlists) back when IDs were random.
+    func withStableID() -> Song {
+        var copy = self
+        copy.id = Song.stableID(for: url)
+        return copy
+    }
+}
+
+// MARK: - Artwork
+
+nonisolated extension Song {
+    // The embedded album artwork bytes, read from (and written to) `ArtworkStore`.
+    var artworkData: Data? {
+        get { artworkKey.flatMap { ArtworkStore.shared.data(for: $0) } }
+        set { artworkKey = newValue.map { ArtworkStore.shared.store($0) } }
+    }
+
+    // The full-size artwork image, decoded once and cached.
     var artworkImage: NSImage? {
-        guard let data = artworkData else { return nil }
-        return NSImage(data: data)
+        artworkKey.flatMap { ArtworkStore.shared.image(for: $0) }
+    }
+
+    // A downscaled artwork image for grids and small views.
+    func artworkThumbnail(maxPixelSize: Int = 300) -> NSImage? {
+        artworkKey.flatMap { ArtworkStore.shared.thumbnail(for: $0, maxPixelSize: maxPixelSize) }
+    }
+}
+
+// MARK: - Codable
+
+nonisolated extension Song {
+    private enum CodingKeys: String, CodingKey {
+        case id, url, title, artist, album, genre, trackNumber, discNumber, year, composer, comment
+        case albumArtist, grouping, compilation, bpm, duration, playCount, artworkKey, dateAdded
+        // Written by earlier versions, which embedded the artwork bytes in every song. Read-only.
+        case legacyArtworkData = "artworkData"
+    }
+
+    // Tolerant decoding: every field added after the first release is optional on disk, so a file
+    // saved by an older version still loads instead of failing (and discarding the whole playlist
+    // file) over a missing key. Artwork embedded by older versions is moved into `ArtworkStore`.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let url = try c.decode(URL.self, forKey: .url)
+        let legacyArtwork = try c.decodeIfPresent(Data.self, forKey: .legacyArtworkData)
+        self.init(
+            id: try c.decodeIfPresent(UUID.self, forKey: .id),
+            url: url,
+            title: try c.decode(String.self, forKey: .title),
+            artist: try c.decodeIfPresent(String.self, forKey: .artist) ?? "Unknown Artist",
+            album: try c.decodeIfPresent(String.self, forKey: .album) ?? "Unknown Album",
+            year: try c.decodeIfPresent(String.self, forKey: .year),
+            genre: try c.decodeIfPresent(String.self, forKey: .genre) ?? "Unknown Genre",
+            trackNumber: try c.decodeIfPresent(Int.self, forKey: .trackNumber),
+            discNumber: try c.decodeIfPresent(Int.self, forKey: .discNumber),
+            composer: try c.decodeIfPresent(String.self, forKey: .composer),
+            comment: try c.decodeIfPresent(String.self, forKey: .comment),
+            albumArtist: try c.decodeIfPresent(String.self, forKey: .albumArtist),
+            grouping: try c.decodeIfPresent(String.self, forKey: .grouping),
+            compilation: try c.decodeIfPresent(Bool.self, forKey: .compilation) ?? false,
+            bpm: try c.decodeIfPresent(Int.self, forKey: .bpm),
+            duration: try c.decodeIfPresent(TimeInterval.self, forKey: .duration),
+            playCount: try c.decodeIfPresent(Int.self, forKey: .playCount) ?? 0,
+            artworkData: legacyArtwork,
+            artworkKey: try c.decodeIfPresent(String.self, forKey: .artworkKey),
+            dateAdded: try c.decodeIfPresent(Date.self, forKey: .dateAdded)
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(url, forKey: .url)
+        try c.encode(title, forKey: .title)
+        try c.encode(artist, forKey: .artist)
+        try c.encode(album, forKey: .album)
+        try c.encode(genre, forKey: .genre)
+        try c.encodeIfPresent(trackNumber, forKey: .trackNumber)
+        try c.encodeIfPresent(discNumber, forKey: .discNumber)
+        try c.encodeIfPresent(year, forKey: .year)
+        try c.encodeIfPresent(composer, forKey: .composer)
+        try c.encodeIfPresent(comment, forKey: .comment)
+        try c.encodeIfPresent(albumArtist, forKey: .albumArtist)
+        try c.encodeIfPresent(grouping, forKey: .grouping)
+        try c.encode(compilation, forKey: .compilation)
+        try c.encodeIfPresent(bpm, forKey: .bpm)
+        try c.encodeIfPresent(duration, forKey: .duration)
+        try c.encode(playCount, forKey: .playCount)
+        try c.encodeIfPresent(artworkKey, forKey: .artworkKey)
+        try c.encodeIfPresent(dateAdded, forKey: .dateAdded)
     }
 }
 
@@ -115,10 +233,12 @@ extension Song {
     // This utilizes modern `AVFoundation` async asset loading APIs to pull both tag-format-agnostic
     // common metadata and raw file format specific tags (such as ID3 and MP4 atoms) concurrently.
     //
-    // - Parameter url: The file system path to the audio track.
-    // - Returns: A fully-populated `Song` structural model.
+    // - Parameters:
+    //   - url: The file system path to the audio track.
+    //   - dateAdded: The file's creation date, if the caller already has it from a directory scan.
+    // - Returns: A fully-populated `Song` structural model. Embedded artwork is saved to `ArtworkStore`.
     // - Throws: An error if the asset cannot read structural metadata property states.
-    static func load(from url: URL) async throws -> Song {
+    static func load(from url: URL, dateAdded: Date? = nil) async throws -> Song {
         let asset = AVURLAsset(url: url)
 
         // Load duration and both metadata collections in one async call each.
@@ -234,19 +354,33 @@ extension Song {
             if let key = item.key as? NSNumber {
                 switch key.uint32Value {
 
-                // trkn  — track number, stored as Data with two UInt16 values (number, total)
+                // trkn  — track number: binary pair (number, total) as Apple's apps write it, or a
+                // plain integer as older versions of this app wrote it
                 case 0x74726B6E:
-                    trackNumber = trackNumber ?? parseMP4Pair(value as? Data)?.0
+                    trackNumber = trackNumber ?? mp4TrackOrDisc(value)
 
-                // disk  — disc number, same layout as trkn
+                // disk  — disc number, same layouts as trkn
                 case 0x6469736B:
-                    discNumber = discNumber ?? parseMP4Pair(value as? Data)?.0
+                    discNumber = discNumber ?? mp4TrackOrDisc(value)
 
-                // ©gen or gnre
-                case 0xA967656E, 0x676E7265:
+                // ©gen — free-text genre
+                case 0xA967656E:
                     if let raw = value as? String, !raw.isEmpty {
                         genre = raw
                     }
+
+                // gnre — predefined genre: a 1-based index into the ID3 genre list. It only fills in
+                // a genre if no ©gen text was found (which always wins, whatever order atoms come in).
+                case 0x676E7265:
+                    if let raw = value as? String, !raw.isEmpty {
+                        genre = raw
+                    } else if genre == "Unknown Genre", let index = mp4Integer(value), index >= 1, index <= id3Genres.count {
+                        genre = id3Genres[index - 1]
+                    }
+
+                // ©cmt — comment
+                case 0xA9636D74:
+                    comment = comment ?? (value as? String)
 
                 // ©day — release date / year
                 case 0xA9646179:
@@ -260,8 +394,9 @@ extension Song {
                 case 0x61415254:
                     albumArtist = albumArtist ?? (value as? String)
 
-                // ©grp — grouping
-                case 0xA9677270:
+                // ©grp — grouping (Apple's Music app), or grup (what AVFoundation's own grouping
+                // identifier writes)
+                case 0xA9677270, 0x67727570:
                     grouping = grouping ?? (value as? String)
 
                 // cpil — compilation flag
@@ -274,12 +409,31 @@ extension Song {
 
                 // tmpo — beats per minute
                 case 0x746D706F:
-                    bpm = bpm ?? (value as? NSNumber)?.intValue
+                    bpm = bpm ?? mp4Integer(value)
 
                 default:
                     break
                 }
             }
+        }
+
+        // FLAC and WAV keep their tags in structures `Song.load` doesn't map above, so read those
+        // files' tags directly. Values found there replace the filename/"Unknown" placeholders.
+        if let embedded = EmbeddedTagReader.read(from: url) {
+            title = embedded.title ?? title
+            artist = embedded.artist ?? artist
+            album = embedded.album ?? album
+            genre = embedded.genre ?? genre
+            year = embedded.year ?? year
+            composer = embedded.composer ?? composer
+            comment = embedded.comment ?? comment
+            albumArtist = embedded.albumArtist ?? albumArtist
+            grouping = embedded.grouping ?? grouping
+            trackNumber = embedded.trackNumber ?? trackNumber
+            discNumber = embedded.discNumber ?? discNumber
+            bpm = embedded.bpm ?? bpm
+            compilation = embedded.compilation ?? compilation
+            artworkData = artworkData ?? embedded.artworkData
         }
 
         return Song(
@@ -298,7 +452,8 @@ extension Song {
             compilation: compilation,
             bpm: bpm,
             duration: duration,
-            artworkData: artworkData
+            artworkData: artworkData,
+            dateAdded: dateAdded
         )
     }
 }
@@ -311,6 +466,22 @@ private func parseLeadingIntPair(_ string: String?) -> (Int?, Int?) {
     let number = Int(parts[0].trimmingCharacters(in: .whitespaces))
     let total = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) : nil
     return (number, total)
+}
+
+// An integer MP4 atom value, whether AVFoundation presents it as a number or as raw big-endian bytes.
+private func mp4Integer(_ value: Any?) -> Int? {
+    if let number = value as? NSNumber { return number.intValue }
+    if let data = value as? Data, (1...8).contains(data.count) {
+        return data.reduce(0) { ($0 << 8) | Int($1) }
+    }
+    return nil
+}
+
+// The number from a track/disc atom. Apple's apps store a binary (reserved, number, total) record;
+// older versions of this app stored a plain integer.
+private func mp4TrackOrDisc(_ value: Any?) -> Int? {
+    if let data = value as? Data, data.count >= 4 { return parseMP4Pair(data)?.0 }
+    return mp4Integer(value)
 }
 
 // Decodes sequential MP4 atom binary payloads to parse position index numbers from raw data structures.

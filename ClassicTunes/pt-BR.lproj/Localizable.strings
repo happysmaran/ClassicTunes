@@ -80,6 +80,7 @@
 "songInfo.where"              = "Local";
 "songInfo.cancel"             = "Cancelar";
 "songInfo.save"               = "OK";
+"songInfo.saveFailed"         = "Não foi possível salvar as alterações";
 "songInfo.unsupportedFormat"  = "As alterações de tags para este formato de arquivo são salvas no ClassicTunes, mas não são gravadas de volta no arquivo.";
 "songInfo.artwork.choose"     = "Escolher Capa…";
 "songInfo.artwork.remove"     = "Remover Capa";

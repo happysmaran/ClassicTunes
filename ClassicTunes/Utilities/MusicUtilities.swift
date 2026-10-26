@@ -19,38 +19,15 @@ extension Color {
 
 // MARK: - Song Processing Infrastructure
 
-// Asynchronously crawls a local folder directory to import and build supported music tracks[span_6](start_span)[span_6](end_span).
+// Asynchronously crawls a local folder directory to import and build supported music tracks.
 //
-// Implemented using a concurrent `withTaskGroup` pipeline to process independent file tags
-// safely on background worker threads without bottlenecking the main runtime loop[span_7](start_span)[span_7](end_span).
+// Backed by `LibraryScanner`: files unchanged since the last scan reuse their saved entry in the
+// library index, and only new or modified files are parsed (a few at a time) on background threads.
 //
-// - Parameter folderURL: The file system target directory containing the source files[span_8](start_span)[span_8](end_span).
-// - Returns: A populated array of structurally parsed `Song` models[span_9](start_span)[span_9](end_span).
+// - Parameter folderURL: The file system target directory containing the source files.
+// - Returns: A populated array of structurally parsed `Song` models.
 func loadSongs(from folderURL: URL) async -> [Song] {
-    let allowedExtensions = ["mp3", "m4a", "aac", "wav", "flac"]
-    let fileManager = FileManager.default
-
-    guard let enumerator = fileManager.enumerator(at: folderURL, includingPropertiesForKeys: nil) else {
-        print("Could not create enumerator")
-        return []
-    }
-
-    let fileURLs = enumerator
-        .compactMap { $0 as? URL }
-        .filter { allowedExtensions.contains($0.pathExtension.lowercased()) }
-
-    return await withTaskGroup(of: Song?.self) { group in
-        for fileURL in fileURLs {
-            group.addTask {
-                try? await Song.load(from: fileURL)
-            }
-        }
-        var results: [Song] = []
-        for await song in group {
-            if let song { results.append(song) }
-        }
-        return results
-    }
+    await LibraryScanner.scan(folderURL: folderURL)
 }
 
 // Discovers and decodes embedded audio metadata block graphics to provide a standalone album view[span_10](start_span)[span_10](end_span).
@@ -92,6 +69,23 @@ func incrementPlayCount(for song: Song) {
     history.insert(songID, at: 0)
     if history.count > 1000 { history = Array(history.prefix(1000)) }
     UserDefaults.standard.set(history, forKey: playHistoryKey)
+
+    recordLastPlayed(for: song)
+}
+
+// Every recorded play count, keyed by song ID, read in one go.
+//
+// `getPlayCount(for:)` loads the whole counts table from `UserDefaults` on every call, so asking for
+// each song's count in a loop is quadratic in the library size. Callers that need many counts
+// should read this once instead.
+func getAllPlayCounts() -> [UUID: Int] {
+    let stored = UserDefaults.standard.dictionary(forKey: playCountKey) as? [String: Int] ?? [:]
+    var counts: [UUID: Int] = [:]
+    counts.reserveCapacity(stored.count)
+    for (key, value) in stored {
+        if let id = UUID(uuidString: key) { counts[id] = value }
+    }
+    return counts
 }
 
 // Evaluates absolute historical loop metrics for a specified data model entity[span_17](start_span)[span_17](end_span).
@@ -139,12 +133,21 @@ func getLastPlayed(for song: Song) -> Date? {
 //   - maxCount: Bounds definition constraint capping the maximum results array length. Defaults to `25`[span_23](start_span)[span_23](end_span).
 // - Returns: A dedicated system-flagged structural collection array wrapper object[span_24](start_span)[span_24](end_span).
 func generateRecentlyPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -> Playlist {
-    let history = getPlayHistory()
-    var seen = Set<String>()
+    let history = getPlayHistory().compactMap { UUID(uuidString: $0) }
+
+    // One pass over the library picks out just the songs the history mentions, instead of
+    // searching the whole library once per history entry.
+    let wanted = Set(history)
+    var byID: [UUID: Song] = [:]
+    for song in allSongs where wanted.contains(song.id) {
+        byID[song.id] = song
+    }
+
+    var seen = Set<UUID>()
     var recentSongs: [Song] = []
     for songID in history {
         if seen.contains(songID) { continue }
-        if let song = allSongs.first(where: { $0.id.uuidString == songID }) {
+        if let song = byID[songID] {
             recentSongs.append(song)
             seen.insert(songID)
             if recentSongs.count == maxCount { break }
@@ -162,15 +165,26 @@ func generateRecentlyPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -
 //   - maxCount: Numerical cutoff range sizing limits. Defaults to `25`[span_28](start_span)[span_28](end_span).
 // - Returns: An immutable system-designated structural group representation[span_29](start_span)[span_29](end_span).
 func generateTopPlayedPlaylist(from allSongs: [Song], maxCount: Int = 25) -> Playlist {
-    let playCounts = UserDefaults.standard.dictionary(forKey: playCountKey) as? [String: Int] ?? [:]
-    let sortedSongs = allSongs.sorted { (s1, s2) -> Bool in
-        let c1 = playCounts[s1.id.uuidString] ?? 0
-        let c2 = playCounts[s2.id.uuidString] ?? 0
-        if c1 == c2 { return s1.title < s2.title }
-        return c1 > c2
+    let playCounts = getAllPlayCounts()
+
+    // Highest count first, ties broken alphabetically by title.
+    func ranksBefore(_ a: (song: Song, count: Int), _ b: (song: Song, count: Int)) -> Bool {
+        if a.count == b.count { return a.song.title < b.song.title }
+        return a.count > b.count
     }
-    let topSongs = Array(sortedSongs.prefix(maxCount))
-    return Playlist(name: "Top 25 Most Played", songs: topSongs, isSystem: true)
+
+    // Only `maxCount` songs are kept, so track the current best in a short sorted list instead of
+    // sorting the entire library (most of which has never been played) on every call.
+    var best: [(song: Song, count: Int)] = []
+    guard maxCount > 0 else { return Playlist(name: "Top 25 Most Played", songs: [], isSystem: true) }
+    for song in allSongs {
+        let candidate = (song: song, count: playCounts[song.id] ?? 0)
+        if best.count == maxCount, let last = best.last, !ranksBefore(candidate, last) { continue }
+        let insertAt = best.firstIndex(where: { ranksBefore(candidate, $0) }) ?? best.count
+        best.insert(candidate, at: insertAt)
+        if best.count > maxCount { best.removeLast() }
+    }
+    return Playlist(name: "Top 25 Most Played", songs: best.map(\.song), isSystem: true)
 }
 
 // MARK: - String Parsing Mechanics

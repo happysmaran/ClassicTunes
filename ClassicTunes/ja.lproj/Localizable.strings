@@ -80,6 +80,7 @@
 "songInfo.where"              = "場所";
 "songInfo.cancel"             = "キャンセル";
 "songInfo.save"               = "OK";
+"songInfo.saveFailed"         = "変更を保存できませんでした";
 "songInfo.unsupportedFormat"  = "このファイル形式のタグ変更はClassicTunes内には保存されますが、ファイルには書き戻されません。";
 "songInfo.artwork.choose"     = "アートワークを選択…";
 "songInfo.artwork.remove"     = "アートワークを削除";

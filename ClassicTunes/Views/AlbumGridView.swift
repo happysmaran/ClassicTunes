@@ -180,8 +180,7 @@ struct AlbumGridView: View {
     // Renders a basic vertical thumbnail cell that handles click interactions to reveal detailed songs[span_19](start_span)[span_19](end_span).
     private func albumCellWithDetailCollapsedOnly(album: String) -> some View {
         VStack {
-            if let artworkData = songs.first(where: { $0.album == album })?.artworkData,
-               let image = NSImage(data: artworkData) {
+            if let image = songs.first(where: { $0.album == album })?.artworkThumbnail(maxPixelSize: 400) {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFit()
@@ -214,8 +213,7 @@ struct AlbumGridView: View {
     private func albumCellWithDetail(album: String) -> some View {
         VStack(spacing: 0) {
             VStack {
-                if let artworkData = songs.first(where: { $0.album == album })?.artworkData,
-                   let image = NSImage(data: artworkData) {
+                if let image = songs.first(where: { $0.album == album })?.artworkThumbnail(maxPixelSize: 400) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
@@ -287,8 +285,7 @@ struct AlbumDetailView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
             Group {
-                if let artworkData = songs.first?.artworkData,
-                   let image = NSImage(data: artworkData) {
+                if let image = songs.first?.artworkThumbnail(maxPixelSize: 200) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()

@@ -80,6 +80,7 @@
 "songInfo.where"              = "Ort";
 "songInfo.cancel"             = "Abbrechen";
 "songInfo.save"               = "OK";
+"songInfo.saveFailed"         = "Änderungen konnten nicht gespeichert werden";
 "songInfo.unsupportedFormat"  = "Tag-Änderungen für dieses Dateiformat werden in ClassicTunes gespeichert, aber nicht in die Datei zurückgeschrieben.";
 "songInfo.artwork.choose"     = "Cover auswählen…";
 "songInfo.artwork.remove"     = "Cover entfernen";

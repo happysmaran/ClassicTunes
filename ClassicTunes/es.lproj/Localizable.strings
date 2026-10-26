@@ -80,6 +80,7 @@
 "songInfo.where"              = "Ubicación";
 "songInfo.cancel"             = "Cancelar";
 "songInfo.save"               = "Aceptar";
+"songInfo.saveFailed"         = "No se pudieron guardar los cambios";
 "songInfo.unsupportedFormat"  = "Los cambios de etiquetas para este formato de archivo se guardan en ClassicTunes, pero no se escriben en el archivo.";
 "songInfo.artwork.choose"     = "Elegir portada…";
 "songInfo.artwork.remove"     = "Quitar portada";

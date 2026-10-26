@@ -690,16 +690,16 @@ enum CoverFlowMetrics {
 }
 
 // Lightweight, identifiable model representing one album in the carousel.
-// It only holds the raw artwork bytes (a cheap, copy-on-write reference to
-// the song's data); decoding happens lazily and off the main thread through
-// `AlbumArtworkLoader`, and only for covers that are actually on screen.
+// It only holds the key of the album's artwork in `ArtworkStore`; the bytes are
+// read, and decoded, lazily and off the main thread through `AlbumArtworkLoader`,
+// and only for covers that are actually on screen.
 struct AlbumInfo: Identifiable {
     // Album names are unique within the carousel, so the name makes a stable
     // identity that survives the list being rebuilt.
     var id: String { name }
     let name: String
     let artist: String
-    let artworkData: Data?
+    let artworkStoreKey: String?
     // Every song in this album, in library order, so per-album lookups don't
     // need to filter the whole library.
     let songs: [Song]
@@ -707,16 +707,18 @@ struct AlbumInfo: Identifiable {
     // re-triggers loading if the album's artwork is edited.
     let artworkKey: String
 
-    init(name: String, artist: String, artworkData: Data?, songs: [Song] = []) {
+    init(name: String, artist: String, artworkStoreKey: String?, songs: [Song] = []) {
         self.name = name
         self.artist = artist
-        self.artworkData = artworkData
+        self.artworkStoreKey = artworkStoreKey
         self.songs = songs
-        if let data = artworkData {
-            self.artworkKey = "\(name)|\(data.count)|\(data.prefix(64).hashValue)"
-        } else {
-            self.artworkKey = "\(name)|none"
-        }
+        // The store key is a hash of the image, so it changes exactly when the artwork does.
+        self.artworkKey = "\(name)|\(artworkStoreKey ?? "none")"
+    }
+
+    // The album's artwork bytes, read from the store on demand.
+    var artworkData: Data? {
+        artworkStoreKey.flatMap { ArtworkStore.shared.data(for: $0) }
     }
 }
 
@@ -729,7 +731,7 @@ final class AlbumListCache {
 
     func albums(for songs: [Song]) -> [AlbumInfo] {
         // Cheap fingerprint of everything the carousel depends on. Artwork is
-        // represented by its byte count to avoid hashing large blobs.
+        // represented by its store key, which changes whenever the image does.
         var hasher = Hasher()
         hasher.combine(songs.count)
         for song in songs {
@@ -740,7 +742,7 @@ final class AlbumListCache {
             hasher.combine(song.trackNumber)
             hasher.combine(song.discNumber)
             hasher.combine(song.playCount)
-            hasher.combine(song.artworkData?.count ?? -1)
+            hasher.combine(song.artworkKey)
         }
         let newSignature = hasher.finalize()
         if newSignature == signature { return albums }
@@ -763,7 +765,7 @@ final class AlbumListCache {
         }
         albums = entries.compactMap { entry in
             guard let first = entry.songs.first else { return nil }
-            return AlbumInfo(name: entry.name, artist: first.artist, artworkData: first.artworkData, songs: entry.songs)
+            return AlbumInfo(name: entry.name, artist: first.artist, artworkStoreKey: first.artworkKey, songs: entry.songs)
         }
         signature = newSignature
         return albums

@@ -11,7 +11,7 @@ struct MiniPlayerView: View {
     @Binding var isPlaying: Bool
     @Binding var volume: Double
     // Playback position is expressed as a 0...1 fraction of playbackDuration.
-    @Binding var playbackPosition: Double
+    @ObservedObject var clock: PlaybackClock
     @Binding var playbackDuration: Double
 
     // Action callbacks wired up by the parent/owner of this view.
@@ -30,7 +30,7 @@ struct MiniPlayerView: View {
         selectedSong: Binding<Song?>,
         isPlaying: Binding<Bool>,
         volume: Binding<Double>,
-        playbackPosition: Binding<Double>,
+        clock: PlaybackClock,
         playbackDuration: Binding<Double>,
         onPlayPause: @escaping () -> Void,
         onPrevious: @escaping () -> Void,
@@ -43,7 +43,7 @@ struct MiniPlayerView: View {
         _selectedSong = selectedSong
         _isPlaying = isPlaying
         _volume = volume
-        _playbackPosition = playbackPosition
+        _clock = ObservedObject(wrappedValue: clock)
         _playbackDuration = playbackDuration
         self.onPlayPause = onPlayPause
         self.onPrevious = onPrevious
@@ -90,7 +90,7 @@ struct MiniPlayerView: View {
         .environment(\.themeColor, theme)
         .onAppear { displayPlaying = isPlaying }
         // Position ticks and song changes also resync the icon.
-        .onChange(of: playbackPosition) { _ in displayPlaying = isPlaying }
+        .onChange(of: clock.position) { _ in displayPlaying = isPlaying }
         .onChange(of: selectedSong) { _ in displayPlaying = isPlaying }
     }
 
@@ -260,9 +260,9 @@ struct MiniPlayerView: View {
                     .frame(maxWidth: .infinity)
 
                     HStack(spacing: 6) {
-                        Text(timeString(from: playbackPosition * playbackDuration))
+                        Text(timeString(from: clock.position * playbackDuration))
                         scrubBar
-                        Text("-" + timeString(from: max(playbackDuration - playbackPosition * playbackDuration, 0)))
+                        Text("-" + timeString(from: max(playbackDuration - clock.position * playbackDuration, 0)))
                     }
                     .font(.system(size: 9).monospacedDigit())
                     .foregroundStyle(Color.black.opacity(0.7))
@@ -317,7 +317,7 @@ struct MiniPlayerView: View {
 
     private var scrubBar: some View {
         ThemedScrubBar(
-            position: $playbackPosition,
+            position: $clock.position,
             isEnabled: playbackDuration > 0,
             isSeeking: $isSeeking,
             onSeek: onSeek
@@ -342,7 +342,7 @@ struct MiniPlayerHost: View {
                 if shouldPlay { engine.play() } else { engine.pause() }
             }),
             volume: $engine.volume,
-            playbackPosition: $engine.playbackPosition,
+            clock: engine.clock,
             playbackDuration: $engine.playbackDuration,
             onPlayPause: engine.togglePlayPause,
             onPrevious: engine.playPrevious,
