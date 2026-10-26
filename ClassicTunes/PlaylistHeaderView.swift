@@ -153,7 +153,7 @@ struct PlaylistHeaderView: View {
             // Load any previously saved custom artwork when the view first appears.
             customImage = PlaylistArtworkStore.shared.load(for: playlist.id)
         }
-        .onChange(of: playlist.id) { _ in
+        .onChange(of: playlist.id) {
             // If the displayed playlist changes (e.g. user picks a different
             // playlist in the sidebar), reset and reload artwork for the new one.
             customImage = nil

@@ -448,7 +448,7 @@ struct ContentView: View {
     private func applyImportersAndLifecycle<V: View>(_ content: V) -> some View {
         content
             .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.folder], allowsMultipleSelection: false, onCompletion: handleFileImport)
-            .onChange(of: showFileImporter, perform: handleShowFileImporterChange)
+            .onChange(of: showFileImporter) { _, isPresented in handleShowFileImporterChange(isPresented) }
             .fileImporter(isPresented: $showM3UImporter, allowedContentTypes: [.data], allowsMultipleSelection: true, onCompletion: handleM3UImportResult)
             .frame(minWidth: 900, minHeight: 600)
             .onAppear(perform: handleContentViewAppear)
@@ -482,9 +482,9 @@ struct ContentView: View {
             .sheet(isPresented: $showKeyboardShortcuts) {
                 KeyboardShortcutsView()
             }
-            .onChange(of: appAppearance) { _ in updateMiniPlayerAppearance() }
-            .onChange(of: playlistManager.userPlaylists.map { $0.id }) { _ in saveUserPlaylists() }
-            .onChange(of: deviceMonitor.connectedDevice) { device in
+            .onChange(of: appAppearance) { updateMiniPlayerAppearance() }
+            .onChange(of: playlistManager.userPlaylists.map { $0.id }) { saveUserPlaylists() }
+            .onChange(of: deviceMonitor.connectedDevice) { _, device in
                 if device == nil { isDeviceSelected = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AddToUpNextPlayNext")), perform: handleAddToUpNextNotification)

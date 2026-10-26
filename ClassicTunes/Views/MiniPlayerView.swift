@@ -90,8 +90,8 @@ struct MiniPlayerView: View {
         .environment(\.themeColor, theme)
         .onAppear { displayPlaying = isPlaying }
         // Position ticks and song changes also resync the icon.
-        .onChange(of: clock.position) { _ in displayPlaying = isPlaying }
-        .onChange(of: selectedSong) { _ in displayPlaying = isPlaying }
+        .onChange(of: clock.position) { displayPlaying = isPlaying }
+        .onChange(of: selectedSong) { displayPlaying = isPlaying }
     }
 
     // MARK: - Chrome

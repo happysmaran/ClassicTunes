@@ -108,7 +108,7 @@ struct iTunesStoreView: View {
             content
         }
         .background(backgroundColor)
-        .onChange(of: selectedMedia) { _ in
+        .onChange(of: selectedMedia) {
             if !searchText.isEmpty {
                 performSearch()
             }

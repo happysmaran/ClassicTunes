@@ -165,7 +165,7 @@ struct CoverFlowView: View {
                     GeometryReader { proxy in
                         Color.clear
                             .onAppear { boxHeight = proxy.size.height }
-                            .onChange(of: proxy.size.height) { newHeight in
+                            .onChange(of: proxy.size.height) { _, newHeight in
                                 boxHeight = newHeight
                             }
                     }
@@ -185,7 +185,7 @@ struct CoverFlowView: View {
                         GeometryReader { geometry in
                             coverFlowContent(geometry: geometry)
                                 .onAppear { containerSize = geometry.size }
-                                .onChange(of: geometry.size) { newSize in
+                                .onChange(of: geometry.size) { _, newSize in
                                     containerSize = newSize
                                 }
                         }
@@ -261,13 +261,13 @@ struct CoverFlowView: View {
             GeometryReader { proxy in
                 Color.clear
                     .onAppear { viewHeight = proxy.size.height }
-                    .onChange(of: proxy.size.height) { newHeight in
+                    .onChange(of: proxy.size.height) { _, newHeight in
                         viewHeight = newHeight
                     }
             }
         )
         .clipShape(Rectangle())
-        .onChange(of: committedIndex) { newValue in
+        .onChange(of: committedIndex) { _, newValue in
             // Whenever the committed (settled) index changes, propagate the
             // newly centered album out via the `selectedAlbum` binding.
             if newValue < sortedAlbums.count {
@@ -292,7 +292,7 @@ struct CoverFlowView: View {
             // Update CoverFlow when selected song changes
             updateCoverFlowIndexIfNeeded()
         }
-        .onChange(of: selectedSong) { _ in
+        .onChange(of: selectedSong) {
             // Keep the carousel in sync if a song gets selected elsewhere in
             // the app (e.g. from a different view), by jumping to its album.
             updateCoverFlowIndexIfNeeded()

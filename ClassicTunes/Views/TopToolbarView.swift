@@ -83,7 +83,7 @@ struct TopToolbarView: View {
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
-            .onChange(of: volume) { _ in
+            .onChange(of: volume) {
                 // Magic-number indicator downstream notifying active audio pipelines to recalibrate decibel rails
                 onSeek(-1)
             }

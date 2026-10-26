@@ -115,7 +115,7 @@ struct SongInfoView: View {
             Text(saveError ?? "")
         }
         .task { await loadSummaryIfNeeded() }
-        .onChange(of: selectedTab) { tab in
+        .onChange(of: selectedTab) { _, tab in
             if tab == .lyrics {
                 Task { await loadLyricsIfNeeded() }
             }

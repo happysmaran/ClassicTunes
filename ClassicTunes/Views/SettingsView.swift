@@ -71,7 +71,7 @@ struct SettingsView: View {
                         Text("settings.dark").tag("dark")
                     }
                     .pickerStyle(.segmented)
-                    .onChange(of: appearanceManager.appAppearance) { _ in
+                    .onChange(of: appearanceManager.appAppearance) {
                         appearanceManager.applyAppearance()
                     }
 
@@ -120,7 +120,7 @@ struct SettingsView: View {
                     Toggle("settings.playback.resumeLast", isOn: $resumeLastSongOnLaunch)
                     Toggle("settings.playback.pauseOnOutputChange", isOn: $pauseOnOutputDeviceChange)
                     Toggle("settings.playback.stableVolume", isOn: $isStableVolumeEnabled)
-                        .onChange(of: isStableVolumeEnabled) { _ in stableVolumeIndex.resync() }
+                        .onChange(of: isStableVolumeEnabled) { stableVolumeIndex.resync() }
                     if isStableVolumeEnabled {
                         stableVolumeStatus
                     }

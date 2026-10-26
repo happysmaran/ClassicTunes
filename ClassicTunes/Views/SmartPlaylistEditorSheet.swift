@@ -122,7 +122,7 @@ private struct SmartRuleRow: View {
             .labelsHidden()
             .frame(width: 130)
             // Keep the operator valid when switching between text and numeric fields.
-            .onChange(of: rule.field) { field in
+            .onChange(of: rule.field) { _, field in
                 if !field.availableOperators.contains(rule.op) {
                     rule.op = field.availableOperators[0]
                 }

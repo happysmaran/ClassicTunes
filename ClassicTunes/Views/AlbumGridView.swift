@@ -474,7 +474,7 @@ private struct DrawerSlot<Content: View>: View {
         }
         .clipped()
         .onAppear { shownAlbum = album }
-        .onChange(of: album) { newValue in
+        .onChange(of: album) { _, newValue in
             if let newValue {
                 shownAlbum = newValue
             } else {
