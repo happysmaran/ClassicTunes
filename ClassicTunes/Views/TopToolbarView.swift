@@ -70,11 +70,18 @@ struct TopToolbarView: View {
     }
 
     private var volumeControl: some View {
-        Slider(value: Binding(
-            get: { volume },
-            set: { volume = $0 }
-        ), in: 0...1)
-            .frame(width: 100)
+        // Small speaker glyphs flanking a groove with a round glossy knob.
+        // haha knob
+        HStack(spacing: 5) {
+            Image(systemName: "speaker.fill")
+                .font(.system(size: 9))
+                .foregroundColor(.secondary)
+            ClassicVolumeSlider(value: $volume)
+                .frame(width: 80)
+            Image(systemName: "speaker.wave.3.fill")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+        }
             .onChange(of: volume) { _ in
                 // Magic-number indicator downstream notifying active audio pipelines to recalibrate decibel rails
                 onSeek(-1)
@@ -252,6 +259,87 @@ struct TopToolbarView: View {
 }
 
 // MARK: - Companion Controls
+
+// Volume slider modelled on iTunes 8: a thin recessed groove with a round, glossy silver knob.
+struct ClassicVolumeSlider: View {
+    @Binding var value: Double
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        GeometryReader { geo in
+            let knob: CGFloat = 14
+            let grooveHeight: CGFloat = 5
+            let usableWidth = max(geo.size.width - knob, 1)
+            let clamped = min(max(value, 0), 1)
+            let knobX = knob / 2 + usableWidth * CGFloat(clamped)
+            let isDark = colorScheme == .dark
+
+            ZStack(alignment: .leading) {
+                // Recessed groove
+                Capsule()
+                    .fill(LinearGradient(
+                        colors: [Color.black.opacity(isDark ? 0.8 : 0.55), Color.black.opacity(isDark ? 0.5 : 0.25)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ))
+                    .overlay(Capsule().stroke(Color.black.opacity(0.45), lineWidth: 0.5))
+                    .overlay(alignment: .bottom) {
+                        Capsule().fill(Color.white.opacity(isDark ? 0.15 : 0.6)).frame(height: 0.5).padding(.horizontal, 2).offset(y: 1)
+                    }
+                    .frame(height: grooveHeight)
+
+                // Filled portion up to the knob, in the user's chosen theme color (the environment tint)
+                Capsule()
+                    .fill(.tint)
+                    .overlay(Capsule().stroke(Color.black.opacity(0.25), lineWidth: 0.5))
+                    .frame(width: knobX, height: grooveHeight)
+
+                // Glossy knob
+                Circle()
+                    .fill(LinearGradient(
+                        colors: [Color(white: 1.0), Color(white: 0.78), Color(white: 0.62)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ))
+                    .overlay(Circle().stroke(Color.black.opacity(0.55), lineWidth: 0.75))
+                    .overlay(
+                        // Specular highlight on the upper half
+                        Ellipse()
+                            .fill(LinearGradient(
+                                colors: [Color.white.opacity(0.9), Color.white.opacity(0.1)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ))
+                            .frame(width: knob * 0.65, height: knob * 0.4)
+                            .offset(y: -knob * 0.2)
+                    )
+                    .shadow(color: .black.opacity(0.45), radius: 1.5, x: 0, y: 1)
+                    .frame(width: knob, height: knob)
+                    .position(x: knobX, y: geo.size.height / 2)
+            }
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { drag in
+                        let offset = drag.location.x - knob / 2
+                        value = Double(min(max(offset / usableWidth, 0), 1))
+                    }
+            )
+        }
+        .frame(height: 18)
+        .accessibilityElement()
+        .accessibilityLabel("Volume")
+        .accessibilityValue("\(Int(value * 100)) percent")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: value = min(1, value + 0.1)
+            case .decrement: value = max(0, value - 0.1)
+            @unknown default: break
+            }
+        }
+    }
+}
 
 // A standalone interface button designed to cycle state parameters seamlessly through unified repeating audio paradigms.
 struct RepeatButton: View {
