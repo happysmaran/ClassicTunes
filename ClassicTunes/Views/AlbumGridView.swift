@@ -140,26 +140,28 @@ struct AlbumGridView: View {
 
                     ForEach(rows.indices, id: \.self) { rowIndex in
                         let row = rows[rowIndex]
-                        HStack(alignment: .top, spacing: itemSpacing) {
-                            ForEach(row, id: \.self) { album in
-                                albumCellWithDetailCollapsedOnly(album: album)
-                                    .frame(width: containerWidth, alignment: .center)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                        if let expanded = expandedAlbum, row.contains(expanded) {
-                            AlbumDetailView(
-                                albumName: expanded,
-                                songs: songs.filter { $0.album == expanded },
-                                backgroundColor: effectiveBackgroundColor,
-                                onSongSelect: { song in
-                                    handleSongSelect(song)
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack(alignment: .top, spacing: itemSpacing) {
+                                ForEach(row, id: \.self) { album in
+                                    albumCellWithDetailCollapsedOnly(album: album)
+                                        .frame(width: containerWidth, alignment: .center)
                                 }
-                            )
+                            }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .transition(.slide)
-                            .animation(.easeInOut(duration: 0.3), value: expandedAlbum)
+
+                            // Always present (zero-height when closed) so the lazy stack animates
+                            // its height in lockstep with the rows below instead of fading out a removed view.
+                            DrawerSlot(album: expandedAlbum.flatMap { row.contains($0) ? $0 : nil }) { expanded in
+                                AlbumDetailView(
+                                    albumName: expanded,
+                                    songs: songs.filter { $0.album == expanded },
+                                    arrowX: CGFloat(row.firstIndex(of: expanded) ?? 0) * (containerWidth + itemSpacing) + containerWidth / 2,
+                                    onSongSelect: { song in
+                                        handleSongSelect(song)
+                                    }
+                                )
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
@@ -174,7 +176,7 @@ struct AlbumGridView: View {
     private func handleSongSelect(_ song: Song) {
         onSongSelect(song)
         NotificationCenter.default.post(name: .PlaybackDidRequestSong, object: song)
-        withAnimation { expandedAlbum = nil }
+        withAnimation(.easeInOut(duration: 0.3)) { expandedAlbum = nil }
     }
 
     // Renders a basic vertical thumbnail cell that handles click interactions to reveal detailed songs[span_19](start_span)[span_19](end_span).
@@ -192,6 +194,8 @@ struct AlbumGridView: View {
 
             Text(album)
                 .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.tail)
                 .frame(maxWidth: coverSize)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.primary)
@@ -199,7 +203,7 @@ struct AlbumGridView: View {
         .frame(width: coverSize)
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 if expandedAlbum == album {
                     expandedAlbum = nil
                 } else {
@@ -232,7 +236,7 @@ struct AlbumGridView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onTapGesture {
-            withAnimation {
+            withAnimation(.easeInOut(duration: 0.3)) {
                 if expandedAlbum == album {
                     expandedAlbum = nil
                 } else {
@@ -257,132 +261,254 @@ struct AlbumGridView: View {
     }
 }
 
-// An embedded row subview displaying comprehensive track arrays, titles, and stats for a specific album[span_22](start_span)[span_22](end_span).
+// iTunes 8-style inline drawer: a dark panel with a pointer toward the selected album, artwork and
+// album info on the left, and a striped track list on the right.
 struct AlbumDetailView: View {
-    // The name string describing the focused album item[span_23](start_span)[span_23](end_span).
+    // The name string describing the focused album item.
     let albumName: String
     
-    // The array collection representing tracks filtered into this discrete record view[span_24](start_span)[span_24](end_span).
+    // The tracks belonging to this album.
     let songs: [Song]
     
-    // The background hue assigned to match parent container configurations[span_25](start_span)[span_25](end_span).
-    var backgroundColor: Color = Color(nsColor: .windowBackgroundColor)
+    // Horizontal position (in the drawer's coordinate space) of the pointer tip, centered under the selected cover.
+    var arrowX: CGFloat = 60
     
-    // Callback action triggered upon selecting an individual child row track entry[span_26](start_span)[span_26](end_span).
+    // Callback action triggered upon selecting an individual track row.
     let onSongSelect: (Song) -> Void
     
-    @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var appearanceManager: AppearanceManager
+    @State private var hoveredSongID: UUID?
     
-    private var isAppDark: Bool {
-        if let forced = appearanceManager.currentColorScheme() {
-            return forced == .dark
-        } else {
-            return colorScheme == .dark
+    private let arrowHeight: CGFloat = 12
+    
+    private var sortedSongs: [Song] {
+        songs.sorted {
+            let a = $0.trackNumber ?? Int.max
+            let b = $1.trackNumber ?? Int.max
+            return a == b ? $0.title < $1.title : a < b
         }
     }
     
+    private var totalDuration: TimeInterval {
+        songs.reduce(0) { $0 + ($1.duration ?? 0) }
+    }
+    
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: 20) {
+            albumInfo
+            trackList
+        }
+        .padding(20)
+        .padding(.top, arrowHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            DrawerShape(arrowX: arrowX, arrowHeight: arrowHeight, cornerRadius: 12)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(white: 0.24), Color(white: 0.14)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay {
+                    DrawerShape(arrowX: arrowX, arrowHeight: arrowHeight, cornerRadius: 12)
+                        .stroke(.white.opacity(0.12), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
+        }
+        .environment(\.colorScheme, .dark)
+        .padding(.vertical, 4)
+    }
+    
+    // Artwork with title, artist, and summary stats beneath.
+    private var albumInfo: some View {
+        VStack(alignment: .leading, spacing: 8) {
             Group {
-                if let image = songs.first?.artworkThumbnail(maxPixelSize: 200) {
+                if let image = songs.first?.artworkThumbnail(maxPixelSize: 400) {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 80, height: 80)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
                 } else {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isAppDark ? Color.itunesWindowBG : Color(nsColor: .underPageBackgroundColor))
-                        .frame(width: 80, height: 80)
+                        .fill(Color(white: 0.2))
                         .overlay(
                             Image(systemName: "music.note")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 30, height: 30)
-                                .foregroundColor(.gray)
+                                .font(.system(size: 40))
+                                .foregroundStyle(.secondary)
                         )
                 }
             }
+            .frame(width: 160, height: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
             
-            VStack(alignment: .leading, spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(albumName)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    
-                    if let artist = songs.first?.artist {
-                        Text(artist)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Text(String(format: NSLocalizedString("albumDetail.songs", comment: "songsCount"), songs.count))
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(albumName)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+                
+                if let artist = songs.first?.artist {
+                    Text(artist)
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
                 }
                 
-                Divider()
-                
-                ScrollView(.vertical, showsIndicators: true) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        let sortedSongs = songs.sorted {
-                            let a = $0.trackNumber ?? Int.max
-                            let b = $1.trackNumber ?? Int.max
-                            return a == b ? $0.title < $1.title : a < b
-                        }
-
-                        ForEach(Array(sortedSongs.enumerated()), id: \.offset) { index, song in
-                            let displayTrackNumber: Int = {
-                                if let track = song.trackNumber, track > 0 {
-                                    return track
-                                } else {
-                                    return index + 1
-                                }
-                            }()
-                            Button(action: { onSongSelect(song) }) {
-                                HStack(spacing: 12) {
-                                    Text("\(displayTrackNumber)")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 20, alignment: .trailing)
-                                    
-                                    VStack(alignment: .leading, spacing: 1) {
-                                        Text(song.title)
-                                            .font(.body)
-                                            .foregroundColor(.primary)
-                                            .lineLimit(1)
-                                        
-                                        Text(song.artist)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(1)
-                                    }
-                                    
-                                    Spacer(minLength: 0)
-                                }
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.vertical, 4)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(height: 200)
+                Text(summaryText)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.5))
             }
-            
-            Spacer(minLength: 0)
+            .frame(width: 160, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(backgroundColor)
-                .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
-        )
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+    }
+    
+    private var summaryText: String {
+        let count = String(format: NSLocalizedString("albumDetail.songs", comment: "songsCount"), songs.count)
+        guard totalDuration > 0 else { return count }
+        return "\(count), \(Self.formatTime(totalDuration))"
+    }
+    
+    // Striped, hoverable list of tracks.
+    private var trackList: some View {
+        ScrollView(.vertical, showsIndicators: true) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(sortedSongs.enumerated()), id: \.element.id) { index, song in
+                    let displayTrackNumber = (song.trackNumber ?? 0) > 0 ? song.trackNumber! : index + 1
+                    let isHovered = hoveredSongID == song.id
+                    Button(action: { onSongSelect(song) }) {
+                        HStack(spacing: 12) {
+                            Text("\(displayTrackNumber)")
+                                .font(.callout.monospacedDigit())
+                                .foregroundStyle(isHovered ? .white : .white.opacity(0.5))
+                                .frame(width: 28, alignment: .trailing)
+                            
+                            Text(song.title)
+                                .font(.callout)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                            
+                            Spacer(minLength: 8)
+                            
+                            if let duration = song.duration {
+                                Text(Self.formatTime(duration))
+                                    .font(.callout.monospacedDigit())
+                                    .foregroundStyle(isHovered ? .white : .white.opacity(0.5))
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .frame(height: 26)
+                        .background(rowBackground(index: index, isHovered: isHovered))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { hovering in
+                        hoveredSongID = hovering ? song.id : (hoveredSongID == song.id ? nil : hoveredSongID)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 220)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+    
+    private func rowBackground(index: Int, isHovered: Bool) -> Color {
+        if isHovered { return Color.accentColor.opacity(0.85) }
+        return index.isMultiple(of: 2) ? .white.opacity(0.06) : .clear
+    }
+    
+    private static func formatTime(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds.rounded())
+        let h = total / 3600, m = (total % 3600) / 60, s = total % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
+    }
+}
+
+// Reveals its content from the top edge downward by growing the container's height, so the
+// drawer pushes the rows below it instead of sliding sideways.
+private struct DrawerSlot<Content: View>: View {
+    // The album expanded within this row, or nil when the drawer should be closed.
+    let album: String?
+    @ViewBuilder let content: (String) -> Content
+
+    // Retained after closing so the content stays visible while the height animates to zero.
+    @State private var shownAlbum: String?
+
+    var body: some View {
+        DrawerRevealLayout(progress: album == nil ? 0 : 1) {
+            if let shownAlbum {
+                content(shownAlbum)
+                    .opacity(album == nil ? 0 : 1)
+            }
+        }
+        .clipped()
+        .onAppear { shownAlbum = album }
+        .onChange(of: album) { newValue in
+            if let newValue {
+                shownAlbum = newValue
+            } else {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    if album == nil { shownAlbum = nil }
+                }
+            }
+        }
+    }
+}
+
+private struct DrawerRevealLayout: Layout {
+    var progress: CGFloat
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let subview = subviews.first else { return .zero }
+        let size = subview.sizeThatFits(proposal)
+        return CGSize(width: size.width, height: size.height * progress)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let subview = subviews.first else { return }
+        // Lay out at full size, pinned to the top; the shrinking bounds clip it.
+        let size = subview.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+        subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: size.height))
+    }
+}
+
+// A rounded rectangle with an upward-pointing notch along the top edge.
+private struct DrawerShape: Shape {
+    var arrowX: CGFloat
+    var arrowHeight: CGFloat
+    var cornerRadius: CGFloat
+    
+    var animatableData: CGFloat {
+        get { arrowX }
+        set { arrowX = newValue }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        let r = cornerRadius
+        let top = rect.minY + arrowHeight
+        // Keep the pointer clear of the rounded corners.
+        let tipX = min(max(arrowX, rect.minX + r + arrowHeight), rect.maxX - r - arrowHeight)
+        var p = Path()
+        p.move(to: CGPoint(x: rect.minX + r, y: top))
+        p.addLine(to: CGPoint(x: tipX - arrowHeight, y: top))
+        p.addLine(to: CGPoint(x: tipX, y: rect.minY))
+        p.addLine(to: CGPoint(x: tipX + arrowHeight, y: top))
+        p.addLine(to: CGPoint(x: rect.maxX - r, y: top))
+        p.addArc(center: CGPoint(x: rect.maxX - r, y: top + r), radius: r, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
+        p.addArc(center: CGPoint(x: rect.maxX - r, y: rect.maxY - r), radius: r, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX + r, y: rect.maxY))
+        p.addArc(center: CGPoint(x: rect.minX + r, y: rect.maxY - r), radius: r, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        p.addLine(to: CGPoint(x: rect.minX, y: top + r))
+        p.addArc(center: CGPoint(x: rect.minX + r, y: top + r), radius: r, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        p.closeSubpath()
+        return p
     }
 }
 
