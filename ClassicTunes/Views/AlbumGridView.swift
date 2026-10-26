@@ -72,6 +72,20 @@ struct AlbumGridView: View {
         }
     }
 
+    // Drawer fill that follows the grid's background setting. nil means the stock dark/light gradient.
+    private var drawerBaseColor: Color? {
+        albumGridBackgroundStyle == "custom" ? customBackgroundColor : nil
+    }
+
+    // Whether the drawer should use dark text on a light panel.
+    private var isDrawerLight: Bool {
+        switch albumGridBackgroundStyle {
+        case "custom": return !customBackgroundColor.isDark
+        case "light": return true
+        default: return false
+        }
+    }
+
     var body: some View {
         VStack {
             sizeSlider
@@ -158,7 +172,9 @@ struct AlbumGridView: View {
                                     arrowX: CGFloat(row.firstIndex(of: expanded) ?? 0) * (containerWidth + itemSpacing) + containerWidth / 2,
                                     onSongSelect: { song in
                                         handleSongSelect(song)
-                                    }
+                                    },
+                                    baseColor: drawerBaseColor,
+                                    isLightPanel: isDrawerLight
                                 )
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -276,7 +292,28 @@ struct AlbumDetailView: View {
     // Callback action triggered upon selecting an individual track row.
     let onSongSelect: (Song) -> Void
     
+    // Custom panel color; nil uses the stock dark or light gradient.
+    var baseColor: Color? = nil
+    
+    // True when the panel is light, so text switches to dark shades.
+    var isLightPanel: Bool = false
+    
     @State private var hoveredSongID: UUID?
+    
+    // Primary content color that contrasts with the panel.
+    private var fg: Color { isLightPanel ? .black : .white }
+    
+    private var panelGradient: LinearGradient {
+        let colors: [Color]
+        if let baseColor {
+            colors = [baseColor.shaded(0.08), baseColor.shaded(-0.08)]
+        } else if isLightPanel {
+            colors = [Color(white: 0.97), Color(white: 0.88)]
+        } else {
+            colors = [Color(white: 0.24), Color(white: 0.14)]
+        }
+        return LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
+    }
     
     private let arrowHeight: CGFloat = 12
     
@@ -302,20 +339,14 @@ struct AlbumDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             DrawerShape(arrowX: arrowX, arrowHeight: arrowHeight, cornerRadius: 12)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(white: 0.24), Color(white: 0.14)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .fill(panelGradient)
                 .overlay {
                     DrawerShape(arrowX: arrowX, arrowHeight: arrowHeight, cornerRadius: 12)
-                        .stroke(.white.opacity(0.12), lineWidth: 1)
+                        .stroke(fg.opacity(0.12), lineWidth: 1)
                 }
-                .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
+                .shadow(color: .black.opacity(isLightPanel ? 0.2 : 0.35), radius: 8, x: 0, y: 3)
         }
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, isLightPanel ? .light : .dark)
         .padding(.vertical, 4)
     }
     
@@ -329,7 +360,7 @@ struct AlbumDetailView: View {
                         .scaledToFit()
                 } else {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(white: 0.2))
+                        .fill(fg.opacity(0.12))
                         .overlay(
                             Image(systemName: "music.note")
                                 .font(.system(size: 40))
@@ -344,19 +375,19 @@ struct AlbumDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(albumName)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(fg)
                     .lineLimit(2)
                 
                 if let artist = songs.first?.artist {
                     Text(artist)
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(fg.opacity(0.7))
                         .lineLimit(1)
                 }
                 
                 Text(summaryText)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(fg.opacity(0.5))
             }
             .frame(width: 160, alignment: .leading)
         }
@@ -379,12 +410,12 @@ struct AlbumDetailView: View {
                         HStack(spacing: 12) {
                             Text("\(displayTrackNumber)")
                                 .font(.callout.monospacedDigit())
-                                .foregroundStyle(isHovered ? .white : .white.opacity(0.5))
+                                .foregroundStyle(isHovered ? .white : fg.opacity(0.5))
                                 .frame(width: 28, alignment: .trailing)
                             
                             Text(song.title)
                                 .font(.callout)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(isHovered ? .white : fg)
                                 .lineLimit(1)
                             
                             Spacer(minLength: 8)
@@ -392,7 +423,7 @@ struct AlbumDetailView: View {
                             if let duration = song.duration {
                                 Text(Self.formatTime(duration))
                                     .font(.callout.monospacedDigit())
-                                    .foregroundStyle(isHovered ? .white : .white.opacity(0.5))
+                                    .foregroundStyle(isHovered ? .white : fg.opacity(0.5))
                             }
                         }
                         .padding(.horizontal, 10)
@@ -414,7 +445,7 @@ struct AlbumDetailView: View {
     
     private func rowBackground(index: Int, isHovered: Bool) -> Color {
         if isHovered { return Color.accentColor.opacity(0.85) }
-        return index.isMultiple(of: 2) ? .white.opacity(0.06) : .clear
+        return index.isMultiple(of: 2) ? fg.opacity(0.06) : .clear
     }
     
     private static func formatTime(_ seconds: TimeInterval) -> String {
