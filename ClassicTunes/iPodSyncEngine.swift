@@ -272,15 +272,15 @@ final class iPodSyncEngine: ObservableObject {
 
     // MARK: Read existing database
 
-    func readDatabase(from device: iPodDevice) throws -> iPodShuffleDatabase {
+    func readDatabase(from device: iPodDevice) throws -> iTunesSD_BEDatabase {
         let base = grantedVolumeURL ?? device.volumeURL
         let dbURL = base.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
         guard FileManager.default.fileExists(atPath: dbURL.path) else {
             // Brand-new or never-synced device — start empty
-            return iPodShuffleDatabase()
+            return iTunesSD_BEDatabase()
         }
         let data = try Data(contentsOf: dbURL)
-        return try iPodShuffleDatabase.parse(from: data)
+        return try iTunesSD_BEDatabase.parse(from: data)
     }
 
     // MARK: Full sync
@@ -334,7 +334,7 @@ final class iPodSyncEngine: ObservableObject {
             }
 
             // 2. Copy each song into split folders and build track entries
-            var db = iPodShuffleDatabase()
+            var db = iTunesSD_BEDatabase()
             var index = 0
 
             for song in songs {
@@ -367,9 +367,9 @@ final class iPodSyncEngine: ObservableObject {
                 }
 
                 // Build track entry
-                var track = iTunesSDTrack()
+                var track = iTunesSD_BETrack()
                 track.filePath = "/iPod_Control/Music/\(destFolder)/\(destName)"
-                track.fileType    = iPodShuffleDatabase.fileType(for: song.url)
+                track.fileType    = iTunesSD_BEDatabase.fileType(for: song.url)
                 track.volume      = 0x59     // 89 ≈ 100%
                 track.shuffleFlag = 0x01
                 track.podcastFlag = 0x00
@@ -386,7 +386,7 @@ final class iPodSyncEngine: ObservableObject {
                 index += 1
             }
 
-            // 3. Write iTunesSD and iTunesStats directly to device
+            // 3. Write iTunesSD (BE) and iTunesStats directly to device
             await MainActor.run { progress.phase = .writing }
 
             let dbURL    = itunesDir.appendingPathComponent("iTunesSD")
@@ -450,9 +450,9 @@ final class iPodSyncEngine: ObservableObject {
         if fm.fileExists(atPath: destURL.path) { try fm.removeItem(at: destURL) }
         try fm.copyItem(at: song.url, to: destURL)
 
-        var track = iTunesSDTrack()
+        var track = iTunesSD_BETrack()
         track.filePath = "/iPod_Control/Music/\(destFolder)/\(destName)"
-        track.fileType    = iPodShuffleDatabase.fileType(for: song.url)
+        track.fileType    = iTunesSD_BEDatabase.fileType(for: song.url)
         track.volume      = 0x59
         track.shuffleFlag = 0x01
         db.tracks.append(track)
@@ -517,7 +517,7 @@ final class iPodSyncEngine: ObservableObject {
     // MARK: iTunesStats
 
     // iTunesStats layout (Gen 1/2 Shuffle):
-    //   Header: 18 bytes (same structure as iTunesSD header — track count + 0x0100 + zeros)
+    //   Header: 18 bytes (same structure as iTunesSD_BE header — track count + 0x0100 + zeros)
     //   Per track: 18 bytes
     //     Bytes 0–2:  bookmarkPositionMS (uint24 BE) — write 0
     //     Bytes 3–5:  skipCount          (uint24 BE) — write 0

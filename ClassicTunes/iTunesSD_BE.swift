@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-// MARK: - iTunesSD Binary Format (Gen 1 & 2 Shuffle)
+// MARK: - iTunesSD Big Endian (BE) Binary Format (Gen 1 & 2 Shuffle)
 //
 // File layout at /iPod_Control/iTunes/iTunesSD:
 //
@@ -16,9 +16,9 @@ import CryptoKit
 
 // MARK: - Track Entry
 
-// Represents a single 558-byte track record in the iTunesSD database.
+// Represents a single 558-byte track record in the iTunesSD_BE database.
 // Field offsets/sizes follow the on-disk layout documented above each property.
-struct iTunesSDTrack {
+struct iTunesSD_BETrack {
     // Offset 0:  3 bytes — startPositionMS (big-endian uint24, usually 0)
     var startPositionMS: UInt32 = 0
 
@@ -64,7 +64,7 @@ struct iTunesSDTrack {
 // MARK: - Header
 
 // Represents the 16/18-byte header that precedes the track entries in the file.
-struct iTunesSDHeader {
+struct iTunesSD_BEHeader {
     // Bytes 0–2:  3-byte big-endian track count
     var trackCount: UInt32
 
@@ -76,19 +76,19 @@ struct iTunesSDHeader {
 
 // MARK: - Database
 
-// In-memory representation of the whole iTunesSD file: a header (track count)
+// In-memory representation of the whole iTunesSD_BE file: a header (track count)
 // followed by an array of fixed-size track entries. Provides parse() to read
 // raw Data from disk into Swift structs, and serialise() to go back to Data
 // for writing to the device.
-struct iPodShuffleDatabase {
-    var tracks: [iTunesSDTrack] = []
+struct iTunesSD_BEDatabase {
+    var tracks: [iTunesSD_BETrack] = []
 
     // MARK: Parse from Data
 
-    // Reads a raw iTunesSD file (header + N track entries) into an
-    // iPodShuffleDatabase. Throws if the file is too small or truncated
+    // Reads a raw iTunesSD_BE file (header + N track entries) into an
+    // iTunesSD_BEDatabase. Throws if the file is too small or truncated
     // relative to the track count encoded in the header.
-    static func parse(from data: Data) throws -> iPodShuffleDatabase {
+    static func parse(from data: Data) throws -> iTunesSD_BEDatabase {
         guard data.count >= 16 else {
             throw iPodSyncError.invalidDatabase("File too small for header")
         }
@@ -103,7 +103,7 @@ struct iPodShuffleDatabase {
         }
 
         // Walk the file in 558-byte chunks (one per track) starting after the header.
-        var tracks: [iTunesSDTrack] = []
+        var tracks: [iTunesSD_BETrack] = []
         for i in 0..<Int(trackCount) {
             let offset = 16 + i * 558
             let entry = data.subdata(in: offset..<(offset + 558))
@@ -111,18 +111,18 @@ struct iPodShuffleDatabase {
             tracks.append(track)
         }
 
-        return iPodShuffleDatabase(tracks: tracks)
+        return iTunesSD_BEDatabase(tracks: tracks)
     }
 
-    // Decodes a single 558-byte track entry blob into an iTunesSDTrack.
-    private static func parseTrackEntry(_ data: Data) throws -> iTunesSDTrack {
+    // Decodes a single 558-byte track entry blob into an iTunesSD_BETrack.
+    private static func parseTrackEntry(_ data: Data) throws -> iTunesSD_BETrack {
         guard data.count == 558 else {
             throw iPodSyncError.invalidDatabase("Track entry wrong size: \(data.count)")
         }
 
         let start = data.startIndex
 
-        var track = iTunesSDTrack()
+        var track = iTunesSD_BETrack()
         // Read the three big-endian uint24 fields (start/stop position, volume).
         track.startPositionMS = UInt32(data[0]) << 16 | UInt32(data[1]) << 8 | UInt32(data[2])
         track.stopPositionMS  = UInt32(data[3]) << 16 | UInt32(data[4]) << 8 | UInt32(data[5])
@@ -180,8 +180,8 @@ struct iPodShuffleDatabase {
         return data
     }
 
-    // Encodes a single iTunesSDTrack back into its fixed 558-byte on-disk form.
-    private func serialiseTrack(_ track: iTunesSDTrack) -> [UInt8] {
+    // Encodes a single iTunesSD_BETrack back into its fixed 558-byte on-disk form.
+    private func serialiseTrack(_ track: iTunesSD_BETrack) -> [UInt8] {
         // Start from an all-zero buffer; this naturally fills in the
         // reserved/padding regions described in the struct's field comments.
         var entry = [UInt8](repeating: 0, count: 558)
@@ -236,8 +236,8 @@ struct iPodShuffleDatabase {
 
 // MARK: - File Type Detection
 
-// Maps a file's extension to the iTunesSD fileType byte value.
-extension iPodShuffleDatabase {
+// Maps a file's extension to the iTunesSD_BE fileType byte value.
+extension iTunesSD_BEDatabase {
     static func fileType(for url: URL) -> UInt8 {
         switch url.pathExtension.lowercased() {
         case "mp3":       return 0x01

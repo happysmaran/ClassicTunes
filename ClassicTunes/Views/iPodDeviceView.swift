@@ -15,8 +15,8 @@ struct iPodDeviceView: View {
     @ObservedObject var syncEngine: iPodSyncEngine
     var allLibrarySongs: [Song]                         // Full library to pick from
 
-    // Tracks currently stored on the connected device, parsed from its iTunesSD database.
-    @State private var deviceTracks:   [iTunesSDTrack] = []
+    // Tracks currently stored on the connected device, parsed from its iTunesSD_BE database.
+    @State private var deviceTracks:   [iTunesSD_BETrack] = []
     @State private var selectedSongs:  Set<UUID>       = []
     @State private var showSongPicker  = false
     @State private var showEjectAlert  = false
@@ -478,7 +478,7 @@ struct iPodDeviceView: View {
         }
     }
 
-    // Reads and parses the device's iTunesSD database, then asynchronously
+    // Reads and parses the device's iTunesSD_BE database, then asynchronously
     // resolves a display name (title — artist, falling back to the file
     // name) for every track in parallel via AVAsset metadata lookups.
     private func loadDeviceTracksAsync() async {
@@ -506,7 +506,7 @@ struct iPodDeviceView: View {
 
         do {
             let fileData = try Data(contentsOf: dbURL)
-            let parsedDB = try iPodShuffleDatabase.parse(from: fileData)
+            let parsedDB = try iTunesSD_BEDatabase.parse(from: fileData)
             var tracks = parsedDB.tracks
 
             // Resolve a friendly display name for every track concurrently
