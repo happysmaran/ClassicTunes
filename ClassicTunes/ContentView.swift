@@ -422,33 +422,13 @@ struct ContentView: View {
                 }
             }
             .padding(.horizontal)
-            .foregroundColor(.primary)
+            .foregroundColor(showLyrics ? appearanceManager.themeColor : .primary)
             .buttonStyle(PlainButtonStyle())
 
             Button(action: toggleUpNextButtonAction) {
                 HStack {
                     Image(systemName: "list.bullet")
                     Text("bottomBar.upNext")
-                }
-            }
-            .padding(.horizontal)
-            .foregroundColor(.primary)
-            .buttonStyle(PlainButtonStyle())
-
-            Button(action: showM3UImporterAction) {
-                HStack {
-                    Image(systemName: "tray.and.arrow.down")
-                    Text("bottomBar.importM3U")
-                }
-            }
-            .padding(.horizontal)
-            .foregroundColor(.primary)
-            .buttonStyle(PlainButtonStyle())
-
-            Button(action: exportSelectedPlaylist) {
-                HStack {
-                    Image(systemName: "tray.and.arrow.up")
-                    Text("bottomBar.exportM3U")
                 }
             }
             .padding(.horizontal)
