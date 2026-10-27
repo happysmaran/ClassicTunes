@@ -432,9 +432,9 @@ struct ContentView: View {
                 }
             }
             .padding(.horizontal)
-            .foregroundColor(selectedPlaylistID == nil ? .secondary : .primary)
+            .foregroundColor(.primary)
             .buttonStyle(PlainButtonStyle())
-            .disabled(selectedPlaylistID == nil)
+            
         }
         .frame(height: 40)
         .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
