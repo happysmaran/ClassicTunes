@@ -618,6 +618,17 @@ final class PlayerEngine: ObservableObject {
         updateNowPlayingInfo()
     }
 
+    func stop() {
+        isCrossfadeArmed = false
+        stopCurrentPlayback()
+        fadingOutPlayer?.pause()
+        previewKey = nil
+        selectedSong = nil
+        playbackPosition = 0
+        playStateRevision += 1
+        updateNowPlayingInfo()
+    }
+
     func play() {
         player?.play()
         fadingOutPlayer?.play()

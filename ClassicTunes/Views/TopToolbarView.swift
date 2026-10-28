@@ -28,6 +28,7 @@ struct TopToolbarView: View {
     @Binding var isRepeatEnabled: Bool
     @Binding var isRepeatOne: Bool
     @Binding var isStopped: Bool
+    var onStop: () -> Void
     @Binding var isCoverFlowActive: Bool
     
     // Secondary container callback used to pop open detached lightweight desktop widget layouts.
@@ -63,7 +64,7 @@ struct TopToolbarView: View {
                 isPlaying.toggle()
             }
             playbackButton(icon: "stop.fill") {
-                isPlaying = false
+                onStop()
                 isStopped = true
             }
             playbackButton(icon: "forward.fill", action: playNext)
@@ -108,7 +109,7 @@ struct TopToolbarView: View {
                 .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 1)
                 .frame(height: 56)
 
-            if let song = selectedSong, isPlaying || !isStopped {
+            if let song = selectedSong {
                 songInfoView(song)
             } else {
                 Image("Icon")

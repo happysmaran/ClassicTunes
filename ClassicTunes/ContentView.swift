@@ -343,6 +343,7 @@ struct ContentView: View {
             isRepeatEnabled: $engine.isRepeatEnabled,
             isRepeatOne: $engine.isRepeatOne,
             isStopped: $isStopped,
+            onStop: engine.stop,
             isCoverFlowActive: $isCoverFlowActive,
             onMiniPlayerToggle: toggleMiniPlayer,
             searchText: $searchText,
@@ -793,7 +794,7 @@ struct ContentView: View {
 
     private var isPlayingBinding: Binding<Bool> {
         Binding(
-            get: { engine.player?.rate != 0 },
+            get: { (engine.player?.rate ?? 0) != 0 },
             set: { shouldPlay in
                 if shouldPlay {
                     engine.play()
