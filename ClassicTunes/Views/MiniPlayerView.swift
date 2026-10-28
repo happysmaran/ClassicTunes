@@ -245,11 +245,16 @@ struct MiniPlayerView: View {
                 artwork(for: song)
                 VStack(spacing: 2) {
                     VStack(spacing: 0) {
-                        Text(song.title)
+                        Text(" ")
+                            .frame(maxWidth: .infinity)
+                            .overlay {
+                                GeometryReader { geo in
+                                    MarqueeText(text: song.title, maxWidth: geo.size.width)
+                                }
+                            }
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.black.opacity(0.9))
                             .shadow(color: Color.black.opacity(isDark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
-                            .lineLimit(1)
                         AnimatedLabel(texts: [song.artist, song.album])
                             .font(.system(size: 10))
                             .foregroundStyle(Color.black.opacity(0.9))

@@ -131,13 +131,10 @@ struct TopToolbarView: View {
 
     private func songInfoView(_ song: Song) -> some View {
         VStack(spacing: 2) {
-            Text(song.title)
+            MarqueeText(text: song.title, maxWidth: 340)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(Color.black.opacity(0.9))
                 .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 0.5, x: 0, y: 1)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: 240)
 
             AnimatedLabel(texts: [song.artist, song.album])
                 .font(.system(size: 10))
