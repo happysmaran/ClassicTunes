@@ -60,6 +60,10 @@ struct ContentView: View {
     // Observer tokens
     @State private var miniPlayerCloseObserver: NSObjectProtocol?
 
+    // Sidebar artwork drawer and library stats
+    @State private var showArtworkPane = false
+    @State private var displayedTotalBytes = 0
+
     // Up Next states
     @State private var showUpNext = false
     @State private var dropTargetIndex: Int? = nil
@@ -349,20 +353,27 @@ struct ContentView: View {
     private var middleContentSection: some View {
         HStack(alignment: .top, spacing: 0) {
             HStack(spacing: 0) {
-                SidebarView(
-                    playlists: playlists,
-                    userPlaylists: $playlistManager.userPlaylists,
-                    selectedPlaylistID: $selectedPlaylistID,
-                    showNewPlaylistSheet: $showNewPlaylistSheet,
-                    showNewSmartPlaylistSheet: $showNewSmartPlaylistSheet,
-                    smartPlaylistToEdit: $smartPlaylistToEdit,
-                    libraryActive: $libraryActive,
-                    showITunesStore: $showITunesStore,
-                    //connectedDevice: deviceMonitor.connectedDevice,
-                    isDeviceSelected: $isDeviceSelected
-                )
+                VStack(spacing: 0) {
+                    SidebarView(
+                        playlists: playlists,
+                        userPlaylists: $playlistManager.userPlaylists,
+                        selectedPlaylistID: $selectedPlaylistID,
+                        showNewPlaylistSheet: $showNewPlaylistSheet,
+                        showNewSmartPlaylistSheet: $showNewSmartPlaylistSheet,
+                        smartPlaylistToEdit: $smartPlaylistToEdit,
+                        libraryActive: $libraryActive,
+                        showITunesStore: $showITunesStore,
+                        //connectedDevice: deviceMonitor.connectedDevice,
+                        isDeviceSelected: $isDeviceSelected
+                    )
+                    .tint(appearanceManager.themeColor)
+
+                    if showArtworkPane {
+                        Divider()
+                        sidebarArtworkPane
+                    }
+                }
                 .frame(width: 220)
-                .tint(appearanceManager.themeColor)
                 .background(ITunesSidebarBackground())
 
                 if let device = deviceMonitor.connectedDevice, isDeviceSelected {
@@ -402,16 +413,66 @@ struct ContentView: View {
         }
     }
 
+    // Artwork for the current song, shown in a drawer at the bottom of the sidebar.
+    private var sidebarArtworkPane: some View {
+        Group {
+            if let image = engine.selectedSong?.artworkImage {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Image(systemName: "music.note")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.secondary.opacity(0.15))
+            }
+        }
+        // Thin frame around the artwork.
+        .overlay(Rectangle().stroke(Color.primary.opacity(0.35), lineWidth: 1))
+        .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+        .padding(10)
+        .frame(width: 220, height: 220)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    // "# songs, #.# hours, #.## GB" for the songs currently shown.
+    private func libraryStatsText(for displayed: [Song]) -> String {
+        let count = displayed.count
+        let hours = displayed.reduce(0) { $0 + ($1.duration ?? 0) } / 3600
+        let gigabytes = Double(displayedTotalBytes) / 1_000_000_000
+        let key = count == 1 ? "library.stats.one" : "library.stats.other"
+        return String(format: NSLocalizedString(key, comment: "Bottom bar: song count, total hours, total size"),
+                      count, hours, gigabytes)
+    }
+
     private var bottomBarSection: some View {
-        HStack {
+        let displayed = displayedSongs
+        let statsKey = displayed.map(\.id).hashValue
+        return ZStack {
+            HStack(spacing: 0) {
+            Button(action: toggleArtworkPaneAction) {
+                // One fixed symbol that rotates 180° so it turns instead of cross-fading.
+                Image(systemName: "chevron.up")
+                    .rotationEffect(.degrees(showArtworkPane ? 180 : 0))
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .padding(.leading)
+            .foregroundColor(showArtworkPane ? appearanceManager.themeColor : .primary)
+            .buttonStyle(PlainButtonStyle())
+            .help("Show or hide album artwork")
+
             Spacer()
             Button(action: toggleVisualizerMenuAction) {
                 HStack {
                     Image(systemName: "waveform")
                     Text("bottomBar.visualizer")
                 }
+                .padding(.horizontal, 8)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal)
             .foregroundColor(showVisualizer ? appearanceManager.themeColor : .primary)
             .buttonStyle(PlainButtonStyle())
 
@@ -420,8 +481,10 @@ struct ContentView: View {
                     Image(systemName: "text.alignleft")
                     Text("lyrics.title")
                 }
+                .padding(.horizontal, 8)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal)
             .foregroundColor(showLyrics ? appearanceManager.themeColor : .primary)
             .buttonStyle(PlainButtonStyle())
 
@@ -430,11 +493,29 @@ struct ContentView: View {
                     Image(systemName: "list.bullet")
                     Text("bottomBar.upNext")
                 }
+                .padding(.horizontal, 8)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal)
-            .foregroundColor(.primary)
+            .foregroundColor(showUpNext ? appearanceManager.themeColor : .primary)
             .buttonStyle(PlainButtonStyle())
-            
+            .padding(.trailing, 8)
+            }
+
+            // Centered on the window's width, independent of the buttons on either side.
+            Text(libraryStatsText(for: displayed))
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+                .allowsHitTesting(false)
+                .task(id: statsKey) {
+                    let urls = displayed.map(\.url)
+                    displayedTotalBytes = await Task.detached(priority: .utility) {
+                        urls.reduce(0) { total, url in
+                            total + ((try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+                        }
+                    }.value
+                }
         }
         .frame(height: 40)
         .background(Color(nsColor: .windowBackgroundColor)) // Use system window background
@@ -569,6 +650,10 @@ struct ContentView: View {
     private func showCoverFlowAction() {
         isCoverFlowActive = true
         isAlbumView = false
+    }
+
+    private func toggleArtworkPaneAction() {
+        withAnimation { showArtworkPane.toggle() }
     }
 
     private func toggleUpNextMenuAction() {

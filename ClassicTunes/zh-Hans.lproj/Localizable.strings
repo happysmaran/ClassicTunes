@@ -414,3 +414,7 @@
 
 // MARK: - File choosers
 "panel.choose"                = "选择";
+
+// MARK: - Library stats (bottom bar)
+"library.stats.one"           = "%d 首歌曲，%.1f 小时，%.2f GB";
+"library.stats.other"         = "%d 首歌曲，%.1f 小时，%.2f GB";

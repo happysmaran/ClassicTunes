@@ -414,3 +414,7 @@
 
 // MARK: - File choosers
 "panel.choose"                = "Выбрать";
+
+// MARK: - Library stats (bottom bar)
+"library.stats.one"           = "%d композиция, %.1f ч, %.2f ГБ";
+"library.stats.other"         = "%d композиций, %.1f ч, %.2f ГБ";

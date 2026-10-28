@@ -414,3 +414,7 @@
 
 // MARK: - File choosers
 "panel.choose"                = "Choisir";
+
+// MARK: - Library stats (bottom bar)
+"library.stats.one"           = "%d morceau, %.1f heures, %.2f Go";
+"library.stats.other"         = "%d morceaux, %.1f heures, %.2f Go";
