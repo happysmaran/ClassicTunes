@@ -3,37 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClassicTunes는 Swift 및 SwiftUI를 사용하여 처음부터 구축된 최신 macOS 앱으로, 최신 Apple Silicon Mac에서 iTunes 7~10의 모양과 느낌을 충실하게 재현합니다.">
-    <meta name="robots" content="index, follow">
-    <meta name="keywords" content="ClassicTunes, iTunes remake, macOS app, SwiftUI, Apple Silicon, classic iTunes, iTunes 7, iTunes 8, iTunes 9, iTunes 10">
+    <title>ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크</title>
+    <meta name="description" content="ClassicTunes는 SwiftUI로 만든 네이티브 macOS 앱으로, Apple Silicon Mac에서 iTunes 7~10을 재현합니다. Cover Flow, 미니 플레이어, 스마트 재생 목록, 가사, iPod Shuffle 동기화, 테마를 지원합니다.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="author" content="Smaran Vallabhaneni">
+    <link rel="canonical" href="https://classictunes.smaran-vallabhaneni.com/ko/">
+
+    <link rel="alternate" hreflang="en" href="https://classictunes.smaran-vallabhaneni.com/">
+    <link rel="alternate" hreflang="zh-Hans" href="https://classictunes.smaran-vallabhaneni.com/zh/">
+    <link rel="alternate" hreflang="fr" href="https://classictunes.smaran-vallabhaneni.com/fr/">
+    <link rel="alternate" hreflang="de" href="https://classictunes.smaran-vallabhaneni.com/de/">
+    <link rel="alternate" hreflang="hi" href="https://classictunes.smaran-vallabhaneni.com/hi/">
+    <link rel="alternate" hreflang="ja" href="https://classictunes.smaran-vallabhaneni.com/ja/">
+    <link rel="alternate" hreflang="ko" href="https://classictunes.smaran-vallabhaneni.com/ko/">
+    <link rel="alternate" hreflang="pt-BR" href="https://classictunes.smaran-vallabhaneni.com/pt/">
+    <link rel="alternate" hreflang="ru" href="https://classictunes.smaran-vallabhaneni.com/ru/">
+    <link rel="alternate" hreflang="es" href="https://classictunes.smaran-vallabhaneni.com/es/">
+    <link rel="alternate" hreflang="te" href="https://classictunes.smaran-vallabhaneni.com/te/">
+    <link rel="alternate" hreflang="x-default" href="https://classictunes.smaran-vallabhaneni.com/">
+
     <meta property="og:type" content="website">
-    <meta property="og:title" content="ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크">
-    <meta property="og:description" content="ClassicTunes는 Swift 및 SwiftUI를 사용하여 처음부터 구축된 최신 macOS 앱으로, 최신 Apple Silicon Mac에서 iTunes 7~10의 모양과 느낌을 충실하게 재현합니다.">
-    <meta property="og:url" content="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
-    <meta property="og:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
     <meta property="og:site_name" content="ClassicTunes">
+    <meta property="og:title" content="ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크">
+    <meta property="og:description" content="ClassicTunes는 SwiftUI로 만든 네이티브 macOS 앱으로, Apple Silicon Mac에서 iTunes 7~10을 재현합니다. Cover Flow, 미니 플레이어, 스마트 재생 목록, 가사, iPod Shuffle 동기화, 테마를 지원합니다.">
+    <meta property="og:url" content="https://classictunes.smaran-vallabhaneni.com/ko/">
+    <meta property="og:image" content="https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png">
+    <meta property="og:image:alt" content="ClassicTunes — 클래식 iTunes 경험의 귀환">
     <meta property="og:locale" content="ko_KR">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:locale:alternate" content="zh_CN">
+    <meta property="og:locale:alternate" content="fr_FR">
+    <meta property="og:locale:alternate" content="de_DE">
+    <meta property="og:locale:alternate" content="hi_IN">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta property="og:locale:alternate" content="pt_BR">
+    <meta property="og:locale:alternate" content="ru_RU">
+    <meta property="og:locale:alternate" content="es_ES">
+    <meta property="og:locale:alternate" content="te_IN">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크">
-    <meta name="twitter:description" content="ClassicTunes는 Swift 및 SwiftUI를 사용하여 처음부터 구축된 최신 macOS 앱으로, 최신 Apple Silicon Mac에서 iTunes 7~10의 모양과 느낌을 충실하게 재현합니다.">
-    <meta name="twitter:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
-    <title>ClassicTunes: SwiftUI로 재현된 Apple Silicon용 iTunes 리메이크</title>
-    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
-    
-    <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
-    <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
-    <link rel="alternate" hreflang="zh" href="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
-    <link rel="alternate" hreflang="fr" href="https://smaran-vallabhaneni.com/ClassicTunes/fr/">
-    <link rel="alternate" hreflang="de" href="https://smaran-vallabhaneni.com/ClassicTunes/de/">
-    <link rel="alternate" hreflang="hi" href="https://smaran-vallabhaneni.com/ClassicTunes/hi/">
-    <link rel="alternate" hreflang="ja" href="https://smaran-vallabhaneni.com/ClassicTunes/ja/">
-    <link rel="alternate" hreflang="ko" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
-    <link rel="alternate" hreflang="pt" href="https://smaran-vallabhaneni.com/ClassicTunes/pt/">
-    <link rel="alternate" hreflang="ru" href="https://smaran-vallabhaneni.com/ClassicTunes/ru/">
-    <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
-    <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
-    
+    <meta name="twitter:description" content="ClassicTunes는 SwiftUI로 만든 네이티브 macOS 앱으로, Apple Silicon Mac에서 iTunes 7~10을 재현합니다. Cover Flow, 미니 플레이어, 스마트 재생 목록, 가사, iPod Shuffle 동기화, 테마를 지원합니다.">
+    <meta name="twitter:image" content="https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png">
+    <meta name="twitter:image:alt" content="ClassicTunes — 클래식 iTunes 경험의 귀환">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ClassicTunes",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "macOS 14.0 or later",
+  "softwareVersion": "1.4",
+  "description": "ClassicTunes는 SwiftUI로 만든 네이티브 macOS 앱으로, Apple Silicon Mac에서 iTunes 7~10을 재현합니다. Cover Flow, 미니 플레이어, 스마트 재생 목록, 가사, iPod Shuffle 동기화, 테마를 지원합니다.",
+  "inLanguage": "ko",
+  "url": "https://classictunes.smaran-vallabhaneni.com/ko/",
+  "image": "https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png",
+  "downloadUrl": "https://github.com/happysmaran/ClassicTunes/releases/download/1.4/ClassicTunes.zip",
+  "screenshot": [
+    "https://classictunes.smaran-vallabhaneni.com/assets/songs.png",
+    "https://classictunes.smaran-vallabhaneni.com/assets/coverflow.png",
+    "https://classictunes.smaran-vallabhaneni.com/assets/upnext_lyrics.png"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Smaran Vallabhaneni",
+    "url": "https://smaran-vallabhaneni.com/"
+  },
+  "sameAs": [
+    "https://github.com/happysmaran/ClassicTunes"
+  ]
+}
+    </script>
+
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="stylesheet" href="../styles.css">
 </head>
@@ -42,17 +83,17 @@
 <header class="titlebar">
     <div class="lang-selector-container">
         <select id="lang-selector" class="mac-select" aria-label="언어 선택" onchange="location = this.value;">
-            <option value="/ClassicTunes/">English</option>
-            <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
-            <option value="/ClassicTunes/fr/">Français (French)</option>
-            <option value="/ClassicTunes/de/">Deutsch (German)</option>
-            <option value="/ClassicTunes/hi/">हिन्दी (Hindi)</option>
-            <option value="/ClassicTunes/ja/">日本語 (Japanese)</option>
-            <option value="/ClassicTunes/ko/" selected>한국어 (Korean)</option>
-            <option value="/ClassicTunes/pt/">Português (Brazil)</option>
-            <option value="/ClassicTunes/ru/">Русский (Russian)</option>
-            <option value="/ClassicTunes/es/">Español (Spanish)</option>
-            <option value="/ClassicTunes/te/">తెలుగు (Telugu)</option>
+            <option value="/">English</option>
+            <option value="/zh/">简体中文 (Chinese Simplified)</option>
+            <option value="/fr/">Français (French)</option>
+            <option value="/de/">Deutsch (German)</option>
+            <option value="/hi/">हिन्दी (Hindi)</option>
+            <option value="/ja/">日本語 (Japanese)</option>
+            <option value="/ko/" selected>한국어 (Korean)</option>
+            <option value="/pt/">Português (Brazil)</option>
+            <option value="/ru/">Русский (Russian)</option>
+            <option value="/es/">Español (Spanish)</option>
+            <option value="/te/">తెలుగు (Telugu)</option>
         </select>
     </div>
     <div class="title-content">
@@ -70,21 +111,22 @@
         </p>
 
         <ul class="features">
-            <li>작동하는 Cover Flow</li>
+            <li>충실하게 재현된 Cover Flow</li>
             <li>미니 플레이어</li>
-            <li>재생 목록 (스마트 m3u 지원 포함)</li>
-            <li>Tunes Store 통합</li>
+            <li>재생 목록 및 스마트 재생 목록 (스마트 m3u 지원 포함)</li>
+            <li>Tunes Store (iTunes API 사용)</li>
             <li>가사 지원 (lrclib 또는 메타데이터 사용)</li>
             <li>아이팟 싱킹 (1st-2nd gen Shuffles)</li>
             <li>Discord Rich Presence (MusicPresence 사용)</li>
+            <li>색상 및 테마 사용자화</li>
             <li>클래식 iTunes 7-10 미학</li>
         </ul>
         
         <p>
-            시스템 요구 사항: macOS 13 Ventura 이상, Apple Silicon (M1 이상).
+            시스템 요구 사항: macOS 14 Sonoma 이상, Apple Silicon (M 시리즈 및 A 시리즈).
         </p>
 
-        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.3.1/ClassicTunes.zip">
+        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.4/ClassicTunes.zip">
             ClassicTunes 다운로드
         </a>
         <br/>
@@ -98,69 +140,95 @@
 
         <div class="screenshot-grid">
             <figure>
-                <img src="../assets/songs.png" alt="노래 목록 보기">
+                <img src="../assets/songs.png" alt="노래 목록 보기" loading="lazy">
                 <figcaption>노래 목록 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/albums.png" alt="앨범 보기">
+                <img src="../assets/albums.png" alt="앨범 보기" loading="lazy">
                 <figcaption>앨범 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/coverflow.png" alt="Cover Flow 보기">
+                <img src="../assets/coverflow.png" alt="Cover Flow 보기" loading="lazy">
                 <figcaption>Cover Flow 보기</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/upnext_lyrics.png" alt="가사 및 다음 항목 보기">
-                <figcaption>가사(lrclib 사용) 및 다음 항목 보기</figcaption>
+                <img src="../assets/visualizer.png" alt="클래식 비주얼라이저" loading="lazy">
+                <figcaption>11가지 비주얼라이저</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/playlists.png" alt="재생 목록">
+                <img src="../assets/upnext_lyrics.png" alt="가사 및 다음 항목 보기" loading="lazy">
+                <figcaption>가사(lrclib 사용), 다음 항목 보기, 앨범 아트 보기</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/playlists.png" alt="재생 목록" loading="lazy">
                 <figcaption>재생 목록</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/addto_playlist.png" alt="재생 목록 관리">
-                <figcaption>가져오기/내보내기 및 스마트 m3u 관리가 포함된 재생 목록 관리</figcaption>
+                <img src="../assets/addto_playlist.png" alt="재생 목록 관리" loading="lazy">
+                <figcaption>스마트 m3u 관리가 포함된 재생 목록/스마트 재생 목록 관리</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/ipo_syncing.png" alt="아이팟 싱킹">
+                <img src="../assets/ipo_syncing.png" alt="아이팟 싱킹" loading="lazy">
                 <figcaption>아이팟 싱킹 (1st-2nd gen Shuffles)</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/itunes_store.png" alt="Tunes Store 통합">
+                <img src="../assets/tunes_store.png" alt="Tunes Store 통합" loading="lazy">
                 <figcaption>Tunes Store 통합</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/miniplayer.png" alt="미니 플레이어">
+                <img src="../assets/miniplayer.png" alt="미니 플레이어" loading="lazy">
                 <figcaption>미니 플레이어</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/translate.png" alt="번역 지원">
+                <img src="../assets/translate.png" alt="번역 지원" loading="lazy">
                 <figcaption>11개 언어로 번역됨</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/darkmode.png" alt="다크 모드 지원">
+                <img src="../assets/darkmode.png" alt="다크 모드 지원" loading="lazy">
                 <figcaption>다크 모드 지원</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence">
+                <img src="../assets/customizatoin.png" alt="사용자화 설정" loading="lazy">
+                <figcaption>색상 및 테마 사용자화</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/equalizer.png" alt="이퀄라이저 설정" loading="lazy">
+                <figcaption>이퀄라이저</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence" loading="lazy">
                 <figcaption>Discord Rich Presence (<a href="https://musicpresence.app/" target="_blank" rel="noopener noreferrer">MusicPresence</a> 사용)</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/metadata.png" alt="메타데이터 편집기" loading="lazy">
+                <figcaption>대부분의 오디오 형식을 지원하는 메타데이터 편집기</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/help.png" alt="도움말 가이드" loading="lazy">
+                <figcaption>도움말 가이드</figcaption>
             </figure>
         </div>
     </section>
 </main>
 
 <footer>
+    <nav class="footer-langs" aria-label="언어"><a href=".././" hreflang="en" lang="en">English</a> <a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">简体中文</a> <a href="../fr/" hreflang="fr" lang="fr">Français</a> <a href="../de/" hreflang="de" lang="de">Deutsch</a> <a href="../hi/" hreflang="hi" lang="hi">हिन्दी</a> <a href="../ja/" hreflang="ja" lang="ja">日本語</a> <a href="../ko/" hreflang="ko" lang="ko" aria-current="true">한국어</a> <a href="../pt/" hreflang="pt-BR" lang="pt-BR">Português</a> <a href="../ru/" hreflang="ru" lang="ru">Русский</a> <a href="../es/" hreflang="es" lang="es">Español</a> <a href="../te/" hreflang="te" lang="te">తెలుగు</a></nav>
     © 2026 ClassicTunes
 </footer>
 
@@ -174,7 +242,7 @@
         </div>
 
         <div class="lightbox-body">
-            <img id="lightbox-image" src="" alt="Screenshot preview">
+            <img id="lightbox-image" src="" alt="스크린샷 미리보기">
             <p class="lightbox-caption" id="lightbox-caption"></p>
         </div>
     </div>
@@ -189,6 +257,54 @@
         const closeButton = document.getElementById('lightbox-close');
         const screenshots = document.querySelectorAll('.screenshot-grid img');
 
+        // The CSS shadow is sized in the image's own pixels, so it needs the on-screen scale of each image.
+        const syncShadowScale = (img) => {
+            if (img.naturalWidth && img.clientWidth) {
+                img.style.setProperty('--u', `${img.clientWidth / img.naturalWidth}px`);
+            }
+        };
+        const shadowObserver = new ResizeObserver((entries) => entries.forEach((entry) => syncShadowScale(entry.target)));
+        [...screenshots, previewImage].forEach((img) => {
+            shadowObserver.observe(img);
+            img.addEventListener('load', () => syncShadowScale(img));
+            syncShadowScale(img);
+        });
+
+        // Reads each screenshot's own transparency so nothing per-image is hardcoded and a re-exported
+        // screenshot is picked up automatically:
+        //  - the first opaque pixel down the centre column is where the window starts, so the transparent
+        //    padding above it is cancelled out (CSS --top-pad) and every row's window tops line up;
+        //  - an opaque top-left corner means there is no baked-in macOS shadow, so the CSS one is added.
+        // Canvas reads are blocked on file:// pages; there the images simply render unadjusted.
+        const probe = document.createElement('canvas');
+        const probeContext = probe.getContext('2d', { willReadFrequently: true });
+        const measureScreenshot = (img) => {
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            if (!width || !height) return;
+            try {
+                probe.width = 1;
+                probe.height = height;
+                probeContext.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
+                const hasBakedPadding = probeContext.getImageData(0, 0, 1, 1).data[3] < 255;
+
+                probeContext.clearRect(0, 0, 1, height);
+                probeContext.drawImage(img, Math.floor(width / 2), 0, 1, height, 0, 0, 1, height);
+                const column = probeContext.getImageData(0, 0, 1, height).data;
+                let top = 0;
+                while (top < height && column[top * 4 + 3] < 255) top++;
+
+                img.classList.toggle('shadowed', !hasBakedPadding);
+                img.style.setProperty('--top-pad', hasBakedPadding && top < height ? String(top / width) : '0');
+            } catch (error) {
+                // Tainted canvas (file://) or unsupported context: leave the image as-is.
+            }
+        };
+        screenshots.forEach((img) => {
+            img.addEventListener('load', () => measureScreenshot(img));
+            if (img.complete) measureScreenshot(img);
+        });
+
         const closeModal = () => {
             overlay.hidden = true;
             overlay.setAttribute('aria-hidden', 'true');
@@ -201,6 +317,7 @@
 
             previewImage.src = image.src;
             previewImage.alt = image.alt;
+            previewImage.classList.toggle('shadowed', image.classList.contains('shadowed'));
             previewCaption.innerHTML = captionContent;
             overlay.hidden = false;
             overlay.setAttribute('aria-hidden', 'false');

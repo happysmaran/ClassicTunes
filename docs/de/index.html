@@ -3,37 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClassicTunes — Eine moderne macOS-App, die das Aussehen und die Bedienung von iTunes 7-10 auf modernen Apple Silicon Macs originalgetreu nachbildet.">
-    <meta name="robots" content="index, follow">
-    <meta name="keywords" content="ClassicTunes, iTunes remake, macOS app, SwiftUI, Apple Silicon, classic iTunes, iTunes 7, iTunes 8, iTunes 9, iTunes 10">
+    <title>ClassicTunes: Das SwiftUI iTunes-Remake für Apple Silicon</title>
+    <meta name="description" content="ClassicTunes ist eine native SwiftUI-App, die iTunes 7-10 auf Apple-Silicon-Macs nachbildet – mit Cover Flow, MiniPlayer, intelligenten Wiedergabelisten, Songtexten, iPod-Shuffle-Sync und Designs.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="author" content="Smaran Vallabhaneni">
+    <link rel="canonical" href="https://classictunes.smaran-vallabhaneni.com/de/">
+
+    <link rel="alternate" hreflang="en" href="https://classictunes.smaran-vallabhaneni.com/">
+    <link rel="alternate" hreflang="zh-Hans" href="https://classictunes.smaran-vallabhaneni.com/zh/">
+    <link rel="alternate" hreflang="fr" href="https://classictunes.smaran-vallabhaneni.com/fr/">
+    <link rel="alternate" hreflang="de" href="https://classictunes.smaran-vallabhaneni.com/de/">
+    <link rel="alternate" hreflang="hi" href="https://classictunes.smaran-vallabhaneni.com/hi/">
+    <link rel="alternate" hreflang="ja" href="https://classictunes.smaran-vallabhaneni.com/ja/">
+    <link rel="alternate" hreflang="ko" href="https://classictunes.smaran-vallabhaneni.com/ko/">
+    <link rel="alternate" hreflang="pt-BR" href="https://classictunes.smaran-vallabhaneni.com/pt/">
+    <link rel="alternate" hreflang="ru" href="https://classictunes.smaran-vallabhaneni.com/ru/">
+    <link rel="alternate" hreflang="es" href="https://classictunes.smaran-vallabhaneni.com/es/">
+    <link rel="alternate" hreflang="te" href="https://classictunes.smaran-vallabhaneni.com/te/">
+    <link rel="alternate" hreflang="x-default" href="https://classictunes.smaran-vallabhaneni.com/">
+
     <meta property="og:type" content="website">
-    <meta property="og:title" content="ClassicTunes: Das SwiftUI iTunes-Remake für Apple Silicon">
-    <meta property="og:description" content="ClassicTunes — Eine moderne macOS-App, die das Aussehen und die Bedienung von iTunes 7-10 auf modernen Apple Silicon Macs originalgetreu nachbildet.">
-    <meta property="og:url" content="https://smaran-vallabhaneni.com/ClassicTunes/de/">
-    <meta property="og:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
     <meta property="og:site_name" content="ClassicTunes">
+    <meta property="og:title" content="ClassicTunes: Das SwiftUI iTunes-Remake für Apple Silicon">
+    <meta property="og:description" content="ClassicTunes ist eine native SwiftUI-App, die iTunes 7-10 auf Apple-Silicon-Macs nachbildet – mit Cover Flow, MiniPlayer, intelligenten Wiedergabelisten, Songtexten, iPod-Shuffle-Sync und Designs.">
+    <meta property="og:url" content="https://classictunes.smaran-vallabhaneni.com/de/">
+    <meta property="og:image" content="https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png">
+    <meta property="og:image:alt" content="ClassicTunes — Die klassische iTunes-Erfahrung ist zurück">
     <meta property="og:locale" content="de_DE">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:locale:alternate" content="zh_CN">
+    <meta property="og:locale:alternate" content="fr_FR">
+    <meta property="og:locale:alternate" content="hi_IN">
+    <meta property="og:locale:alternate" content="ja_JP">
+    <meta property="og:locale:alternate" content="ko_KR">
+    <meta property="og:locale:alternate" content="pt_BR">
+    <meta property="og:locale:alternate" content="ru_RU">
+    <meta property="og:locale:alternate" content="es_ES">
+    <meta property="og:locale:alternate" content="te_IN">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="ClassicTunes: Das SwiftUI iTunes-Remake für Apple Silicon">
-    <meta name="twitter:description" content="ClassicTunes — Eine moderne macOS-App, die das Aussehen und die Bedienung von iTunes 7-10 auf modernen Apple Silicon Macs originalgetreu nachbildet.">
-    <meta name="twitter:image" content="https://smaran-vallabhaneni.com/ClassicTunes/assets/classictunes.png">
-    <title>ClassicTunes: Das SwiftUI iTunes-Remake für Apple Silicon</title>
-    <link rel="canonical" href="https://smaran-vallabhaneni.com/ClassicTunes/de/">
-    
-    <link rel="alternate" hreflang="x-default" href="https://smaran-vallabhaneni.com/ClassicTunes/">
-    <link rel="alternate" hreflang="en" href="https://smaran-vallabhaneni.com/ClassicTunes/">
-    <link rel="alternate" hreflang="zh" href="https://smaran-vallabhaneni.com/ClassicTunes/zh/">
-    <link rel="alternate" hreflang="fr" href="https://smaran-vallabhaneni.com/ClassicTunes/fr/">
-    <link rel="alternate" hreflang="de" href="https://smaran-vallabhaneni.com/ClassicTunes/de/">
-    <link rel="alternate" hreflang="hi" href="https://smaran-vallabhaneni.com/ClassicTunes/hi/">
-    <link rel="alternate" hreflang="ja" href="https://smaran-vallabhaneni.com/ClassicTunes/ja/">
-    <link rel="alternate" hreflang="ko" href="https://smaran-vallabhaneni.com/ClassicTunes/ko/">
-    <link rel="alternate" hreflang="pt" href="https://smaran-vallabhaneni.com/ClassicTunes/pt/">
-    <link rel="alternate" hreflang="ru" href="https://smaran-vallabhaneni.com/ClassicTunes/ru/">
-    <link rel="alternate" hreflang="es" href="https://smaran-vallabhaneni.com/ClassicTunes/es/">
-    <link rel="alternate" hreflang="te" href="https://smaran-vallabhaneni.com/ClassicTunes/te/">
-    
+    <meta name="twitter:description" content="ClassicTunes ist eine native SwiftUI-App, die iTunes 7-10 auf Apple-Silicon-Macs nachbildet – mit Cover Flow, MiniPlayer, intelligenten Wiedergabelisten, Songtexten, iPod-Shuffle-Sync und Designs.">
+    <meta name="twitter:image" content="https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png">
+    <meta name="twitter:image:alt" content="ClassicTunes — Die klassische iTunes-Erfahrung ist zurück">
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ClassicTunes",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "macOS 14.0 or later",
+  "softwareVersion": "1.4",
+  "description": "ClassicTunes ist eine native SwiftUI-App, die iTunes 7-10 auf Apple-Silicon-Macs nachbildet – mit Cover Flow, MiniPlayer, intelligenten Wiedergabelisten, Songtexten, iPod-Shuffle-Sync und Designs.",
+  "inLanguage": "de",
+  "url": "https://classictunes.smaran-vallabhaneni.com/de/",
+  "image": "https://classictunes.smaran-vallabhaneni.com/assets/classictunes.png",
+  "downloadUrl": "https://github.com/happysmaran/ClassicTunes/releases/download/1.4/ClassicTunes.zip",
+  "screenshot": [
+    "https://classictunes.smaran-vallabhaneni.com/assets/songs.png",
+    "https://classictunes.smaran-vallabhaneni.com/assets/coverflow.png",
+    "https://classictunes.smaran-vallabhaneni.com/assets/upnext_lyrics.png"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Smaran Vallabhaneni",
+    "url": "https://smaran-vallabhaneni.com/"
+  },
+  "sameAs": [
+    "https://github.com/happysmaran/ClassicTunes"
+  ]
+}
+    </script>
+
     <link rel="icon" type="image/png" href="../assets/favicon.png">
     <link rel="stylesheet" href="../styles.css">
 </head>
@@ -42,17 +83,17 @@
 <header class="titlebar">
     <div class="lang-selector-container">
         <select id="lang-selector" class="mac-select" aria-label="Sprache auswählen" onchange="location = this.value;">
-            <option value="/ClassicTunes/">English</option>
-            <option value="/ClassicTunes/zh/">简体中文 (Chinese Simplified)</option>
-            <option value="/ClassicTunes/fr/">Français (French)</option>
-            <option value="/ClassicTunes/de/" selected>Deutsch (German)</option>
-            <option value="/ClassicTunes/hi/">हिन्दी (Hindi)</option>
-            <option value="/ClassicTunes/ja/">日本語 (Japanese)</option>
-            <option value="/ClassicTunes/ko/">한국어 (Korean)</option>
-            <option value="/ClassicTunes/pt/">Português (Brazil)</option>
-            <option value="/ClassicTunes/ru/">Русский (Russian)</option>
-            <option value="/ClassicTunes/es/">Español (Spanish)</option>
-            <option value="/ClassicTunes/te/">తెలుగు (Telugu)</option>
+            <option value="/">English</option>
+            <option value="/zh/">简体中文 (Chinese Simplified)</option>
+            <option value="/fr/">Français (French)</option>
+            <option value="/de/" selected>Deutsch (German)</option>
+            <option value="/hi/">हिन्दी (Hindi)</option>
+            <option value="/ja/">日本語 (Japanese)</option>
+            <option value="/ko/">한국어 (Korean)</option>
+            <option value="/pt/">Português (Brazil)</option>
+            <option value="/ru/">Русский (Russian)</option>
+            <option value="/es/">Español (Spanish)</option>
+            <option value="/te/">తెలుగు (Telugu)</option>
         </select>
     </div>
     <div class="title-content">
@@ -70,21 +111,22 @@
         </p>
 
         <ul class="features">
-            <li>Funktionierender Cover Flow</li>
+            <li>Originalgetreuer Cover Flow</li>
             <li>MiniPlayer</li>
-            <li>Wiedergabelisten (mit intelligenter m3u-Unterstützung)</li>
-            <li>Tunes Store-Integration</li>
+            <li>Wiedergabelisten und intelligente Wiedergabelisten (mit intelligenter m3u-Unterstützung)</li>
+            <li>Tunes Store (über die iTunes-API)</li>
             <li>Songtext-Unterstützung (mit lrclib oder Metadaten)</li>
             <li>iPod-Synchronisierung (1st-2nd gen Shuffles)</li>
             <li>Discord Rich Presence (mit MusicPresence)</li>
+            <li>Anpassung von Farben und Designs</li>
             <li>Klassische iTunes 7-10 Ästhetik</li>
         </ul>
         
         <p>
-            Systemvoraussetzungen: macOS 13 Ventura oder neuer, Apple Silicon (M1 und neuer).
+            Systemvoraussetzungen: macOS 14 Sonoma oder neuer, Apple Silicon (M-Serie und A-Serie).
         </p>
 
-        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.3.1/ClassicTunes.zip">
+        <a class="download-btn" href="https://github.com/happysmaran/ClassicTunes/releases/download/1.4/ClassicTunes.zip">
             ClassicTunes herunterladen
         </a>
         <br/>
@@ -98,69 +140,95 @@
 
         <div class="screenshot-grid">
             <figure>
-                <img src="../assets/songs.png" alt="Titellisten-Ansicht">
+                <img src="../assets/songs.png" alt="Titellisten-Ansicht" loading="lazy">
                 <figcaption>Titellisten-Ansicht</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/albums.png" alt="Album-Ansicht">
+                <img src="../assets/albums.png" alt="Album-Ansicht" loading="lazy">
                 <figcaption>Album-Ansicht</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/coverflow.png" alt="Cover Flow-Ansicht">
+                <img src="../assets/coverflow.png" alt="Cover Flow-Ansicht" loading="lazy">
                 <figcaption>Cover Flow-Ansicht</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/upnext_lyrics.png" alt="Songtexte und Nächster Titel">
-                <figcaption>Songtexte (mit lrclib) und 'Nächster Titel'-Ansicht</figcaption>
+                <img src="../assets/visualizer.png" alt="Klassischer Visualizer" loading="lazy">
+                <figcaption>11 verschiedene Visualizer</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/playlists.png" alt="Wiedergabelisten">
+                <img src="../assets/upnext_lyrics.png" alt="Songtexte und Nächster Titel" loading="lazy">
+                <figcaption>Songtexte (mit lrclib), &#x27;Nächster Titel&#x27;-Ansicht und Albumcover-Ansicht</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/playlists.png" alt="Wiedergabelisten" loading="lazy">
                 <figcaption>Wiedergabelisten</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/addto_playlist.png" alt="Wiedergabelistenverwaltung">
-                <figcaption>Wiedergabelistenverwaltung mit Import/Export und intelligenter m3u-Verwaltung</figcaption>
+                <img src="../assets/addto_playlist.png" alt="Wiedergabelistenverwaltung" loading="lazy">
+                <figcaption>Verwaltung von Wiedergabelisten und intelligenten Wiedergabelisten mit intelligenter m3u-Verwaltung</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/ipo_syncing.png" alt="iPod Syncing">
+                <img src="../assets/ipo_syncing.png" alt="iPod-Synchronisierung" loading="lazy">
                 <figcaption>iPod-Synchronisierung (1st-2nd gen Shuffles)</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/itunes_store.png" alt="Tunes Store-Integration">
+                <img src="../assets/tunes_store.png" alt="Tunes Store-Integration" loading="lazy">
                 <figcaption>Tunes Store-Integration</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/miniplayer.png" alt="MiniPlayer">
+                <img src="../assets/miniplayer.png" alt="MiniPlayer" loading="lazy">
                 <figcaption>MiniPlayer</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/translate.png" alt="Übersetzungsunterstützung">
+                <img src="../assets/translate.png" alt="Übersetzungsunterstützung" loading="lazy">
                 <figcaption>In 11 Sprachen übersetzt</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/darkmode.png" alt="Dunkelmodus-Unterstützung">
+                <img src="../assets/darkmode.png" alt="Dunkelmodus-Unterstützung" loading="lazy">
                 <figcaption>Dunkelmodus-Unterstützung</figcaption>
             </figure>
 
             <figure>
-                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence">
+                <img src="../assets/customizatoin.png" alt="Anpassungseinstellungen" loading="lazy">
+                <figcaption>Anpassung von Farben und Designs</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/equalizer.png" alt="Equalizer-Einstellungen" loading="lazy">
+                <figcaption>Equalizer</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/discord_rpc.png" alt="Discord Rich Presence" loading="lazy">
                 <figcaption>Discord Rich Presence (mit <a href="https://musicpresence.app/" target="_blank" rel="noopener noreferrer">MusicPresence</a>)</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/metadata.png" alt="Metadaten-Editor" loading="lazy">
+                <figcaption>Metadaten-Editor für die meisten Audioformate</figcaption>
+            </figure>
+
+            <figure>
+                <img src="../assets/help.png" alt="Hilfe-Handbuch" loading="lazy">
+                <figcaption>Hilfe-Handbuch</figcaption>
             </figure>
         </div>
     </section>
 </main>
 
 <footer>
+    <nav class="footer-langs" aria-label="Sprachen"><a href=".././" hreflang="en" lang="en">English</a> <a href="../zh/" hreflang="zh-Hans" lang="zh-Hans">简体中文</a> <a href="../fr/" hreflang="fr" lang="fr">Français</a> <a href="../de/" hreflang="de" lang="de" aria-current="true">Deutsch</a> <a href="../hi/" hreflang="hi" lang="hi">हिन्दी</a> <a href="../ja/" hreflang="ja" lang="ja">日本語</a> <a href="../ko/" hreflang="ko" lang="ko">한국어</a> <a href="../pt/" hreflang="pt-BR" lang="pt-BR">Português</a> <a href="../ru/" hreflang="ru" lang="ru">Русский</a> <a href="../es/" hreflang="es" lang="es">Español</a> <a href="../te/" hreflang="te" lang="te">తెలుగు</a></nav>
     © 2026 ClassicTunes
 </footer>
 
@@ -174,7 +242,7 @@
         </div>
 
         <div class="lightbox-body">
-            <img id="lightbox-image" src="" alt="Screenshot preview">
+            <img id="lightbox-image" src="" alt="Screenshot-Vorschau">
             <p class="lightbox-caption" id="lightbox-caption"></p>
         </div>
     </div>
@@ -189,6 +257,54 @@
         const closeButton = document.getElementById('lightbox-close');
         const screenshots = document.querySelectorAll('.screenshot-grid img');
 
+        // The CSS shadow is sized in the image's own pixels, so it needs the on-screen scale of each image.
+        const syncShadowScale = (img) => {
+            if (img.naturalWidth && img.clientWidth) {
+                img.style.setProperty('--u', `${img.clientWidth / img.naturalWidth}px`);
+            }
+        };
+        const shadowObserver = new ResizeObserver((entries) => entries.forEach((entry) => syncShadowScale(entry.target)));
+        [...screenshots, previewImage].forEach((img) => {
+            shadowObserver.observe(img);
+            img.addEventListener('load', () => syncShadowScale(img));
+            syncShadowScale(img);
+        });
+
+        // Reads each screenshot's own transparency so nothing per-image is hardcoded and a re-exported
+        // screenshot is picked up automatically:
+        //  - the first opaque pixel down the centre column is where the window starts, so the transparent
+        //    padding above it is cancelled out (CSS --top-pad) and every row's window tops line up;
+        //  - an opaque top-left corner means there is no baked-in macOS shadow, so the CSS one is added.
+        // Canvas reads are blocked on file:// pages; there the images simply render unadjusted.
+        const probe = document.createElement('canvas');
+        const probeContext = probe.getContext('2d', { willReadFrequently: true });
+        const measureScreenshot = (img) => {
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            if (!width || !height) return;
+            try {
+                probe.width = 1;
+                probe.height = height;
+                probeContext.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
+                const hasBakedPadding = probeContext.getImageData(0, 0, 1, 1).data[3] < 255;
+
+                probeContext.clearRect(0, 0, 1, height);
+                probeContext.drawImage(img, Math.floor(width / 2), 0, 1, height, 0, 0, 1, height);
+                const column = probeContext.getImageData(0, 0, 1, height).data;
+                let top = 0;
+                while (top < height && column[top * 4 + 3] < 255) top++;
+
+                img.classList.toggle('shadowed', !hasBakedPadding);
+                img.style.setProperty('--top-pad', hasBakedPadding && top < height ? String(top / width) : '0');
+            } catch (error) {
+                // Tainted canvas (file://) or unsupported context: leave the image as-is.
+            }
+        };
+        screenshots.forEach((img) => {
+            img.addEventListener('load', () => measureScreenshot(img));
+            if (img.complete) measureScreenshot(img);
+        });
+
         const closeModal = () => {
             overlay.hidden = true;
             overlay.setAttribute('aria-hidden', 'true');
@@ -201,6 +317,7 @@
 
             previewImage.src = image.src;
             previewImage.alt = image.alt;
+            previewImage.classList.toggle('shadowed', image.classList.contains('shadowed'));
             previewCaption.innerHTML = captionContent;
             overlay.hidden = false;
             overlay.setAttribute('aria-hidden', 'false');

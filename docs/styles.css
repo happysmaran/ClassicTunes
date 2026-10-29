@@ -160,18 +160,34 @@ figure {
     text-align: center;
 }
 
+/* Most screenshots are exported from macOS with the window shadow baked into transparent padding,
+   so a CSS shadow would draw a second one around the padded rectangle. Only opaque, shadowless
+   images (e.g. Discord) get .shadowed from the page script, which detects them from their pixels. */
+/* Screenshots carry different amounts of transparent padding above the window (it scales with each
+   file's resolution), which staggered the visible window tops within a row. --top-pad is that padding as a
+   fraction of the image width, measured by the page script; a percentage margin resolves against the figure width, and the image is
+   --fit of it wide, so the negative margin pulls every visible window top up to the row's top edge. */
 figure img {
+    --fit: 80%;
     width: 100%;
-    max-width: 80%;
-    border-radius: 4px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    max-width: var(--fit);
+    margin-top: calc(var(--top-pad, 0) * var(--fit) * -1);
     cursor: zoom-in;
-    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    transition: transform 0.16s ease;
 }
 
-figure img:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+/* Reproduces the shadow baked into the macOS screenshots (measured from them: black at 40%,
+   79px blur, 36px down, in the image's own pixels). --u is displayed px per image px, set by script,
+   so the shadow scales with the image exactly as a baked one does. */
+img.shadowed {
+    border-radius: 4px;
+    box-shadow: 0 calc(var(--u, 0.5px) * 35.75) calc(var(--u, 0.5px) * 79) rgba(0, 0, 0, 0.4);
+}
+
+@media (hover: hover) {
+    figure img:hover {
+        transform: translateY(-2px);
+    }
 }
 
 figure img:focus-visible {
@@ -242,8 +258,16 @@ body.modal-open {
 }
 
 button.traffic {
+    position: relative;
     padding: 0;
     cursor: pointer;
+}
+
+/* The dot stays 12px to look like a macOS window control; this widens the touch target to a usable size. */
+button.traffic::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
 }
 
 .close {
@@ -277,8 +301,6 @@ button.traffic {
     max-width: 100%;
     max-height: 70vh;
     margin: 0 auto;
-    border-radius: 8px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.28);
 }
 
 .lightbox-caption {
@@ -308,8 +330,12 @@ footer {
 
 @media (max-width: 600px) {
     .window {
-        padding: 20px;
-        margin: 16px;
+        padding: 16px;
+        margin: 10px;
+    }
+
+    .titlebar {
+        padding: 20px 12px;
     }
 
     .titlebar h1 {
@@ -317,12 +343,87 @@ footer {
     }
 
     figure img {
-        max-width: 100%;
+        --fit: 100%;
     }
-    
+
     .lang-selector-container {
         position: static;
         text-align: center;
         margin-bottom: 12px;
     }
+
+    /* 16px keeps iOS Safari from zooming the page when the dropdown is focused. */
+    .mac-select {
+        font-size: 16px;
+        padding: 8px 32px 8px 12px;
+    }
+
+    .download-btn,
+    .github-btn {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 14px 20px;
+        text-align: center;
+    }
+
+    /* The <br> between the buttons would add a blank line on top of the margin once they stack. */
+    .about br {
+        display: none;
+    }
+
+    .github-btn {
+        margin-top: 12px;
+    }
+
+    /* Screenshots are far too dense to read at phone width, so the preview shows them at a readable
+       size and lets the viewer pan sideways instead of shrinking them to fit. */
+    .lightbox-overlay {
+        padding: 10px;
+    }
+
+    .lightbox-window {
+        display: flex;
+        flex-direction: column;
+        max-height: 92vh;
+    }
+
+    .lightbox-body {
+        padding: 10px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .lightbox-body img {
+        max-width: none;
+        max-height: none;
+        width: max(100%, 720px);
+        margin: 0;
+    }
+
+    .lightbox-caption {
+        position: sticky;
+        left: 0;
+    }
+}
+
+/* Plain anchors back up the JS-only language <select> so every translation is reachable without scripting. */
+.footer-langs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    margin-bottom: 10px;
+}
+
+.footer-langs a {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 4px 0;
+}
+
+.footer-langs a:hover,
+.footer-langs a[aria-current="true"] {
+    text-decoration: underline;
 }
