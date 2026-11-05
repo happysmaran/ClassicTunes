@@ -166,10 +166,9 @@ final class ITunesDBDocument {
         for index in indexMHODs() {
             let type = index.body.readLE(UInt32.self, at: 0) ?? 0
             guard !Self.rebuildableIndexTypes.contains(type) else { continue }
-            let entry = (type: type, count: UInt32(0))
-            throw ITunesDBError.unsupported("This iPod's library has a sorted index (type 0x\(String(entry.type, radix: 16))) ClassicTunes cannot rebuild yet, so it will not modify it. (\(summary))")
+            throw ITunesDBError.unsupported("This iPod's library has a sorted index (type 0x\(String(type, radix: 16))) ClassicTunes cannot rebuild yet, so it will not modify it. (\(summary))")
         }
-        for type in jumpTableTypes() where ![0x03, 0x04, 0x05, 0x07, 0x12, 0x23].contains(type) {
+        for type in jumpTableTypes() where !Self.rebuildableIndexTypes.contains(type) {
             throw ITunesDBError.unsupported("This iPod's library has a letter-jump table (type 0x\(String(type, radix: 16))) ClassicTunes cannot rebuild yet, so it will not modify it.")
         }
         guard dataset(1) != nil, masterPlaylist() != nil else {
@@ -272,14 +271,13 @@ final class ITunesDBDocument {
     @discardableResult
     func addTrack(_ input: ClassicTrackInput, now: Date = Date()) throws -> UInt32 {
         try assertWritable()
-        guard let list = dataset(1), let master = masterPlaylist() else {
-            throw ITunesDBError.malformed("track list or master playlist is missing")
+        guard let list = dataset(1) else {
+            throw ITunesDBError.malformed("track list is missing")
         }
         let nextID = (list.children.compactMap { $0.header.readLE(UInt32.self, at: 0x10) }.max() ?? 0) + 1
         let persistentID = UInt64.random(in: 1...UInt64.max)
         let albumRecordID = try albumID(title: input.album, artist: input.albumArtist.isEmpty ? input.artist : input.albumArtist)
         list.children.append(makeTrack(input, id: nextID, persistentID: persistentID, albumID: albumRecordID, list: list, now: now))
-        _ = master
         for each in masterPlaylists() {
             appendItem(to: each, trackID: nextID, persistentID: persistentID)
         }
@@ -288,19 +286,23 @@ final class ITunesDBDocument {
 
     // The id that links a track to its cover art in the ArtworkDB.
     func databaseTrackID(of trackID: UInt32) -> UInt64? {
-        dataset(1)?.children.first { $0.header.readLE(UInt32.self, at: 0x10) == trackID }?
-            .header.readLE(UInt64.self, at: 0x70)
+        trackRecord(trackID)?.header.readLE(UInt64.self, at: 0x70)
     }
 
+    // True for unknown ids so a vanished track is never queued for a pointless refresh.
     func hasArtwork(trackID: UInt32) -> Bool {
-        guard let mhit = dataset(1)?.children.first(where: { $0.header.readLE(UInt32.self, at: 0x10) == trackID }) else { return true }
+        guard let mhit = trackRecord(trackID) else { return true }
         return (mhit.header.readLE(UInt8.self, at: 0xA4) ?? 1) != 0
+    }
+
+    private func trackRecord(_ trackID: UInt32) -> DBChunk? {
+        dataset(1)?.children.first { $0.header.readLE(UInt32.self, at: 0x10) == trackID }
     }
 
     // Marks a track as having cover art; the art itself lives in the ArtworkDB and .ithmb files.
     // Headers too short to hold the fields (very old databases) are left alone.
     func attachArtwork(trackID: UInt32, sourceSize: Int) {
-        guard let mhit = dataset(1)?.children.first(where: { $0.header.readLE(UInt32.self, at: 0x10) == trackID }),
+        guard let mhit = trackRecord(trackID),
               mhit.header.hasField(at: 0xA4, size: 1) else { return }
         mhit.header.writeLE(UInt16(1), at: 0x7C)
         mhit.header.writeLE(UInt32(clamping: sourceSize), at: 0x80)

@@ -42,6 +42,15 @@ extension iPodSyncEngine {
         grantedVolumeURL = nil
     }
 
+    // Both sync and rollback backups are filed under the same device key.
+    private func backupKey(for device: iPodDevice) -> String {
+        device.bsdName.isEmpty ? device.volumeName : device.bsdName
+    }
+
+    private func identity(of song: Song) async -> String {
+        SyncIdentity.make(title: song.title, artist: song.artist, album: song.album, durationMS: await ClassicBackend.durationMS(of: song))
+    }
+
     private func setPhase(_ phase: SyncProgress.Phase) async { await MainActor.run { progress.phase = phase } }
 
     // MARK: Sync
@@ -76,9 +85,7 @@ extension iPodSyncEngine {
             SyncLog.record("device holds \(library.entries.count) tracks")
 
             var identities: [String] = []
-            for song in songs {
-                identities.append(SyncIdentity.make(title: song.title, artist: song.artist, album: song.album, durationMS: await ClassicBackend.durationMS(of: song)))
-            }
+            for song in songs { identities.append(await identity(of: song)) }
             var plan = SyncPlanner.plan(desired: identities, device: library.entries, mode: mode)
 
             var skipped: [(title: String, reason: String)] = []
@@ -117,7 +124,7 @@ extension iPodSyncEngine {
             if device.generation != .classic {
                 setHidden(at: base.appendingPathComponent("iPod_Control", isDirectory: true))
             }
-            try DatabaseBackups.save(library.databaseFiles, key: device.bsdName.isEmpty ? device.volumeName : device.bsdName)
+            try DatabaseBackups.save(library.databaseFiles, key: backupKey(for: device))
 
             await MainActor.run {
                 progress.phase = .copying
@@ -145,9 +152,7 @@ extension iPodSyncEngine {
                 var requests: [PlaylistRequest] = []
                 for playlist in playlists where !playlist.isSystem && !playlist.songs.isEmpty {
                     var ids: [String] = []
-                    for song in playlist.songs {
-                        ids.append(SyncIdentity.make(title: song.title, artist: song.artist, album: song.album, durationMS: await ClassicBackend.durationMS(of: song)))
-                    }
+                    for song in playlist.songs { ids.append(await identity(of: song)) }
                     requests.append(PlaylistRequest(name: playlist.name, identities: ids))
                 }
                 _ = try library.writePlaylists(requests)
@@ -195,7 +200,7 @@ extension iPodSyncEngine {
         let entries = library.entries
         guard entries.indices.contains(trackIndex) else { return }
         try library.prepareForWrite()
-        try DatabaseBackups.save(library.databaseFiles, key: device.bsdName.isEmpty ? device.volumeName : device.bsdName)
+        try DatabaseBackups.save(library.databaseFiles, key: backupKey(for: device))
         try library.remove(entries[trackIndex])
         try library.commit()
         // After the commit, so a failure leaves an orphaned file rather than a dangling record.

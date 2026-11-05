@@ -18,10 +18,6 @@ enum ClassicBackend {
         return try ITunesDBDocument(data: Data(contentsOf: url))
     }
 
-    static func tracks(base: URL) throws -> [ClassicDeviceTrack] {
-        try loadDocument(base: base).tracks()
-    }
-
     // MARK: Audio inspection
 
     static func durationMS(of song: Song) async -> UInt32 {
