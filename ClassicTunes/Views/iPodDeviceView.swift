@@ -537,8 +537,11 @@ struct iPodDeviceView: View {
 
         do {
             let fileData = try Data(contentsOf: dbURL)
-            let parsedDB = try iTunesSD_BEDatabase.parse(from: fileData)
-            var tracks = parsedDB.tracks
+            var tracks = try ShuffleDatabaseFormat.trackPaths(in: fileData).map { path -> iTunesSD_BETrack in
+                var entry = iTunesSD_BETrack()
+                entry.filePath = path
+                return entry
+            }
 
             // Resolve a friendly display name for every track concurrently
             // (one child task per track), then write results back in order.

@@ -3,15 +3,29 @@ import Foundation
 // iTunesSD-based devices (Shuffle 1G/2G). The database stores only a path per track, so which
 // Mac song a record came from is kept in a small manifest next to it; without one, a record
 // can't be recognized and a mirror sync replaces it.
-final class ShuffleLibrary: DeviceLibrary {
-    private struct Manifest: Codable {
-        var version = 1
-        var tracks: [String: String] = [:]
+
+// Remembers which Mac song each device path came from for every Shuffle generation.
+struct ShuffleManifest: Codable {
+    var version = 1
+    var tracks: [String: String] = [:]
+    // Name -> id tables for the 3rd/4th generation's album and artist grouping. Optional so
+    // manifests written before they existed still decode.
+    var albums: [String: UInt32]?
+    var artists: [String: UInt32]?
+
+    static func load(from url: URL) -> ShuffleManifest {
+        guard let data = try? Data(contentsOf: url),
+              let loaded = try? JSONDecoder().decode(ShuffleManifest.self, from: data) else { return ShuffleManifest() }
+        return loaded
     }
 
+    func encoded() throws -> Data { try JSONEncoder().encode(self) }
+}
+
+final class ShuffleLibrary: DeviceLibrary {
     private let base: URL
     private var database: iTunesSD_BEDatabase
-    private var manifest: Manifest
+    private var manifest: ShuffleManifest
 
     private var itunesDir: URL { base.appendingPathComponent("iPod_Control/iTunes", isDirectory: true) }
     private var databaseURL: URL { itunesDir.appendingPathComponent("iTunesSD") }
@@ -29,13 +43,7 @@ final class ShuffleLibrary: DeviceLibrary {
         } else {
             database = iTunesSD_BEDatabase()
         }
-        let manifestURL = dir.appendingPathComponent("ClassicTunes.manifest.json")
-        if let data = try? Data(contentsOf: manifestURL),
-           let loaded = try? JSONDecoder().decode(Manifest.self, from: data) {
-            manifest = loaded
-        } else {
-            manifest = Manifest()
-        }
+        manifest = ShuffleManifest.load(from: dir.appendingPathComponent("ClassicTunes.manifest.json"))
     }
 
     var entries: [DeviceEntry] {
@@ -78,7 +86,7 @@ final class ShuffleLibrary: DeviceLibrary {
 
     func commit() throws {
         try DeviceFiles.writeVerified(database.serialise(), to: databaseURL)
-        try DeviceFiles.writeVerified(JSONEncoder().encode(manifest), to: manifestURL)
+        try DeviceFiles.writeVerified(manifest.encoded(), to: manifestURL)
         // The stats file must list exactly as many tracks as the database or the Shuffle
         // reports the library as corrupt, so play counts restart from zero after a change.
         try DeviceFiles.writeVerified(Self.emptyStats(trackCount: database.tracks.count), to: statsURL)

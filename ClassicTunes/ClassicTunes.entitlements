@@ -7,6 +7,9 @@
         <string>/Volumes/</string>
     </array>
 
+    <key>com.apple.security.device.usb</key>
+    <true/>
+
     <key>com.apple.security.exception.mach-lookup.global-name</key>
     <array>
         <string>com.apple.audioanalyticsd</string>

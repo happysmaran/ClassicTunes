@@ -10,7 +10,11 @@ extension iPodSyncEngine {
     }
 
     func openLibrary(for device: iPodDevice, base: URL) throws -> DeviceLibrary {
-        device.generation == .classic ? try ClassicLibrary(base: base) : try ShuffleLibrary(base: base)
+        switch device.generation {
+        case .classic: return try ClassicLibrary(base: base)
+        case .shuffle3: return try ShuffleLELibrary(base: base)
+        default: return try ShuffleLibrary(base: base)
+        }
     }
 
     // Asks for access to the volume only when none was granted before; the grant is remembered
@@ -177,8 +181,9 @@ extension iPodSyncEngine {
                 progress.phase = .done
             }
         } catch {
-            // The database is written last, so on failure the device still holds the old one and
-            // only the files copied during this run need removing.
+            // The database is written last so on failure the device still holds the old one and
+            // only the files copied during this run get removed if needed. This is to avoid
+            // corruption
             for url in copied { try? fm.removeItem(at: url) }
             SyncLog.record("FAILED: \(error.localizedDescription) [\(error)]")
             SyncLog.flush(deviceBase: grantedVolumeURL)

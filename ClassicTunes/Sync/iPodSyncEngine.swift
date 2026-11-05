@@ -23,6 +23,7 @@ struct iPodDevice: Identifiable, Equatable {
 enum iPodGeneration: String {
     case shuffle1 = "iPod Shuffle (1st gen)"
     case shuffle2 = "iPod Shuffle (2nd gen)"
+    case shuffle3 = "iPod Shuffle (3rd/4th gen)"
     case classic  = "iPod (Classic/Nano/Mini)"
     case unknown  = "iPod (Unknown)"
 }
@@ -131,6 +132,7 @@ final class iPodDeviceMonitor: ObservableObject {
 
         var hasiTunesSD = false
         var hasiTunesDB = false
+        var iTunesSDURL: URL?
         if let actualControlDir = controlDir {
             let iTunesDir = actualControlDir.appendingPathComponent("iTunes")
             let ITUNESDir = actualControlDir.appendingPathComponent("ITUNES")
@@ -141,7 +143,8 @@ final class iPodDeviceMonitor: ObservableObject {
             let dbPathCaps = actualITunesDir.appendingPathComponent("ITUNESDB")
             let dbPathLower = actualITunesDir.appendingPathComponent("iTunesDB")
 
-            hasiTunesSD = fm.fileExists(atPath: sdPathCaps.path) || fm.fileExists(atPath: sdPathLower.path)
+            iTunesSDURL = [sdPathLower, sdPathCaps].first { fm.fileExists(atPath: $0.path) }
+            hasiTunesSD = iTunesSDURL != nil
             hasiTunesDB = fm.fileExists(atPath: dbPathCaps.path) || fm.fileExists(atPath: dbPathLower.path)
         }
 
@@ -162,7 +165,12 @@ final class iPodDeviceMonitor: ObservableObject {
         // iTunesSD wins when both files exist: Shuffles may carry an iTunesDB too, and the
         // Shuffle path is the one that knows how to write them.
         if hasiTunesSD {
-            generation = .shuffle2
+            // The two Shuffle families store incompatible iTunesSD files; the file's own tag
+            // is the only reliable way to tell them apart.
+            let head = iTunesSDURL.flatMap { try? FileHandle(forReadingFrom: $0) }
+            let magic = (try? head?.read(upToCount: 4)) ?? nil
+            try? head?.close()
+            generation = magic == iTunesSD_LEDatabase.magic ? .shuffle3 : .shuffle2
         } else if hasiTunesDB {
             generation = .classic
         } else if controlDir != nil {
