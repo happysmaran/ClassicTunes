@@ -67,7 +67,7 @@ final class ShuffleLibrary: DeviceLibrary {
     func add(_ song: Song, identity: String, placed: PlacedFile) async throws -> DeviceEntry {
         var track = iTunesSD_BETrack()
         track.filePath = placed.devicePath
-        track.fileType = iTunesSD_BEDatabase.fileType(for: song.url)
+        track.fileType = iTunesSD_BEDatabase.fileType(for: placed.url)
         track.volume = 0x59     // 89 is roughly full volume
         track.shuffleFlag = 0x01
         track.podcastFlag = 0x00

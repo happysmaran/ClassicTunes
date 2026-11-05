@@ -42,7 +42,7 @@ final class ShuffleLELibrary: DeviceLibrary {
     func prepareForWrite() throws {}
 
     func add(_ song: Song, identity: String, placed: PlacedFile) async throws -> DeviceEntry {
-        guard let encoding = await ClassicBackend.encoding(for: song.url),
+        guard let encoding = await ClassicBackend.encoding(for: placed.url),
               let type = iTunesSD_LEDatabase.fileType(for: encoding) else {
             throw SyncFailure("\(song.url.pathExtension.uppercased()) files can't be played by this iPod")
         }

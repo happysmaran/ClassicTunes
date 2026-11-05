@@ -54,7 +54,9 @@ enum DeviceFiles {
 
     // iPods spread music over F00...Fnn so no directory grows past what the firmware can list;
     // reusing the folders already present keeps the layout iTunes or the device created.
-    static func place(_ song: Song, base: URL) throws -> PlacedFile {
+    // `source` is a converted copy to place instead of the song's own file.
+    static func place(_ song: Song, base: URL, source: URL? = nil) throws -> PlacedFile {
+        let origin = source ?? song.url
         let fm = FileManager.default
         let musicBase = base.appendingPathComponent("iPod_Control/Music", isDirectory: true)
         let existing = ((try? fm.contentsOfDirectory(atPath: musicBase.path)) ?? [])
@@ -64,7 +66,7 @@ enum DeviceFiles {
         let folder = musicBase.appendingPathComponent(folderName, isDirectory: true)
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)
 
-        let ext = song.url.pathExtension.lowercased()
+        let ext = origin.pathExtension.lowercased()
         let letters = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         var fileName: String
         repeat {
@@ -73,7 +75,7 @@ enum DeviceFiles {
         } while fm.fileExists(atPath: folder.appendingPathComponent(fileName).path)
 
         let destination = folder.appendingPathComponent(fileName)
-        try fm.copyItem(at: song.url, to: destination)
+        try fm.copyItem(at: origin, to: destination)
         removeAppleDouble(for: destination)
         let size = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         return PlacedFile(url: destination, devicePath: "/iPod_Control/Music/\(folderName)/\(fileName)", sizeBytes: size)

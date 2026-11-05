@@ -451,3 +451,6 @@
 "device.options.auto" = "Sync the entire music library automatically";
 "device.options.auto.help" = "Keeps every library song on the iPod and updates it when songs are added, changed or deleted. Other songs on the iPod are removed.";
 "picker.selectAll" = "Select All";
+"device.options.bitrate" = "Convert higher bitrate songs to:";
+"device.bitrate.off" = "Don't convert";
+"device.bitrate.help" = "Songs encoded above this rate are re-encoded as AAC on the way to the iPod to save space. Songs at or below it, and your Mac library, are not changed. Converting takes longer.";

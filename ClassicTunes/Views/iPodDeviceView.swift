@@ -42,6 +42,8 @@ struct iPodDeviceView: View {
     // iTunes' automatic management.
     @State private var autoSync = false
     @State private var didAutoSyncOnConnect = false
+    // Songs encoded above this many kbps are converted to AAC at it while syncing; 0 means never.
+    @State private var maxBitrate = 0
 
     @State private var showSongPicker = false
     @State private var showEjectAlert = false
@@ -56,6 +58,8 @@ struct iPodDeviceView: View {
     // Automatic management has to remove songs deleted from the library, so it always mirrors.
     private var effectiveMode: SyncMode { autoSync ? .mirror : syncMode }
     private var autoSyncKey: String { "autoSync.\(device.volumeName)" }
+    private var bitrateKey: String { "maxBitrate.\(device.volumeName)" }
+    private var syncedBitrateKey: String { "syncedBitrate.\(device.volumeName)" }
     // Changes whenever a song is added, removed or edited, which is what should trigger a re-sync.
     private var libraryFingerprint: Int {
         var hasher = Hasher()
@@ -88,7 +92,12 @@ struct iPodDeviceView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .onAppear {
             autoSync = UserDefaults.standard.bool(forKey: autoSyncKey)
+            maxBitrate = UserDefaults.standard.integer(forKey: bitrateKey)
             loadDeviceTracks()
+        }
+        .onChange(of: maxBitrate) { _, value in
+            UserDefaults.standard.set(value, forKey: bitrateKey)
+            if autoSync { autoSyncIfIdle() }
         }
         .onChange(of: autoSync) { _, on in
             UserDefaults.standard.set(on, forKey: autoSyncKey)
@@ -264,6 +273,22 @@ struct iPodDeviceView: View {
             Text(syncMode == .mirror
                  ? loc("device.mode.mirror.help", "Songs on the iPod that are not in the Music list are removed.")
                  : loc("device.mode.add.help", "Songs already on the iPod are kept."))
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Divider()
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(loc("device.options.bitrate", "Convert higher bitrate songs to:"))
+                    .fontWeight(.semibold)
+                Picker("", selection: $maxBitrate) {
+                    Text(loc("device.bitrate.off", "Don't convert")).tag(0)
+                    ForEach([96, 128, 160, 192, 256], id: \.self) { rate in
+                        Text("\(rate) kbps AAC").tag(rate)
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            Text(loc("device.bitrate.help", "Songs encoded above this rate are re-encoded as AAC on the way to the iPod to save space. Songs at or below it, and your Mac library, are not changed. Converting takes longer."))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -718,7 +743,16 @@ struct iPodDeviceView: View {
     private func doSync() {
         let mode = effectiveMode
         let songs = songsToSync
-        Task { await syncEngine.sync(songs: songs, playlists: playlists, to: device, mode: mode) }
+        let rate = maxBitrate
+        let bitrate = rate > 0 ? rate : nil
+        // The songs on the iPod were copied at whatever setting the last successful sync used.
+        let replace = UserDefaults.standard.integer(forKey: syncedBitrateKey) != rate
+        Task {
+            await syncEngine.sync(songs: songs, playlists: playlists, to: device, mode: mode, maxBitrateKbps: bitrate, replaceExisting: replace)
+            if case .done = syncEngine.progress.phase {
+                UserDefaults.standard.set(rate, forKey: syncedBitrateKey)
+            }
+        }
     }
 
     // Skipped while something else is running so a burst of library edits cannot start

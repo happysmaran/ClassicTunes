@@ -11,7 +11,7 @@ extension iPodSyncEngine {
 
     func openLibrary(for device: iPodDevice, base: URL) throws -> DeviceLibrary {
         switch device.generation {
-        case .classic: return try ClassicLibrary(base: base)
+        case .classic: return try ClassicLibrary(base: base, fallbackArtworkFormats: iPodUSBIdentity.artworkFormats(bsdName: device.bsdName))
         case .shuffle3: return try ShuffleLELibrary(base: base)
         case .shuffle1, .shuffle2: return try ShuffleLibrary(base: base)
         // Writing the wrong database format can leave an iPod unreadable, so a device whose model
@@ -64,7 +64,10 @@ extension iPodSyncEngine {
 
     // Reads the device, works out what differs from `songs`, then applies only that difference
     // and writes the database once at the end.
-    func sync(songs: [Song], playlists: [Playlist] = [], to device: iPodDevice, mode: SyncMode? = nil) async {
+    // `replaceExisting` re-copies songs already on the iPod, used when the conversion bitrate changed
+    // because the copies on the device were made at the old setting.
+    // `maxBitrateKbps`: songs encoded above it are converted to AAC at that rate before copying.
+    func sync(songs: [Song], playlists: [Playlist] = [], to device: iPodDevice, mode: SyncMode? = nil, maxBitrateKbps: Int? = nil, replaceExisting: Bool = false) async {
         guard let base = await resolveAccess(for: device) else {
             await setPhase(.failed(NSLocalizedString("sync.access.denied", comment: "")))
             return
@@ -105,12 +108,12 @@ extension iPodSyncEngine {
                 }
             }
             plan.addIndices = addable
-            // Songs already on the device but missing their cover are replaced, once.
+            // Songs already on the device are replaced, once, when they lack their cover or were copied at a different bitrate setting.
             let addSet = Set(addable)
             var seenRefresh = Set<String>()
             for (index, identity) in identities.enumerated() where !addSet.contains(index) && seenRefresh.insert(identity).inserted {
                 if let entry = library.entries.first(where: { $0.identity == identity }),
-                   library.needsRefresh(entry, for: songs[index]),
+                   replaceExisting || library.needsRefresh(entry, for: songs[index]),
                    !plan.remove.contains(entry) {
                     plan.remove.append(entry)
                     plan.addIndices.append(index)
@@ -123,7 +126,8 @@ extension iPodSyncEngine {
             // Checked before copying so a full device fails cleanly instead of half-way.
             let needed = plan.addIndices.reduce(Int64(0)) { $0 + DeviceFiles.fileSize(songs[$1].url) }
             let freed = plan.remove.reduce(Int64(0)) { $0 + DeviceFiles.fileSize(DeviceFiles.url(base: base, devicePath: $1.path)) }
-            if let free = DeviceFiles.availableBytes(at: base), needed > free + freed {
+            let freeSpace = DeviceFiles.availableBytes(at: base)
+            if let free = freeSpace, needed > free + freed {
                 let fmt = ByteCountFormatter()
                 throw SyncFailure("Not enough space on the iPod: \(fmt.string(fromByteCount: needed)) needed, \(fmt.string(fromByteCount: free + freed)) available.")
             }
@@ -141,6 +145,16 @@ extension iPodSyncEngine {
             // Removals come out of the database first; their files are deleted only after the
             // new database is safely written.
             for entry in plan.remove { try library.remove(entry) }
+            // Old files are normally kept until the new database is written so a failure changes
+            // nothing. When the old and new copies cannot coexist (replacing songs on a nearly
+            // full iPod), the old ones are dropped first; an interrupted sync then leaves a
+            // partial library that the next sync completes.
+            if let free = freeSpace, needed > free, !plan.remove.isEmpty {
+                SyncLog.record("not enough room for old and new copies together; removing old copies first")
+                try library.commit()
+                for entry in plan.remove { try? fm.removeItem(at: DeviceFiles.url(base: base, devicePath: entry.path)) }
+                plan.remove = []
+            }
 
             for (position, index) in plan.addIndices.enumerated() {
                 let song = songs[index]
@@ -148,7 +162,9 @@ extension iPodSyncEngine {
                     progress.currentTrack = song.title
                     progress.completedTracks = position
                 }
-                let placed = try DeviceFiles.place(song, base: base)
+                let converted = await convertedCopy(of: song, maxBitrateKbps: maxBitrateKbps)
+                defer { if let converted { try? fm.removeItem(at: converted) } }
+                let placed = try DeviceFiles.place(song, base: base, source: converted)
                 copied.append(placed.url)
                 SyncLog.record("copied \(song.title) -> \(placed.devicePath) (\(placed.sizeBytes) bytes)")
                 _ = try await library.add(song, identity: identities[index], placed: placed)
@@ -199,6 +215,24 @@ extension iPodSyncEngine {
     func addTrack(_ song: Song, to device: iPodDevice) async throws {
         await sync(songs: [song], to: device, mode: .additive)
         if case let .failed(message) = progress.phase { throw SyncFailure(message) }
+    }
+
+    // A smaller AAC copy of `song` when it is encoded above the limit, otherwise nil. A failed or
+    // not-smaller conversion falls back to the original so one odd file never stops the sync.
+    private func convertedCopy(of song: Song, maxBitrateKbps: Int?) async -> URL? {
+        guard let limit = maxBitrateKbps, limit > 0 else { return nil }
+        let rate = Int(await ClassicBackend.audioProperties(for: song.url).bitrateKbps)
+        guard rate > limit else { return nil }
+        do {
+            let output = try await AudioTranscoder.convertToAAC(song.url, bitrateKbps: limit)
+            let before = DeviceFiles.fileSize(song.url), after = DeviceFiles.fileSize(output)
+            guard after < before else { try? FileManager.default.removeItem(at: output); return nil }
+            SyncLog.record("converted \(song.title): \(rate) -> \(limit) kbps (\(before) -> \(after) bytes)")
+            return output
+        } catch {
+            SyncLog.record("conversion failed for \(song.title), copying original: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     // `trackIndex` is the position in the list the UI shows, which is the library's entry order.

@@ -10,9 +10,9 @@ final class ClassicLibrary: DeviceLibrary {
     // nil when the iPod has no ArtworkDB we can extend; songs then sync without covers.
     private let artwork: ArtworkDatabase?
 
-    init(base: URL) throws {
+    init(base: URL, fallbackArtworkFormats: [ArtworkFormat] = []) throws {
         self.base = base
-        artwork = ArtworkDatabase(base: base)
+        artwork = ArtworkDatabase(base: base, fallbackFormats: fallbackArtworkFormats)
         document = try ClassicBackend.loadDocument(base: base)
         // A database written by newer software than the iPod's firmware understands is read as
         // empty. With nothing in it to lose, replace it with one of the firmware's own version.
@@ -58,10 +58,11 @@ final class ClassicLibrary: DeviceLibrary {
     func prepareForWrite() throws { try document.assertWritable() }
 
     func add(_ song: Song, identity: String, placed: PlacedFile) async throws -> DeviceEntry {
-        guard let encoding = await ClassicBackend.encoding(for: song.url) else {
+        // Read from the placed file because it may be a converted copy with a different encoding.
+        guard let encoding = await ClassicBackend.encoding(for: placed.url) else {
             throw SyncFailure("\(song.url.pathExtension.uppercased()) files can't be played by this iPod")
         }
-        let properties = await ClassicBackend.audioProperties(for: song.url)
+        let properties = await ClassicBackend.audioProperties(for: placed.url)
         let input = ClassicTrackInput(
             title: song.title.isEmpty ? song.url.deletingPathExtension().lastPathComponent : song.title,
             artist: song.artist,
@@ -82,7 +83,7 @@ final class ClassicLibrary: DeviceLibrary {
             compilation: song.compilation,
             bpm: UInt32(clamping: song.bpm ?? 0),
             playCount: UInt32(clamping: song.playCount),
-            hasLyrics: await ClassicBackend.hasEmbeddedLyrics(song.url),
+            hasLyrics: await ClassicBackend.hasEmbeddedLyrics(placed.url),
             dateAdded: song.dateAdded,
             modified: (try? placed.url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate,
             location: placed.devicePath.replacingOccurrences(of: "/", with: ":")

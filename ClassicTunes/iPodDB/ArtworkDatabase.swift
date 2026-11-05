@@ -18,8 +18,10 @@ struct ArtworkFormat: Equatable {
 // little-endian RGB formats are written; a device that declares anything else keeps its art
 // untouched and the songs simply have none.
 //
-// The ArtworkDB is nil-initialised when the device has no ArtworkDB yet or declares no formats we
-// can write. Creating one from scratch is deliberately not attempted here.
+// A device with no ArtworkDB gets an empty one, laid out for the formats the device declares in
+// SysInfoExtended or, when that file is missing too, for the  formats its model is known to use.
+// The initialiser returns nil when no writable format is known, and the songs then sync without
+// covers.
 final class ArtworkDatabase {
     private let base: URL
     private var bytes: Data
@@ -45,22 +47,68 @@ final class ArtworkDatabase {
         base.appendingPathComponent("iPod_Control/Artwork/F\(format)_1.ithmb")
     }
 
-    init?(base: URL) {
+    // `fallbackFormats` covers iPods that have not yet had SysInfoExtended written (iTunes creates
+    // it on first connect; a Finder restore does not).
+    init?(base: URL, fallbackFormats: [ArtworkFormat] = []) {
         self.base = base
-        guard let data = try? Data(contentsOf: Self.databaseURL(base: base)),
-              let next = data.readLE(UInt32.self, at: 0x1C),
-              (try? Self.imageDataset(in: data)) != nil else { return nil }
-        let formats = Self.writableFormats(base: base)
+        var formats = Self.writableFormats(base: base)
+        if formats.isEmpty { formats = fallbackFormats }
         guard !formats.isEmpty else { return nil }
-        self.bytes = data
+        if let data = try? Data(contentsOf: Self.databaseURL(base: base)) {
+            guard let next = data.readLE(UInt32.self, at: 0x1C),
+                  (try? Self.imageDataset(in: data)) != nil else { return nil }
+            self.bytes = data
+            self.nextImageID = next
+        } else {
+            self.bytes = Self.emptyDatabase(formats: formats)
+            // iTunes numbers images from 100; lower ids are reserved by the firmware.
+            self.nextImageID = 100
+        }
         self.formats = formats
-        self.nextImageID = next
         for format in formats {
             originalSizes[format.id] = Int(DeviceFiles.fileSize(Self.pixelURL(base: base, format: format.id)))
         }
     }
 
     var databaseFiles: [URL] { [Self.databaseURL(base: base)] }
+
+    // MARK: Fresh database
+
+    // An ArtworkDB holding no images: the file header, an empty image list, an empty album list
+    // and the list of pixel-file formats the device uses.
+    private static func emptyDatabase(formats: [ArtworkFormat]) -> Data {
+        func chunk(_ tag: String, header size: Int, field8: Int, _ fill: (inout Data) -> Void = { _ in }) -> Data {
+            var data = Data(count: size)
+            data.replaceSubrange(0..<4, with: Array(tag.utf8))
+            data.writeLE(UInt32(size), at: 4)
+            data.writeLE(UInt32(field8), at: 8)
+            fill(&data)
+            return data
+        }
+        func dataset(_ type: Int, _ child: Data) -> Data {
+            var data = chunk("mhsd", header: 96, field8: 96 + child.count) { $0.writeLE(UInt32(type), at: 12) }
+            data.append(child)
+            return data
+        }
+        var files = chunk("mhlf", header: 92, field8: formats.count)
+        for format in formats {
+            files.append(chunk("mhif", header: 124, field8: 124) {
+                $0.writeLE(format.id, at: 16)
+                $0.writeLE(UInt32(format.byteCount), at: 20)
+            })
+        }
+        var body = dataset(1, chunk("mhli", header: 92, field8: 0))
+        body.append(dataset(2, chunk("mhla", header: 92, field8: 0)))
+        body.append(dataset(3, files))
+        var root = chunk("mhfd", header: 132, field8: 132 + body.count) {
+            $0.writeLE(UInt32(2), at: 16)
+            $0.writeLE(UInt32(3), at: 20)
+            $0.writeLE(UInt32(100), at: 0x1C)
+            $0.writeLE(UInt32(2), at: 48)
+        }
+        root.append(body)
+        return root
+    }
 
     // MARK: Formats
 
@@ -223,6 +271,8 @@ final class ArtworkDatabase {
     // pixel data at the end of a file instead of records pointing at nothing.
     func commit() throws {
         guard pendingCount > 0 else { return }
+        try FileManager.default.createDirectory(
+            at: Self.databaseURL(base: base).deletingLastPathComponent(), withIntermediateDirectories: true)
         for format in formats {
             guard let pixels = pendingPixels[format.id], !pixels.isEmpty else { continue }
             let url = Self.pixelURL(base: base, format: format.id)

@@ -28,6 +28,21 @@ enum iPodUSBIdentity {
         0x1265: .classic,   // Nano 5th generation
     ]
 
+    // Cover formats for models whose artwork layout is fixed, used when the iPod has no
+    // SysInfoExtended to declare them (a Finder restore does not write it).
+    static func artworkFormats(bsdName: String) -> [ArtworkFormat] {
+        guard let ids = usbIDs(bsdName: bsdName), ids.vendor == appleVendorID else { return [] }
+        switch ids.product {
+        case 0x120A, 0x1260:   // Nano 1st and 2nd generation
+            return [
+                ArtworkFormat(id: 1031, width: 42, height: 42, rowBytes: 84),
+                ArtworkFormat(id: 1027, width: 100, height: 100, rowBytes: 200),
+            ]
+        default:
+            return []
+        }
+    }
+
     // nil when the volume is not on a USB Apple device or the model is not in the table, in
     // which case the caller falls back to inspecting files.
     static func generation(bsdName: String) -> iPodGeneration? {
