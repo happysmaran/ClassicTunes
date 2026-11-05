@@ -160,25 +160,21 @@ final class iPodDeviceMonitor: ObservableObject {
         let capacity  = Int64(values?.volumeTotalCapacity  ?? 0)
         let freeSpace = Int64(values?.volumeAvailableCapacity ?? 0)
 
-        // 5) Identify generation: prefer concrete filesystem hints
+        // 5) Identify generation: the USB identity is authoritative; files are the fallback for
+        // models it does not list (and for volumes with no USB parent).
         let generation: iPodGeneration
-        // iTunesSD wins when both files exist: Shuffles may carry an iTunesDB too, and the
-        // Shuffle path is the one that knows how to write them.
-        if hasiTunesSD {
-            // The two Shuffle families store incompatible iTunesSD files; the file's own tag
-            // is the only reliable way to tell them apart.
+        if let usbGeneration = iPodUSBIdentity.generation(bsdName: bsdName) {
+            generation = usbGeneration
+        } else if hasiTunesSD {
+            // iTunesSD wins when both files exist: Shuffles may carry an iTunesDB too. The two
+            // Shuffle families store incompatible iTunesSD files, and the file's own tag is the
+            // only way to tell them apart without USB identity.
             let head = iTunesSDURL.flatMap { try? FileHandle(forReadingFrom: $0) }
             let magic = (try? head?.read(upToCount: 4)) ?? nil
             try? head?.close()
             generation = magic == iTunesSD_LEDatabase.magic ? .shuffle3 : .shuffle2
         } else if hasiTunesDB {
             generation = .classic
-        } else if controlDir != nil {
-            if capacity > 0 && capacity < 2_100_000_000 {
-                generation = .shuffle2
-            } else {
-                generation = .shuffle1
-            }
         } else {
             generation = .unknown
         }

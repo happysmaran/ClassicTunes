@@ -13,7 +13,10 @@ extension iPodSyncEngine {
         switch device.generation {
         case .classic: return try ClassicLibrary(base: base)
         case .shuffle3: return try ShuffleLELibrary(base: base)
-        default: return try ShuffleLibrary(base: base)
+        case .shuffle1, .shuffle2: return try ShuffleLibrary(base: base)
+        // Writing the wrong database format can leave an iPod unreadable, so a device whose model
+        // could not be determined is obviously not written to.
+        case .unknown: throw SyncFailure("ClassicTunes couldn't tell which iPod model this is, so it won't write to it. Restore it in Finder first, then reconnect.")
         }
     }
 
