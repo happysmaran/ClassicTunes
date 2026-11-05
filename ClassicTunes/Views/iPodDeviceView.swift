@@ -14,6 +14,8 @@ struct iPodDeviceView: View {
     let device: iPodDevice
     @ObservedObject var syncEngine: iPodSyncEngine
     var allLibrarySongs: [Song]                         // Full library to pick from
+    // User playlists written to iTunesDB iPods; Shuffles have no playlist support.
+    var playlists: [Playlist] = []
 
     // Tracks currently stored on the connected device, parsed from its iTunesSD_BE database.
     @State private var deviceTracks:   [iTunesSD_BETrack] = []
@@ -491,6 +493,35 @@ struct iPodDeviceView: View {
         }
 
         let baseURL = syncEngine.grantedVolumeURL ?? device.volumeURL
+
+        // iTunesDB iPods list their tracks from the iTunesDB; the rest of this function is the
+        // Shuffle's iTunesSD reader.
+        if device.generation == .classic {
+            let accessGranted = baseURL.startAccessingSecurityScopedResource()
+            defer { if accessGranted { baseURL.stopAccessingSecurityScopedResource() } }
+            do {
+                let document = try ClassicBackend.loadDocument(base: baseURL)
+                print("iPodDeviceView: \(document.summary)")
+                let listed = document.tracks().map { track -> iTunesSD_BETrack in
+                    var entry = iTunesSD_BETrack()
+                    entry.filePath = track.devicePath
+                    entry.displayName = track.displayName
+                    return entry
+                }
+                await MainActor.run {
+                    self.deviceTracks = listed
+                    isLoadingTracks = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.loadError = error.localizedDescription
+                    self.deviceTracks = []
+                    isLoadingTracks = false
+                }
+            }
+            return
+        }
+
         let dbURL = baseURL.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
 
         guard FileManager.default.fileExists(atPath: dbURL.path) else {
@@ -549,7 +580,7 @@ struct iPodDeviceView: View {
     // Hands off the staged sync list and device to the sync engine.
     private func doSync() {
         Task {
-            await syncEngine.sync(songs: syncList, to: device)
+            await syncEngine.sync(songs: syncList, playlists: playlists, to: device)
         }
     }
 

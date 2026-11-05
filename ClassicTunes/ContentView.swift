@@ -381,7 +381,8 @@ struct ContentView: View {
                     iPodDeviceView(
                         device: device,
                         syncEngine: syncEngine,
-                        allLibrarySongs: songs
+                        allLibrarySongs: songs,
+                        playlists: playlists.filter { !$0.isSystem }.map { $0.resolved(against: songs) }
                     )
                 } else {
                     mainContentArea()
