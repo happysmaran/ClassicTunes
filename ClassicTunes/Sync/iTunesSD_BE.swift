@@ -251,23 +251,13 @@ extension iTunesSD_BEDatabase {
 
 // MARK: - Errors
 
-// Error cases surfaced throughout the sync pipeline (device discovery,
-// database parsing/writing, file copying, format support).
+// Thrown by the iTunesSD parser; the sync pipeline reports its own failures as SyncFailure.
 enum iPodSyncError: LocalizedError {
-    case deviceNotFound
     case invalidDatabase(String)
-    case writeFailure(String)
-    case unsupportedFormat(String)
-    case copyFailure(String)
 
-    // Human-readable description shown to the user / logged for each error case.
     var errorDescription: String? {
         switch self {
-        case .deviceNotFound:          return "iPod not found or not mounted."
-        case .invalidDatabase(let m):  return "Database error: \(m)"
-        case .writeFailure(let m):     return "Write failed: \(m)"
-        case .unsupportedFormat(let m):return "Unsupported format: \(m)"
-        case .copyFailure(let m):      return "Copy failed: \(m)"
+        case .invalidDatabase(let m): return "Database error: \(m)"
         }
     }
 }

@@ -2,7 +2,6 @@ import Foundation
 import DiskArbitration
 import AppKit
 import Combine
-import AVFoundation
 
 // MARK: - iPod Device Model
 // This file is hella cursed enough you can peruse around here to your liking
@@ -253,26 +252,7 @@ final class iPodSyncEngine: ObservableObject {
 
     @Published var progress = SyncProgress()
 
-    // MARK: Read existing database
-
-    func readDatabase(from device: iPodDevice) throws -> iTunesSD_BEDatabase {
-        let base = grantedVolumeURL ?? device.volumeURL
-        let dbURL = base.appendingPathComponent("iPod_Control/iTunes/iTunesSD")
-        guard FileManager.default.fileExists(atPath: dbURL.path) else {
-            // Brand-new or never-synced device — start empty
-            return iTunesSD_BEDatabase()
-        }
-        let data = try Data(contentsOf: dbURL)
-        return try iTunesSD_BEDatabase.parse(from: data)
-    }
-
     // Sync, add and remove live in Sync/SyncEngine.swift.
-
-    func trackDurationMS(for url: URL) async -> UInt32 {
-        let asset = AVURLAsset(url: url)
-        let seconds = (try? await asset.load(.duration).seconds) ?? 0
-        return seconds.isFinite && seconds > 0 ? UInt32(seconds * 1000) : 0
-    }
 
     // MARK: Filesystem flush
 
