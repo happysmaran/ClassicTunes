@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import AVKit
+import CryptoKit
 
 // Looked up with an English fallback so a language without a translation shows readable text
 // instead of the key.
@@ -41,13 +42,14 @@ struct iPodDeviceView: View {
     // When on, the whole library is kept on the iPod and re-synced as the library changes, like
     // iTunes' automatic management.
     @State private var autoSync = false
-    @State private var didAutoSyncOnConnect = false
+    @State private var autoSyncTask: Task<Void, Never>?
     // Songs encoded above this many kbps are converted to AAC at it while syncing; 0 means never.
     @State private var maxBitrate = 0
 
     @State private var showSongPicker = false
     @State private var showEjectAlert = false
     @State private var showSyncConfirm = false
+    @State private var showClearConfirm = false
 
     // MARK: Derived values
 
@@ -59,6 +61,7 @@ struct iPodDeviceView: View {
     private var effectiveMode: SyncMode { autoSync ? .mirror : syncMode }
     private var autoSyncKey: String { "autoSync.\(device.volumeName)" }
     private var bitrateKey: String { "maxBitrate.\(device.volumeName)" }
+    private var syncedDigestKey: String { "syncedDigest.\(device.volumeName)" }
     private var syncedBitrateKey: String { "syncedBitrate.\(device.volumeName)" }
     // Changes whenever a song is added, removed or edited, which is what should trigger a re-sync.
     private var libraryFingerprint: Int {
@@ -97,14 +100,14 @@ struct iPodDeviceView: View {
         }
         .onChange(of: maxBitrate) { _, value in
             UserDefaults.standard.set(value, forKey: bitrateKey)
-            if autoSync { autoSyncIfIdle() }
+            if autoSync { scheduleAutoSync() }
         }
         .onChange(of: autoSync) { _, on in
             UserDefaults.standard.set(on, forKey: autoSyncKey)
-            if on { autoSyncIfIdle() }
+            if on { scheduleAutoSync() }
         }
         .onChange(of: libraryFingerprint) { _, _ in
-            if autoSync { autoSyncIfIdle() }
+            if autoSync { scheduleAutoSync() }
         }
         .sheet(isPresented: $showSongPicker) {
             SongPickerSheet(
@@ -121,6 +124,12 @@ struct iPodDeviceView: View {
             Button("eject.cancel", role: .cancel) { }
         } message: {
             Text("eject.confirm.message")
+        }
+        .alert(loc("device.clear.title", "Clear this iPod?"), isPresented: $showClearConfirm) {
+            Button(loc("device.clear.confirm", "Clear iPod"), role: .destructive) { doClear() }
+            Button("sync.cancel", role: .cancel) { }
+        } message: {
+            Text(loc("device.clear.message", "Every song and all cover art will be removed from the iPod. Your Mac library is not changed. Automatic syncing will be turned off."))
         }
         .alert("sync.confirm.title", isPresented: $showSyncConfirm) {
             Button("sync.sync", role: .destructive) { doSync() }
@@ -291,6 +300,17 @@ struct iPodDeviceView: View {
             Text(loc("device.bitrate.help", "Songs encoded above this rate are re-encoded as AAC on the way to the iPod to save space. Songs at or below it, and your Mac library, are not changed. Converting takes longer."))
                 .font(.caption)
                 .foregroundColor(.secondary)
+            Divider()
+            HStack(spacing: 10) {
+                Button(action: { showClearConfirm = true }) {
+                    Text(loc("device.clear.button", "Clear iPod…"))
+                }
+                .buttonStyle(ClassicPushButtonStyle())
+                .disabled(isBusy)
+                Text(loc("device.clear.help", "Removes every song from the iPod."))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .font(.system(size: 12))
         .padding(.vertical, 4)
@@ -687,11 +707,8 @@ struct iPodDeviceView: View {
             freeBytes = freeSpace
             info = deviceInfo
             isLoadingTracks = false
-            // Once per connection, to catch changes made while the iPod was unplugged.
-            if autoSync && !didAutoSyncOnConnect {
-                didAutoSyncOnConnect = true
-                autoSyncIfIdle()
-            }
+            // Catches changes made while the iPod was unplugged; does nothing if none were.
+            if autoSync { scheduleAutoSync() }
         }
     }
 
@@ -740,7 +757,15 @@ struct iPodDeviceView: View {
         }
     }
 
-    private func doSync() {
+    private func doClear() {
+        // The saved fingerprint described a full iPod, and automatic syncing would refill it.
+        autoSync = false
+        UserDefaults.standard.removeObject(forKey: syncedDigestKey)
+        UserDefaults.standard.removeObject(forKey: syncedBitrateKey)
+        Task { await syncEngine.clearDevice(device) }
+    }
+
+    private func doSync(recordingDigest digest: String? = nil) {
         let mode = effectiveMode
         let songs = songsToSync
         let rate = maxBitrate
@@ -751,15 +776,43 @@ struct iPodDeviceView: View {
             await syncEngine.sync(songs: songs, playlists: playlists, to: device, mode: mode, maxBitrateKbps: bitrate, replaceExisting: replace)
             if case .done = syncEngine.progress.phase {
                 UserDefaults.standard.set(rate, forKey: syncedBitrateKey)
+                if let digest { UserDefaults.standard.set(digest, forKey: syncedDigestKey) }
             }
         }
     }
 
-    // Skipped while something else is running so a burst of library edits cannot start
-    // overlapping syncs.
-    private func autoSyncIfIdle() {
-        guard !isBusy, !isLoadingTracks, !allLibrarySongs.isEmpty else { return }
-        doSync()
+    // Waits for the library to stop changing (it loads and refreshes in pieces at launch) and then
+    // syncs only if what would be written differs from what the last automatic sync wrote.
+    private func scheduleAutoSync() {
+        autoSyncTask?.cancel()
+        autoSyncTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { autoSyncIfNeeded() }
+        }
+    }
+
+    private func autoSyncIfNeeded() {
+        guard autoSync, !isBusy, !isLoadingTracks, !allLibrarySongs.isEmpty else { return }
+        let digest = Self.syncDigest(of: allLibrarySongs, bitrate: maxBitrate)
+        guard digest != UserDefaults.standard.string(forKey: syncedDigestKey) else { return }
+        doSync(recordingDigest: digest)
+    }
+
+    // A fingerprint that stays the same across launches, built from everything that ends up on
+    // the iPod: the song's tags and the source file's size and modification time, so an edited
+    // file counts as changed. Not Hasher, which is seeded differently every launch.
+    private static func syncDigest(of songs: [Song], bitrate: Int) -> String {
+        var lines = songs.map { song -> String in
+            let values = try? song.url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
+            let modified = values?.contentModificationDate?.timeIntervalSince1970 ?? 0
+            return [song.url.path, song.title, song.artist, song.album, song.genre,
+                    String(song.duration ?? 0), String(modified), String(values?.fileSize ?? 0)].joined(separator: "|")
+        }
+        lines.sort()
+        lines.append("bitrate=\(bitrate)")
+        let digest = SHA256.hash(data: Data(lines.joined(separator: "\n").utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 
     private func doEject() {
@@ -872,7 +925,7 @@ private struct SyncSongRow: View {
 
             Text(song.title).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
             Text(song.artist).foregroundColor(.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-            Text(song.duration.map(Self.format) ?? "")
+            Text(song.duration.map { Self.format($0) } ?? "")
                 .font(.system(size: 11).monospacedDigit())
                 .foregroundColor(.secondary)
                 .frame(width: 44, alignment: .trailing)

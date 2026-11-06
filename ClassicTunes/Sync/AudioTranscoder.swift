@@ -35,11 +35,95 @@ nonisolated enum AudioTranscoder {
         let job = try Job(asset: asset, track: track, output: output, pcm: pcm, aac: aac, metadata: metadata)
         do {
             try await job.run()
+            try rewriteForIPod(output)
         } catch {
             try? FileManager.default.removeItem(at: output)
             throw error
         }
         return output
+    }
+
+    // AVAssetWriter puts the audio first and stores its size as a 64-bit "extended" box length. iPod
+    // firmware parses the layout iTunes writes (ftyp, moov, mdat, all 32-bit sizes), and a converted
+    // file in any other layout is skipped during playback. The audio itself is not touched; only the
+    // boxes are reordered and the chunk offsets in the index shifted to match.
+    static func rewriteForIPod(_ url: URL) throws {
+        var bytes = [UInt8](try Data(contentsOf: url))
+        func u32(_ o: Int) -> Int { Int(bytes[o]) << 24 | Int(bytes[o + 1]) << 16 | Int(bytes[o + 2]) << 8 | Int(bytes[o + 3]) }
+        func u64(_ o: Int) -> Int { (u32(o) << 32) | u32(o + 4) }
+        func put32(_ o: Int, _ value: Int) {
+            for i in 0..<4 { bytes[o + i] = UInt8((value >> (24 - 8 * i)) & 0xFF) }
+        }
+        func put64(_ o: Int, _ value: Int) {
+            for i in 0..<8 { bytes[o + i] = UInt8((value >> (56 - 8 * i)) & 0xFF) }
+        }
+        func boxes(_ start: Int, _ end: Int) -> [(offset: Int, size: Int, type: String, header: Int)] {
+            var result: [(offset: Int, size: Int, type: String, header: Int)] = []
+            var o = start
+            while o + 8 <= end {
+                var size = u32(o)
+                var header = 8
+                let type = String(decoding: bytes[(o + 4)..<(o + 8)], as: UTF8.self)
+                if size == 1 {
+                    guard o + 16 <= end else { break }
+                    size = u64(o + 8)
+                    header = 16
+                } else if size == 0 {
+                    size = end - o
+                }
+                guard size >= header, o + size <= end else { break }
+                result.append((o, size, type, header))
+                o += size
+            }
+            return result
+        }
+
+        let top = boxes(0, bytes.count)
+        guard let ftyp = top.first(where: { $0.type == "ftyp" }),
+              let moov = top.first(where: { $0.type == "moov" }),
+              let mdat = top.first(where: { $0.type == "mdat" }) else {
+            throw TranscodeError("The converted file has an unexpected layout.")
+        }
+        let payloadLength = mdat.size - mdat.header
+        guard 8 + payloadLength <= Int(UInt32.max) else { throw TranscodeError("The converted file is too large.") }
+        // Audio moves to just after ftyp + moov, behind a plain 8-byte header.
+        let delta = (ftyp.size + moov.size + 8) - (mdat.offset + mdat.header)
+
+        func shiftOffsets(_ start: Int, _ end: Int) throws {
+            for box in boxes(start, end) {
+                let body = box.offset + box.header
+                switch box.type {
+                case "trak", "mdia", "minf", "stbl":
+                    try shiftOffsets(body, box.offset + box.size)
+                case "stco":
+                    for i in 0..<u32(body + 4) {
+                        let position = body + 8 + 4 * i
+                        let moved = u32(position) + delta
+                        guard moved >= 0, moved <= Int(UInt32.max) else { throw TranscodeError("The converted file's index is out of range.") }
+                        put32(position, moved)
+                    }
+                case "co64":
+                    for i in 0..<u32(body + 4) {
+                        let position = body + 8 + 8 * i
+                        put64(position, u64(position) + delta)
+                    }
+                default:
+                    break
+                }
+            }
+        }
+        try shiftOffsets(moov.offset + moov.header, moov.offset + moov.size)
+
+        var output = Data()
+        output.append(contentsOf: bytes[ftyp.offset..<(ftyp.offset + ftyp.size)])
+        output.append(contentsOf: bytes[moov.offset..<(moov.offset + moov.size)])
+        var header = [UInt8](repeating: 0, count: 8)
+        let total = 8 + payloadLength
+        for i in 0..<4 { header[i] = UInt8((total >> (24 - 8 * i)) & 0xFF) }
+        header.replaceSubrange(4..<8, with: Array("mdat".utf8))
+        output.append(contentsOf: header)
+        output.append(contentsOf: bytes[(mdat.offset + mdat.header)..<(mdat.offset + mdat.size)])
+        try output.write(to: url, options: .atomic)
     }
 
     // Its own type rather than SyncFailure because it is thrown from the converter's background queue.

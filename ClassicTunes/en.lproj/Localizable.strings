@@ -454,3 +454,8 @@
 "device.options.bitrate" = "Convert higher bitrate songs to:";
 "device.bitrate.off" = "Don't convert";
 "device.bitrate.help" = "Songs encoded above this rate are re-encoded as AAC on the way to the iPod to save space. Songs at or below it, and your Mac library, are not changed. Converting takes longer.";
+"device.clear.title" = "Clear this iPod?";
+"device.clear.confirm" = "Clear iPod";
+"device.clear.message" = "Every song and all cover art will be removed from the iPod. Your Mac library is not changed. Automatic syncing will be turned off.";
+"device.clear.button" = "Clear iPod…";
+"device.clear.help" = "Removes every song from the iPod.";

@@ -186,6 +186,8 @@ extension iPodSyncEngine {
             SyncLog.record("database written and verified (\(library.entries.count) tracks)")
             copied.removeAll()
             for entry in plan.remove { try? fm.removeItem(at: DeviceFiles.url(base: base, devicePath: entry.path)) }
+            let orphans = removeOrphanedFiles(base: base, keeping: library.entries)
+            if orphans > 0 { SyncLog.record("removed \(orphans) unreferenced music files") }
 
             if plan.addIndices.isEmpty, plan.alreadyPresent == 0, plan.remove.isEmpty, let first = skipped.first {
                 await setPhase(.failed("No tracks could be synced. \(first.title): \(first.reason)"))
@@ -217,6 +219,26 @@ extension iPodSyncEngine {
         if case let .failed(message) = progress.phase { throw SyncFailure(message) }
     }
 
+    // Music files the database doesn't list. A sync that was interrupted, or a delete that
+    // failed, leaves copies like this, and they take space without ever being playable. Only run
+    // after the new database is written and never against an empty one, so a database that failed
+    // to load can't be mistaken for "nothing is referenced".
+    private func removeOrphanedFiles(base: URL, keeping entries: [DeviceEntry]) -> Int {
+        guard !entries.isEmpty else { return 0 }
+        let fm = FileManager.default
+        let kept = Set(entries.map { $0.path.lowercased() })
+        let music = base.appendingPathComponent("iPod_Control/Music", isDirectory: true)
+        var removed = 0
+        for folder in (try? fm.contentsOfDirectory(atPath: music.path)) ?? [] where folder.hasPrefix("F") {
+            let folderURL = music.appendingPathComponent(folder, isDirectory: true)
+            for name in (try? fm.contentsOfDirectory(atPath: folderURL.path)) ?? [] where !name.hasPrefix(".") {
+                guard !kept.contains("/iPod_Control/Music/\(folder)/\(name)".lowercased()) else { continue }
+                if (try? fm.removeItem(at: folderURL.appendingPathComponent(name))) != nil { removed += 1 }
+            }
+        }
+        return removed
+    }
+
     // A smaller AAC copy of `song` when it is encoded above the limit, otherwise nil. A failed or
     // not-smaller conversion falls back to the original so one odd file never stops the sync.
     private func convertedCopy(of song: Song, maxBitrateKbps: Int?) async -> URL? {
@@ -232,6 +254,56 @@ extension iPodSyncEngine {
         } catch {
             SyncLog.record("conversion failed for \(song.title), copying original: \(error.localizedDescription)")
             return nil
+        }
+    }
+
+    // Removes every song from the iPod: its database entries, the music files and the cover art.
+    // The Mac library is untouched. A backup of the database is saved first.
+    func clearDevice(_ device: iPodDevice) async {
+        guard let base = await resolveAccess(for: device) else {
+            await setPhase(.failed(NSLocalizedString("sync.access.denied", comment: "")))
+            return
+        }
+        await MainActor.run { progress = SyncProgress(phase: .reading, totalTracks: 0) }
+        SyncLog.beginSession("clear \(device.volumeName) [\(device.generation.rawValue)]")
+        let fm = FileManager.default
+        do {
+            try DeviceFiles.preflight(base: base)
+            let library = try openLibrary(for: device, base: base)
+            try library.prepareForWrite()
+            let entries = library.entries
+            SyncLog.record("device holds \(entries.count) tracks")
+            try DatabaseBackups.save(library.databaseFiles, key: backupKey(for: device))
+            for entry in entries { try library.remove(entry) }
+            await setPhase(.writing)
+            try library.commit()
+            SyncLog.record("database written and verified (0 tracks)")
+
+            // Files go only after the empty database is safely written, so a failure leaves
+            // songs that still play rather than records pointing at nothing.
+            let music = base.appendingPathComponent("iPod_Control/Music", isDirectory: true)
+            for folder in (try? fm.contentsOfDirectory(atPath: music.path)) ?? [] where folder.hasPrefix("F") {
+                let folderURL = music.appendingPathComponent(folder, isDirectory: true)
+                for name in (try? fm.contentsOfDirectory(atPath: folderURL.path)) ?? [] {
+                    try? fm.removeItem(at: folderURL.appendingPathComponent(name))
+                }
+            }
+            // The next sync builds a fresh ArtworkDB; keeping the old one would hold covers
+            // for songs that no longer exist.
+            let artwork = base.appendingPathComponent("iPod_Control/Artwork", isDirectory: true)
+            for name in (try? fm.contentsOfDirectory(atPath: artwork.path)) ?? [] where name == "ArtworkDB" || name.hasSuffix(".ithmb") {
+                try? fm.removeItem(at: artwork.appendingPathComponent(name))
+            }
+
+            await setPhase(.ejecting)
+            syncFilesystem(at: device.volumeURL)
+            SyncLog.record("done")
+            SyncLog.flush(deviceBase: base)
+            await setPhase(.done)
+        } catch {
+            SyncLog.record("FAILED: \(error.localizedDescription) [\(error)]")
+            SyncLog.flush(deviceBase: grantedVolumeURL)
+            await setPhase(.failed(error.localizedDescription))
         }
     }
 
