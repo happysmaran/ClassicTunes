@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d Titel, %.1f Stunden, %.2f GB";
 "library.stats.other"         = "%d Titel, %.1f Stunden, %.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "Übersicht";
+"device.tab.music" = "Musik";
+"device.section.ipod" = "iPod";
+"device.section.options" = "Optionen";
+"device.info.name" = "Name:";
+"device.info.model" = "Modell:";
+"device.info.capacity" = "Kapazität:";
+"device.info.songs" = "Titel:";
+"device.info.software" = "Softwareversion:";
+"device.info.serial" = "Seriennummer:";
+"device.options.syncMode" = "Beim Synchronisieren:";
+"device.mode.add" = "Ausgewählte Titel hinzufügen";
+"device.mode.mirror" = "iPod an die ausgewählten Titel angleichen";
+"device.mode.mirror.help" = "Titel auf dem iPod, die nicht in der Musikliste stehen, werden entfernt.";
+"device.mode.add.help" = "Titel, die bereits auf dem iPod sind, bleiben erhalten.";
+"device.toSync" = "Zu synchronisierende Titel";
+"device.onIPod" = "Auf dem iPod";
+"device.clear" = "Leeren";
+"device.col.name" = "Name";
+"device.col.artist" = "Interpret";
+"device.col.time" = "Dauer";
+"device.capacity" = "Kapazität";
+"device.audio" = "Audio";
+"device.other" = "Andere";
+"device.free" = "Frei";
+"sync.syncing" = "Synchronisiere…";
+"sync.confirm.messageAdd" = "Diese %d Titel werden zum iPod hinzugefügt. Es wird nichts entfernt. Fortfahren?";
+"sync.confirm.messageMirror" = "Der iPod enthält danach genau diese %d Titel. Alles andere wird entfernt. Fortfahren?";
+"device.addAll" = "Alle hinzufügen";
+"device.autoActive" = "Die gesamte Mediathek (%d Titel) bleibt auf diesem iPod.";
+"device.options.auto" = "Gesamte Musikmediathek automatisch synchronisieren";
+"device.options.auto.help" = "Hält alle Titel der Mediathek auf dem iPod und aktualisiert sie, wenn Titel hinzugefügt, geändert oder gelöscht werden. Andere Titel auf dem iPod werden entfernt.";
+"picker.selectAll" = "Alle auswählen";
+"device.options.bitrate" = "Titel mit höherer Bitrate umwandeln in:";
+"device.bitrate.off" = "Nicht umwandeln";
+"device.bitrate.help" = "Titel mit einer höheren Bitrate werden auf dem Weg zum iPod als AAC neu codiert, um Speicherplatz zu sparen. Titel mit dieser oder einer niedrigeren Bitrate sowie deine Mac-Mediathek bleiben unverändert. Das Umwandeln dauert länger.";
+"device.clear.title" = "Diesen iPod leeren?";
+"device.clear.confirm" = "iPod leeren";
+"device.clear.message" = "Alle Titel und alle Cover werden vom iPod entfernt. Deine Mac-Mediathek bleibt unverändert. Die automatische Synchronisierung wird ausgeschaltet.";
+"device.clear.button" = "iPod leeren…";
+"device.clear.help" = "Entfernt alle Titel vom iPod.";

@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d canción, %.1f horas, %.2f GB";
 "library.stats.other"         = "%d canciones, %.1f horas, %.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "Resumen";
+"device.tab.music" = "Música";
+"device.section.ipod" = "iPod";
+"device.section.options" = "Opciones";
+"device.info.name" = "Nombre:";
+"device.info.model" = "Modelo:";
+"device.info.capacity" = "Capacidad:";
+"device.info.songs" = "Canciones:";
+"device.info.software" = "Versión del software:";
+"device.info.serial" = "Número de serie:";
+"device.options.syncMode" = "Al sincronizar:";
+"device.mode.add" = "Añadir las canciones seleccionadas";
+"device.mode.mirror" = "Hacer que el iPod coincida con las canciones seleccionadas";
+"device.mode.mirror.help" = "Se eliminan las canciones del iPod que no están en la lista de música.";
+"device.mode.add.help" = "Se conservan las canciones que ya están en el iPod.";
+"device.toSync" = "Canciones para sincronizar";
+"device.onIPod" = "En el iPod";
+"device.clear" = "Vaciar";
+"device.col.name" = "Nombre";
+"device.col.artist" = "Artista";
+"device.col.time" = "Duración";
+"device.capacity" = "Capacidad";
+"device.audio" = "Audio";
+"device.other" = "Otros";
+"device.free" = "Libre";
+"sync.syncing" = "Sincronizando…";
+"sync.confirm.messageAdd" = "Se añadirán estas %d canciones al iPod. No se eliminará nada. ¿Continuar?";
+"sync.confirm.messageMirror" = "El iPod contendrá exactamente estas %d canciones. Todo lo demás se eliminará. ¿Continuar?";
+"device.addAll" = "Añadir todas";
+"device.autoActive" = "Toda la biblioteca (%d canciones) se mantiene en este iPod.";
+"device.options.auto" = "Sincronizar automáticamente toda la biblioteca de música";
+"device.options.auto.help" = "Mantiene todas las canciones de la biblioteca en el iPod y lo actualiza cuando se añaden, cambian o eliminan canciones. Se eliminan las demás canciones del iPod.";
+"picker.selectAll" = "Seleccionar todo";
+"device.options.bitrate" = "Convertir las canciones de mayor tasa de bits a:";
+"device.bitrate.off" = "No convertir";
+"device.bitrate.help" = "Las canciones codificadas por encima de esta tasa se recodifican como AAC al enviarlas al iPod para ahorrar espacio. Las canciones con esta tasa o menos, y tu biblioteca del Mac, no se modifican. La conversión tarda más.";
+"device.clear.title" = "¿Vaciar este iPod?";
+"device.clear.confirm" = "Vaciar iPod";
+"device.clear.message" = "Se eliminarán todas las canciones y todas las carátulas del iPod. Tu biblioteca del Mac no cambia. La sincronización automática se desactivará.";
+"device.clear.button" = "Vaciar iPod…";
+"device.clear.help" = "Elimina todas las canciones del iPod.";

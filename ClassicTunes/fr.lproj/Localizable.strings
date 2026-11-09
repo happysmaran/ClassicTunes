@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d morceau, %.1f heures, %.2f Go";
 "library.stats.other"         = "%d morceaux, %.1f heures, %.2f Go";
+
+// MARK: - iPod device page
+"device.tab.summary" = "Résumé";
+"device.tab.music" = "Musique";
+"device.section.ipod" = "iPod";
+"device.section.options" = "Options";
+"device.info.name" = "Nom :";
+"device.info.model" = "Modèle :";
+"device.info.capacity" = "Capacité :";
+"device.info.songs" = "Morceaux :";
+"device.info.software" = "Version du logiciel :";
+"device.info.serial" = "Numéro de série :";
+"device.options.syncMode" = "Lors de la synchronisation :";
+"device.mode.add" = "Ajouter les morceaux sélectionnés";
+"device.mode.mirror" = "Aligner l’iPod sur les morceaux sélectionnés";
+"device.mode.mirror.help" = "Les morceaux de l’iPod qui ne figurent pas dans la liste de musique sont supprimés.";
+"device.mode.add.help" = "Les morceaux déjà présents sur l’iPod sont conservés.";
+"device.toSync" = "Morceaux à synchroniser";
+"device.onIPod" = "Sur l’iPod";
+"device.clear" = "Effacer";
+"device.col.name" = "Nom";
+"device.col.artist" = "Artiste";
+"device.col.time" = "Durée";
+"device.capacity" = "Capacité";
+"device.audio" = "Audio";
+"device.other" = "Autre";
+"device.free" = "Libre";
+"sync.syncing" = "Synchronisation…";
+"sync.confirm.messageAdd" = "Ces %d morceaux seront ajoutés à l’iPod. Rien ne sera supprimé. Continuer ?";
+"sync.confirm.messageMirror" = "L’iPod contiendra exactement ces %d morceaux. Tout le reste sera supprimé. Continuer ?";
+"device.addAll" = "Tout ajouter";
+"device.autoActive" = "Toute la bibliothèque (%d morceaux) est conservée sur cet iPod.";
+"device.options.auto" = "Synchroniser automatiquement toute la bibliothèque musicale";
+"device.options.auto.help" = "Conserve tous les morceaux de la bibliothèque sur l’iPod et le met à jour quand des morceaux sont ajoutés, modifiés ou supprimés. Les autres morceaux de l’iPod sont supprimés.";
+"picker.selectAll" = "Tout sélectionner";
+"device.options.bitrate" = "Convertir les morceaux de débit supérieur en :";
+"device.bitrate.off" = "Ne pas convertir";
+"device.bitrate.help" = "Les morceaux encodés au-delà de ce débit sont réencodés en AAC en route vers l’iPod pour économiser de l’espace. Les morceaux à ce débit ou en dessous, ainsi que votre bibliothèque Mac, ne sont pas modifiés. La conversion prend plus de temps.";
+"device.clear.title" = "Effacer cet iPod ?";
+"device.clear.confirm" = "Effacer l’iPod";
+"device.clear.message" = "Tous les morceaux et toutes les pochettes seront supprimés de l’iPod. Votre bibliothèque Mac n’est pas modifiée. La synchronisation automatique sera désactivée.";
+"device.clear.button" = "Effacer l’iPod…";
+"device.clear.help" = "Supprime tous les morceaux de l’iPod.";

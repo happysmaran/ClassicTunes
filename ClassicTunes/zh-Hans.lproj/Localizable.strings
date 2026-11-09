@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d 首歌曲，%.1f 小时，%.2f GB";
 "library.stats.other"         = "%d 首歌曲，%.1f 小时，%.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "摘要";
+"device.tab.music" = "音乐";
+"device.section.ipod" = "iPod";
+"device.section.options" = "选项";
+"device.info.name" = "名称：";
+"device.info.model" = "型号：";
+"device.info.capacity" = "容量：";
+"device.info.songs" = "歌曲：";
+"device.info.software" = "软件版本：";
+"device.info.serial" = "序列号：";
+"device.options.syncMode" = "同步时：";
+"device.mode.add" = "添加所选歌曲";
+"device.mode.mirror" = "使 iPod 与所选歌曲一致";
+"device.mode.mirror.help" = "iPod 上不在音乐列表中的歌曲将被移除。";
+"device.mode.add.help" = "iPod 上已有的歌曲会保留。";
+"device.toSync" = "待同步歌曲";
+"device.onIPod" = "iPod 上";
+"device.clear" = "清除";
+"device.col.name" = "名称";
+"device.col.artist" = "艺人";
+"device.col.time" = "时长";
+"device.capacity" = "容量";
+"device.audio" = "音频";
+"device.other" = "其他";
+"device.free" = "可用";
+"sync.syncing" = "正在同步…";
+"sync.confirm.messageAdd" = "这 %d 首歌曲将添加到 iPod，iPod 上的内容不会被移除。要继续吗？";
+"sync.confirm.messageMirror" = "iPod 上将只保留这 %d 首歌曲，其余内容都会被移除。要继续吗？";
+"device.addAll" = "全部添加";
+"device.autoActive" = "整个资料库（%d 首歌曲）会保留在此 iPod 上。";
+"device.options.auto" = "自动同步整个音乐资料库";
+"device.options.auto.help" = "将资料库中的所有歌曲保留在 iPod 上，并在歌曲被添加、更改或删除时更新。iPod 上的其他歌曲会被移除。";
+"picker.selectAll" = "全选";
+"device.options.bitrate" = "将较高比特率的歌曲转换为：";
+"device.bitrate.off" = "不转换";
+"device.bitrate.help" = "高于此比特率的歌曲会在传到 iPod 的过程中重新编码为 AAC，以节省空间。等于或低于此比特率的歌曲以及你的 Mac 资料库不会改变。转换需要更长时间。";
+"device.clear.title" = "要清除这台 iPod 吗？";
+"device.clear.confirm" = "清除 iPod";
+"device.clear.message" = "iPod 上的所有歌曲和所有封面都将被移除。你的 Mac 资料库不会改变。自动同步将被关闭。";
+"device.clear.button" = "清除 iPod…";
+"device.clear.help" = "移除 iPod 上的所有歌曲。";

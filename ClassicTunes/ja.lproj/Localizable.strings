@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d曲、%.1f時間、%.2f GB";
 "library.stats.other"         = "%d曲、%.1f時間、%.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "概要";
+"device.tab.music" = "ミュージック";
+"device.section.ipod" = "iPod";
+"device.section.options" = "オプション";
+"device.info.name" = "名前:";
+"device.info.model" = "モデル:";
+"device.info.capacity" = "容量:";
+"device.info.songs" = "曲:";
+"device.info.software" = "ソフトウェアバージョン:";
+"device.info.serial" = "シリアル番号:";
+"device.options.syncMode" = "同期するとき:";
+"device.mode.add" = "選択した曲を追加";
+"device.mode.mirror" = "iPodを選択した曲と同じにする";
+"device.mode.mirror.help" = "ミュージックリストにないiPod上の曲は削除されます。";
+"device.mode.add.help" = "すでにiPodにある曲は残ります。";
+"device.toSync" = "同期する曲";
+"device.onIPod" = "iPod内";
+"device.clear" = "クリア";
+"device.col.name" = "名前";
+"device.col.artist" = "アーティスト";
+"device.col.time" = "時間";
+"device.capacity" = "容量";
+"device.audio" = "オーディオ";
+"device.other" = "その他";
+"device.free" = "空き";
+"sync.syncing" = "同期中…";
+"sync.confirm.messageAdd" = "これらの%d曲をiPodに追加します。iPod上のものは削除されません。続けますか？";
+"sync.confirm.messageMirror" = "iPodにはこの%d曲だけが入ります。それ以外はすべて削除されます。続けますか？";
+"device.addAll" = "すべて追加";
+"device.autoActive" = "ライブラリ全体(%d曲)をこのiPodに保持します。";
+"device.options.auto" = "ミュージックライブラリ全体を自動的に同期";
+"device.options.auto.help" = "ライブラリのすべての曲をiPodに保持し、曲の追加・変更・削除に合わせて更新します。iPod上のその他の曲は削除されます。";
+"picker.selectAll" = "すべて選択";
+"device.options.bitrate" = "ビットレートが高い曲を次に変換:";
+"device.bitrate.off" = "変換しない";
+"device.bitrate.help" = "このレートを超えるビットレートの曲は、容量を節約するためにiPodへ送る際にAACで再エンコードされます。このレート以下の曲とMacのライブラリは変更されません。変換には時間がかかります。";
+"device.clear.title" = "このiPodを消去しますか？";
+"device.clear.confirm" = "iPodを消去";
+"device.clear.message" = "iPodからすべての曲とアートワークが削除されます。Macのライブラリは変更されません。自動同期はオフになります。";
+"device.clear.button" = "iPodを消去…";
+"device.clear.help" = "iPodからすべての曲を削除します。";

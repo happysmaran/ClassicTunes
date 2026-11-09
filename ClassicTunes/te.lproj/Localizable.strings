@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d పాట, %.1f గంటలు, %.2f GB";
 "library.stats.other"         = "%d పాటలు, %.1f గంటలు, %.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "సారాంశం";
+"device.tab.music" = "సంగీతం";
+"device.section.ipod" = "iPod";
+"device.section.options" = "ఎంపికలు";
+"device.info.name" = "పేరు:";
+"device.info.model" = "మోడల్:";
+"device.info.capacity" = "సామర్థ్యం:";
+"device.info.songs" = "పాటలు:";
+"device.info.software" = "సాఫ్ట్‌వేర్ వెర్షన్:";
+"device.info.serial" = "సీరియల్ నంబర్:";
+"device.options.syncMode" = "సింక్ చేసేటప్పుడు:";
+"device.mode.add" = "ఎంచుకున్న పాటలను జోడించు";
+"device.mode.mirror" = "iPodని ఎంచుకున్న పాటలకు సరిపోయేలా చేయి";
+"device.mode.mirror.help" = "సంగీత జాబితాలో లేని iPod పాటలు తొలగించబడతాయి.";
+"device.mode.add.help" = "iPodలో ఇప్పటికే ఉన్న పాటలు అలాగే ఉంటాయి.";
+"device.toSync" = "సింక్ చేయవలసిన పాటలు";
+"device.onIPod" = "iPodలో";
+"device.clear" = "క్లియర్ చేయి";
+"device.col.name" = "పేరు";
+"device.col.artist" = "కళాకారుడు";
+"device.col.time" = "సమయం";
+"device.capacity" = "సామర్థ్యం";
+"device.audio" = "ఆడియో";
+"device.other" = "ఇతరాలు";
+"device.free" = "ఖాళీ";
+"sync.syncing" = "సింక్ అవుతోంది…";
+"sync.confirm.messageAdd" = "ఈ %d పాటలు iPodకి జోడించబడతాయి. దానిపై ఏదీ తొలగించబడదు. కొనసాగించాలా?";
+"sync.confirm.messageMirror" = "iPodలో సరిగ్గా ఈ %d పాటలు మాత్రమే ఉంటాయి. మిగిలినవన్నీ తొలగించబడతాయి. కొనసాగించాలా?";
+"device.addAll" = "అన్నీ జోడించు";
+"device.autoActive" = "మొత్తం లైబ్రరీ (%d పాటలు) ఈ iPodలో ఉంచబడింది.";
+"device.options.auto" = "మొత్తం సంగీత లైబ్రరీని ఆటోమేటిక్‌గా సింక్ చేయి";
+"device.options.auto.help" = "లైబ్రరీలోని అన్ని పాటలను iPodలో ఉంచుతుంది మరియు పాటలు జోడించినప్పుడు, మార్చినప్పుడు లేదా తొలగించినప్పుడు దాన్ని అప్‌డేట్ చేస్తుంది. iPodలోని ఇతర పాటలు తొలగించబడతాయి.";
+"picker.selectAll" = "అన్నీ ఎంచుకో";
+"device.options.bitrate" = "ఎక్కువ బిట్‌రేట్ ఉన్న పాటలను దీనికి మార్చు:";
+"device.bitrate.off" = "మార్చవద్దు";
+"device.bitrate.help" = "ఈ రేటు కంటే ఎక్కువగా ఎన్‌కోడ్ చేసిన పాటలు స్థలం ఆదా చేయడానికి iPodకి పంపేటప్పుడు AAC గా మళ్ళీ ఎన్‌కోడ్ చేయబడతాయి. ఈ రేటు లేదా అంతకంటే తక్కువ ఉన్న పాటలు మరియు మీ Mac లైబ్రరీ మారవు. మార్చడానికి ఎక్కువ సమయం పడుతుంది.";
+"device.clear.title" = "ఈ iPodని క్లియర్ చేయాలా?";
+"device.clear.confirm" = "iPodని క్లియర్ చేయి";
+"device.clear.message" = "iPod నుండి ప్రతి పాట మరియు అన్ని కవర్ ఆర్ట్ తొలగించబడతాయి. మీ Mac లైబ్రరీ మారదు. ఆటోమేటిక్ సింక్ ఆఫ్ చేయబడుతుంది.";
+"device.clear.button" = "iPodని క్లియర్ చేయి…";
+"device.clear.help" = "iPod నుండి ప్రతి పాటను తొలగిస్తుంది.";

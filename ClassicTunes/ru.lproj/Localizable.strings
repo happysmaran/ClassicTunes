@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d композиция, %.1f ч, %.2f ГБ";
 "library.stats.other"         = "%d композиций, %.1f ч, %.2f ГБ";
+
+// MARK: - iPod device page
+"device.tab.summary" = "Обзор";
+"device.tab.music" = "Музыка";
+"device.section.ipod" = "iPod";
+"device.section.options" = "Параметры";
+"device.info.name" = "Имя:";
+"device.info.model" = "Модель:";
+"device.info.capacity" = "Ёмкость:";
+"device.info.songs" = "Песни:";
+"device.info.software" = "Версия ПО:";
+"device.info.serial" = "Серийный номер:";
+"device.options.syncMode" = "При синхронизации:";
+"device.mode.add" = "Добавить выбранные песни";
+"device.mode.mirror" = "Привести iPod в соответствие с выбранными песнями";
+"device.mode.mirror.help" = "Песни на iPod, которых нет в списке музыки, будут удалены.";
+"device.mode.add.help" = "Песни, уже находящиеся на iPod, сохраняются.";
+"device.toSync" = "Песни для синхронизации";
+"device.onIPod" = "На iPod";
+"device.clear" = "Очистить";
+"device.col.name" = "Название";
+"device.col.artist" = "Исполнитель";
+"device.col.time" = "Время";
+"device.capacity" = "Ёмкость";
+"device.audio" = "Аудио";
+"device.other" = "Другое";
+"device.free" = "Свободно";
+"sync.syncing" = "Синхронизация…";
+"sync.confirm.messageAdd" = "Эти песни (%d) будут добавлены на iPod. Ничего не будет удалено. Продолжить?";
+"sync.confirm.messageMirror" = "На iPod останутся ровно эти песни (%d). Всё остальное будет удалено. Продолжить?";
+"device.addAll" = "Добавить все";
+"device.autoActive" = "Вся медиатека (песен: %d) хранится на этом iPod.";
+"device.options.auto" = "Автоматически синхронизировать всю музыкальную медиатеку";
+"device.options.auto.help" = "Хранит на iPod все песни медиатеки и обновляет их при добавлении, изменении или удалении песен. Остальные песни на iPod удаляются.";
+"picker.selectAll" = "Выбрать все";
+"device.options.bitrate" = "Конвертировать песни с более высоким битрейтом в:";
+"device.bitrate.off" = "Не конвертировать";
+"device.bitrate.help" = "Песни с битрейтом выше этого значения перекодируются в AAC при отправке на iPod, чтобы сэкономить место. Песни с таким или меньшим битрейтом и ваша медиатека на Mac не изменяются. Конвертация занимает больше времени.";
+"device.clear.title" = "Очистить этот iPod?";
+"device.clear.confirm" = "Очистить iPod";
+"device.clear.message" = "С iPod будут удалены все песни и все обложки. Ваша медиатека на Mac не изменится. Автоматическая синхронизация будет отключена.";
+"device.clear.button" = "Очистить iPod…";
+"device.clear.help" = "Удаляет все песни с iPod.";

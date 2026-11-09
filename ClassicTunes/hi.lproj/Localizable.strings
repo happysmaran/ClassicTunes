@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d गाना, %.1f घंटे, %.2f GB";
 "library.stats.other"         = "%d गाने, %.1f घंटे, %.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "सारांश";
+"device.tab.music" = "संगीत";
+"device.section.ipod" = "iPod";
+"device.section.options" = "विकल्प";
+"device.info.name" = "नाम:";
+"device.info.model" = "मॉडल:";
+"device.info.capacity" = "क्षमता:";
+"device.info.songs" = "गाने:";
+"device.info.software" = "सॉफ़्टवेयर संस्करण:";
+"device.info.serial" = "क्रम संख्या:";
+"device.options.syncMode" = "सिंक करते समय:";
+"device.mode.add" = "चुने हुए गाने जोड़ें";
+"device.mode.mirror" = "iPod को चुने हुए गानों के अनुसार बनाएँ";
+"device.mode.mirror.help" = "iPod पर जो गाने संगीत सूची में नहीं हैं, उन्हें हटा दिया जाएगा।";
+"device.mode.add.help" = "iPod पर पहले से मौजूद गाने रखे जाएँगे।";
+"device.toSync" = "सिंक करने के गाने";
+"device.onIPod" = "iPod पर";
+"device.clear" = "साफ़ करें";
+"device.col.name" = "नाम";
+"device.col.artist" = "कलाकार";
+"device.col.time" = "अवधि";
+"device.capacity" = "क्षमता";
+"device.audio" = "ऑडियो";
+"device.other" = "अन्य";
+"device.free" = "खाली";
+"sync.syncing" = "सिंक हो रहा है…";
+"sync.confirm.messageAdd" = "ये %d गाने iPod में जोड़े जाएँगे। उस पर से कुछ भी नहीं हटाया जाएगा। जारी रखें?";
+"sync.confirm.messageMirror" = "iPod पर ठीक यही %d गाने रहेंगे। बाकी सब कुछ हटा दिया जाएगा। जारी रखें?";
+"device.addAll" = "सभी जोड़ें";
+"device.autoActive" = "पूरी लाइब्रेरी (%d गाने) इस iPod पर रखी गई है।";
+"device.options.auto" = "पूरी संगीत लाइब्रेरी अपने आप सिंक करें";
+"device.options.auto.help" = "लाइब्रेरी के सभी गाने iPod पर रखता है और गाने जोड़े, बदले या हटाए जाने पर उसे अपडेट करता है। iPod के अन्य गाने हटा दिए जाते हैं।";
+"picker.selectAll" = "सभी चुनें";
+"device.options.bitrate" = "अधिक बिटरेट वाले गानों को इसमें बदलें:";
+"device.bitrate.off" = "न बदलें";
+"device.bitrate.help" = "इस दर से अधिक पर एन्कोड किए गए गानों को जगह बचाने के लिए iPod पर भेजते समय AAC में दोबारा एन्कोड किया जाता है। इस दर या उससे कम वाले गाने और आपकी Mac लाइब्रेरी नहीं बदलती। बदलने में अधिक समय लगता है।";
+"device.clear.title" = "इस iPod को साफ़ करें?";
+"device.clear.confirm" = "iPod साफ़ करें";
+"device.clear.message" = "iPod से सभी गाने और सारे कवर आर्ट हटा दिए जाएँगे। आपकी Mac लाइब्रेरी नहीं बदलेगी। अपने आप सिंक होना बंद कर दिया जाएगा।";
+"device.clear.button" = "iPod साफ़ करें…";
+"device.clear.help" = "iPod से सभी गाने हटाता है।";

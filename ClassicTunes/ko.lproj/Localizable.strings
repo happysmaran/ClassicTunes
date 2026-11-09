@@ -418,3 +418,46 @@
 // MARK: - Library stats (bottom bar)
 "library.stats.one"           = "%d곡, %.1f시간, %.2f GB";
 "library.stats.other"         = "%d곡, %.1f시간, %.2f GB";
+
+// MARK: - iPod device page
+"device.tab.summary" = "요약";
+"device.tab.music" = "음악";
+"device.section.ipod" = "iPod";
+"device.section.options" = "옵션";
+"device.info.name" = "이름:";
+"device.info.model" = "모델:";
+"device.info.capacity" = "용량:";
+"device.info.songs" = "노래:";
+"device.info.software" = "소프트웨어 버전:";
+"device.info.serial" = "일련번호:";
+"device.options.syncMode" = "동기화할 때:";
+"device.mode.add" = "선택한 노래 추가";
+"device.mode.mirror" = "iPod을 선택한 노래와 일치시키기";
+"device.mode.mirror.help" = "음악 목록에 없는 iPod의 노래는 삭제됩니다.";
+"device.mode.add.help" = "iPod에 이미 있는 노래는 유지됩니다.";
+"device.toSync" = "동기화할 노래";
+"device.onIPod" = "iPod에 있음";
+"device.clear" = "지우기";
+"device.col.name" = "이름";
+"device.col.artist" = "아티스트";
+"device.col.time" = "시간";
+"device.capacity" = "용량";
+"device.audio" = "오디오";
+"device.other" = "기타";
+"device.free" = "남은 공간";
+"sync.syncing" = "동기화 중…";
+"sync.confirm.messageAdd" = "이 노래 %d곡이 iPod에 추가됩니다. iPod의 기존 항목은 삭제되지 않습니다. 계속하겠습니까?";
+"sync.confirm.messageMirror" = "iPod에는 정확히 이 노래 %d곡만 남습니다. 나머지는 모두 삭제됩니다. 계속하겠습니까?";
+"device.addAll" = "모두 추가";
+"device.autoActive" = "전체 보관함(노래 %d곡)이 이 iPod에 유지됩니다.";
+"device.options.auto" = "전체 음악 보관함 자동 동기화";
+"device.options.auto.help" = "보관함의 모든 노래를 iPod에 유지하고, 노래가 추가, 변경 또는 삭제되면 업데이트합니다. iPod의 다른 노래는 삭제됩니다.";
+"picker.selectAll" = "모두 선택";
+"device.options.bitrate" = "비트 전송률이 높은 노래 변환:";
+"device.bitrate.off" = "변환 안 함";
+"device.bitrate.help" = "이 전송률보다 높게 인코딩된 노래는 공간을 절약하기 위해 iPod로 보내는 중에 AAC로 다시 인코딩됩니다. 이 전송률 이하의 노래와 Mac 보관함은 변경되지 않습니다. 변환에는 시간이 더 걸립니다.";
+"device.clear.title" = "이 iPod을 지우겠습니까?";
+"device.clear.confirm" = "iPod 지우기";
+"device.clear.message" = "iPod에서 모든 노래와 앨범 아트가 삭제됩니다. Mac 보관함은 변경되지 않습니다. 자동 동기화는 꺼집니다.";
+"device.clear.button" = "iPod 지우기…";
+"device.clear.help" = "iPod에서 모든 노래를 삭제합니다.";
