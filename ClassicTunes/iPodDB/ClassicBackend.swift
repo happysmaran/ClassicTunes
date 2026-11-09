@@ -42,8 +42,8 @@ enum ClassicBackend {
         return false
     }
 
-    // Returns nil for formats the iPod cannot decode (FLAC, Ogg, Opus, ...). Converting those
-    // needs an encoder pass that is not part of syncing yet.
+    // Returns nil for formats the iPod cannot decode (FLAC, Ogg, Opus, ...). FLAC is converted to
+    // AAC while syncing (ConversionPipeline); the others are not supported.
     static func encoding(for url: URL) async -> ClassicAudioEncoding? {
         switch url.pathExtension.lowercased() {
         case "mp3": return .mp3

@@ -78,6 +78,7 @@ extension iPodSyncEngine {
         SyncLog.record("volume access: \(base.path)")
         let fm = FileManager.default
         var copied: [URL] = []
+        var pipeline: ConversionPipeline?
 
         do {
             // Mirroring an empty selection would erase the device, which is never what an empty
@@ -101,7 +102,8 @@ extension iPodSyncEngine {
             var skipped: [(title: String, reason: String)] = []
             var addable: [Int] = []
             for index in plan.addIndices {
-                if let reason = await library.rejectionReason(for: songs[index]) {
+                // FLAC is converted during the copy, so the device's own format check doesn't apply to it.
+                if !ConversionPipeline.mustConvert(songs[index].url), let reason = await library.rejectionReason(for: songs[index]) {
                     skipped.append((songs[index].title, reason))
                 } else {
                     addable.append(index)
@@ -124,7 +126,10 @@ extension iPodSyncEngine {
             for item in skipped { print("iPodSync: skipped \(item.title): \(item.reason)") }
 
             // Checked before copying so a full device fails cleanly instead of half-way.
-            let needed = plan.addIndices.reduce(Int64(0)) { $0 + DeviceFiles.fileSize(songs[$1].url) }
+            var needed: Int64 = 0
+            for index in plan.addIndices {
+                needed += ConversionPipeline.estimatedSize(url: songs[index].url, durationMS: await ClassicBackend.durationMS(of: songs[index]), limitKbps: maxBitrateKbps)
+            }
             let freed = plan.remove.reduce(Int64(0)) { $0 + DeviceFiles.fileSize(DeviceFiles.url(base: base, devicePath: $1.path)) }
             let freeSpace = DeviceFiles.availableBytes(at: base)
             if let free = freeSpace, needed > free + freed {
@@ -156,13 +161,26 @@ extension iPodSyncEngine {
                 plan.remove = []
             }
 
+            let conversions = ConversionPipeline(
+                items: plan.addIndices.map { .init(index: $0, url: songs[$0].url, title: songs[$0].title) },
+                limitKbps: maxBitrateKbps
+            )
+            pipeline = conversions
             for (position, index) in plan.addIndices.enumerated() {
                 let song = songs[index]
                 await MainActor.run {
                     progress.currentTrack = song.title
                     progress.completedTracks = position
                 }
-                let converted = await convertedCopy(of: song, maxBitrateKbps: maxBitrateKbps)
+                var converted: URL?
+                switch await conversions.outcome(at: position) {
+                case .original: converted = nil
+                case .converted(let url): converted = url
+                case .unusable(let reason):
+                    skipped.append((song.title, reason))
+                    SyncLog.record("skipped \(song.title): \(reason)")
+                    continue
+                }
                 defer { if let converted { try? fm.removeItem(at: converted) } }
                 let placed = try DeviceFiles.place(song, base: base, source: converted)
                 copied.append(placed.url)
@@ -184,6 +202,7 @@ extension iPodSyncEngine {
             await setPhase(.writing)
             try library.commit()
             SyncLog.record("database written and verified (\(library.entries.count) tracks)")
+            await pipeline?.discardPending()
             copied.removeAll()
             for entry in plan.remove { try? fm.removeItem(at: DeviceFiles.url(base: base, devicePath: entry.path)) }
             let orphans = removeOrphanedFiles(base: base, keeping: library.entries)
@@ -206,6 +225,7 @@ extension iPodSyncEngine {
             // only the files copied during this run get removed if needed. This is to avoid
             // corruption
             for url in copied { try? fm.removeItem(at: url) }
+            await pipeline?.discardPending()
             SyncLog.record("FAILED: \(error.localizedDescription) [\(error)]")
             SyncLog.flush(deviceBase: grantedVolumeURL)
             await setPhase(.failed(error.localizedDescription))
@@ -237,24 +257,6 @@ extension iPodSyncEngine {
             }
         }
         return removed
-    }
-
-    // A smaller AAC copy of `song` when it is encoded above the limit, otherwise nil. A failed or
-    // not-smaller conversion falls back to the original so one odd file never stops the sync.
-    private func convertedCopy(of song: Song, maxBitrateKbps: Int?) async -> URL? {
-        guard let limit = maxBitrateKbps, limit > 0 else { return nil }
-        let rate = Int(await ClassicBackend.audioProperties(for: song.url).bitrateKbps)
-        guard rate > limit else { return nil }
-        do {
-            let output = try await AudioTranscoder.convertToAAC(song.url, bitrateKbps: limit)
-            let before = DeviceFiles.fileSize(song.url), after = DeviceFiles.fileSize(output)
-            guard after < before else { try? FileManager.default.removeItem(at: output); return nil }
-            SyncLog.record("converted \(song.title): \(rate) -> \(limit) kbps (\(before) -> \(after) bytes)")
-            return output
-        } catch {
-            SyncLog.record("conversion failed for \(song.title), copying original: \(error.localizedDescription)")
-            return nil
-        }
     }
 
     // Removes every song from the iPod: its database entries, the music files and the cover art.
