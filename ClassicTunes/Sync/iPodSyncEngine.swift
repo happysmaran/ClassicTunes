@@ -39,6 +39,7 @@ final class iPodDeviceMonitor: ObservableObject {
 
     init() {
         startMonitoring()
+        observeSystemEvents()
     }
 
     deinit {
@@ -60,6 +61,17 @@ final class iPodDeviceMonitor: ObservableObject {
             { disk, context in
                 let monitor = Unmanaged<iPodDeviceMonitor>.fromOpaque(context!).takeUnretainedValue()
                 monitor.handleDiskAppeared(disk)
+            },
+            Unmanaged.passUnretained(self).toOpaque()
+        )
+
+        DARegisterDiskDescriptionChangedCallback(
+            session,
+            nil,
+            [kDADiskDescriptionVolumePathKey] as CFArray,
+            { disk, _, context in
+                let monitor = Unmanaged<iPodDeviceMonitor>.fromOpaque(context!).takeUnretainedValue()
+                monitor.handleDiskChanged(disk)
             },
             Unmanaged.passUnretained(self).toOpaque()
         )
@@ -90,24 +102,65 @@ final class iPodDeviceMonitor: ObservableObject {
 
         print("iPodDeviceMonitor: disk appeared at \(mountURL.path)")
 
-        // Check if this looks like an iPod Shuffle
-        guard let device = identifyiPodShuffle(at: mountURL, description: desc) else { return }
+        // Check if this looks like an iPod
+        guard let device = identifyiPodShuffle(at: mountURL, description: desc) else {
+            if (desc[kDADiskDescriptionDeviceInternalKey as String] as? Bool) == false {
+                refresh(after: 1.5)
+                refresh(after: 4)
+            }
+            return
+        }
 
         DispatchQueue.main.async {
             self.connectedDevice = device
         }
     }
 
+    private func handleDiskChanged(_ disk: DADisk) {
+        guard let desc = DADiskCopyDescription(disk) as? [String: Any] else { return }
+        if desc[kDADiskDescriptionVolumePathKey as String] is URL {
+            handleDiskAppeared(disk)
+        } else {
+            validateConnectedDevice()
+        }
+    }
+
+    // The description of a disk that is going away often has no mount path any more, so matching
+    // it against the connected device by path misses it and leaves a ghost device in the UI. Asking
+    // whether the device's own volume still exists does not depend on that.
     private func handleDiskDisappeared(_ disk: DADisk) {
-        guard let desc = DADiskCopyDescription(disk) as? [String: Any],
-              let mountURL = desc[kDADiskDescriptionVolumePathKey as String] as? URL else { return }
+        print("iPodDeviceMonitor: disk disappeared")
+        validateConnectedDevice()
+    }
 
-        print("iPodDeviceMonitor: disk disappeared at \(mountURL.path)")
-
+    func validateConnectedDevice() {
         DispatchQueue.main.async {
-            if self.connectedDevice?.volumeURL == mountURL {
+            if let device = self.connectedDevice, !FileManager.default.fileExists(atPath: device.volumeURL.path) {
                 self.connectedDevice = nil
             }
+        }
+    }
+
+    // Safety nets for events DiskArbitration misses: mount and unmount notices from the system, and
+    // the app coming back to the foreground, which is when someone who plugged the iPod in while
+    // the app was in the background looks at it.
+    private func observeSystemEvents() {
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(forName: NSWorkspace.didMountNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.refresh(after: 0.5)
+        }
+        workspace.addObserver(forName: NSWorkspace.didUnmountNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.validateConnectedDevice()
+        }
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.refresh(after: 0)
+        }
+    }
+
+    private func refresh(after delay: TimeInterval) {
+        queue.asyncAfter(deadline: .now() + delay) { [weak self] in
+            self?.validateConnectedDevice()
+            self?.scanMountedVolumes()
         }
     }
 
@@ -196,22 +249,22 @@ final class iPodDeviceMonitor: ObservableObject {
     // MARK: Manual Scan (called on app launch to catch already-mounted devices)
 
     func scanMountedVolumes() {
-        let fm = FileManager.default
-        guard let volumes = fm.mountedVolumeURLs(includingResourceValuesForKeys: [], options: []) else { return }
-        for url in volumes {
-            print("iPodDeviceMonitor: scanning mounted volume \(url.path)")
-            // Build a minimal description dict for already-mounted volumes
-            let name = url.lastPathComponent
-            let desc: [String: Any] = [
-                kDADiskDescriptionVolumePathKey as String: url,
-                kDADiskDescriptionVolumeNameKey as String: name
-            ]
-            if let device = identifyiPodShuffle(at: url, description: desc) {
+        queue.async { [weak self] in
+            guard let self, let session = self.session else { return }
+            let keys: [URLResourceKey] = [.volumeIsInternalKey]
+            guard let volumes = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) else { return }
+            for url in volumes {
+                // Internal volumes are the Mac's own disks; none of them is an iPod.
+                if (try? url.resourceValues(forKeys: Set(keys)))?.volumeIsInternal == true { continue }
+                // The real description, so the BSD name (needed for USB identification and the saved
+                // access grant) is known instead of being left blank.
+                guard let disk = DADiskCreateFromVolumePath(kCFAllocatorDefault, session, url as CFURL),
+                      let desc = DADiskCopyDescription(disk) as? [String: Any],
+                      let device = self.identifyiPodShuffle(at: url, description: desc) else { continue }
                 DispatchQueue.main.async {
-                    if self.connectedDevice == nil {
-                        self.connectedDevice = device
-                    }
+                    if self.connectedDevice == nil { self.connectedDevice = device }
                 }
+                return
             }
         }
     }
@@ -320,16 +373,37 @@ final class iPodSyncEngine: ObservableObject {
 // MARK: - Eject Helper
 
 extension iPodSyncEngine {
-    // Asks macOS to unmount and eject the iPod volume safely.
+    // Asks macOS to unmount and eject the iPod volume. Another process (Spotlight indexing the
+    // volume, a Finder window) can briefly hold it, so a refusal is retried before it is reported.
     func eject(device: iPodDevice, completion: @escaping (Bool) -> Void) {
-        let workspace = NSWorkspace.shared
-        
-        do {
-            try workspace.unmountAndEjectDevice(at: device.volumeURL)
-            completion(true)
-        } catch {
-            print("Failed to eject iPod: \(error.localizedDescription)")
-            completion(false)
+        Task {
+            await MainActor.run { progress = SyncProgress(phase: .ejecting) }
+            // Our own open access to the volume would otherwise count as "in use".
+            grantedVolumeURL?.stopAccessingSecurityScopedResource()
+            syncFilesystem(at: device.volumeURL)
+
+            var failure: Error?
+            for attempt in 0..<4 {
+                do {
+                    try NSWorkspace.shared.unmountAndEjectDevice(at: device.volumeURL)
+                    failure = nil
+                    break
+                } catch {
+                    failure = error
+                    print("Failed to eject iPod (attempt \(attempt + 1)): \(error.localizedDescription)")
+                    try? await Task.sleep(for: .seconds(1.5))
+                }
+            }
+
+            if let failure {
+                // Still plugged in, so the access the failed attempt gave up is needed again.
+                _ = grantedVolumeURL?.startAccessingSecurityScopedResource()
+                let message = "The iPod couldn't be ejected: \(failure.localizedDescription) Another app may be using it."
+                await MainActor.run { progress = SyncProgress(phase: .failed(message)) }
+            } else {
+                await MainActor.run { progress = SyncProgress() }
+            }
+            completion(failure == nil)
         }
     }
 }
