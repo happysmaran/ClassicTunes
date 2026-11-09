@@ -100,8 +100,8 @@ struct ClassicDevicePlaylist: Identifiable {
 
 // MARK: - Document
 
-// High-level view of an iPod's iTunesDB for devices that need no signature (hashing_scheme 0,
-// e.g. 1st-gen Nano). Edits work on the existing tree rather than building a database from
+// High-level view of an iPod's iTunesDB for devices that are unsigned (hashing_scheme 0, e.g.
+// 1st-gen Nano) or use HASH58 (scheme 1, signed by ITunesDBSigning). Edits work on the existing tree rather than building a database from
 // scratch, so everything the firmware or iTunes wrote that we do not understand survives.
 final class ITunesDBDocument {
     private(set) var root: DBChunk
@@ -156,8 +156,8 @@ final class ITunesDBDocument {
     // Refusing is the safe default: a database that parses but is internally inconsistent can
     // make the device show an empty library, so unsupported layouts are never edited.
     func assertWritable() throws {
-        guard hashingScheme == 0 else {
-            throw ITunesDBError.unsupported("This iPod's database is signed (scheme \(hashingScheme)). ClassicTunes cannot sign it yet, so it will not modify it.")
+        guard hashingScheme == 0 || hashingScheme == 1 else {
+            throw ITunesDBError.unsupported("This iPod's database uses signature scheme \(hashingScheme), which ClassicTunes cannot produce, so it will not modify it.")
         }
         // Artist records (dataset 8) have no maintenance logic yet, so a populated one would go stale.
         if !(dataset(8)?.children.isEmpty ?? true) {

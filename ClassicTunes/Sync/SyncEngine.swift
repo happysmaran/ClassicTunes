@@ -11,7 +11,7 @@ extension iPodSyncEngine {
 
     func openLibrary(for device: iPodDevice, base: URL) throws -> DeviceLibrary {
         switch device.generation {
-        case .classic: return try ClassicLibrary(base: base, fallbackArtworkFormats: iPodUSBIdentity.artworkFormats(bsdName: device.bsdName))
+        case .classic: return try ClassicLibrary(base: base, fallbackArtworkFormats: iPodUSBIdentity.artworkFormats(bsdName: device.bsdName), usbSerial: iPodUSBIdentity.serialNumber(bsdName: device.bsdName))
         case .shuffle3: return try ShuffleLELibrary(base: base)
         case .shuffle1, .shuffle2: return try ShuffleLibrary(base: base)
         // Writing the wrong database format can leave an iPod unreadable, so a device whose model

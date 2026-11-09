@@ -83,7 +83,7 @@ struct ITunesDBTests {
 
     @Test func refusesToEditSignedDatabases() throws {
         var bytes = try fixture("original-empty")
-        bytes.writeLE(UInt16(1), at: 0x30)
+        bytes.writeLE(UInt16(2), at: 0x30)
         let document = try ITunesDBDocument(data: bytes)
         #expect(throws: ITunesDBError.self) { try document.addTrack(sampleTrack("Signed")) }
     }

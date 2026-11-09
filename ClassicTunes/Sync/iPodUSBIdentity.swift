@@ -50,6 +50,19 @@ enum iPodUSBIdentity {
         return generations[ids.product]
     }
 
+    // The USB serial of an iPod is its FireWire GUID, the fallback when no SysInfo file states it.
+    static func serialNumber(bsdName: String) -> String? {
+        guard !bsdName.isEmpty,
+              let matching = IOBSDNameMatching(kIOMainPortDefault, 0, bsdName) else { return nil }
+        let media = IOServiceGetMatchingService(kIOMainPortDefault, matching)
+        guard media != 0 else { return nil }
+        defer { IOObjectRelease(media) }
+        return IORegistryEntrySearchCFProperty(
+            media, kIOServicePlane, "USB Serial Number" as CFString, kCFAllocatorDefault,
+            IOOptionBits(kIORegistryIterateRecursively | kIORegistryIterateParents)
+        ) as? String
+    }
+
     // Walks up from the volume's IOMedia node to the USB device that owns it; the vendor and
     // product IDs live on that ancestor, not on the disk itself.
     private static func usbIDs(bsdName: String) -> (vendor: Int, product: Int)? {

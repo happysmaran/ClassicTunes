@@ -10,8 +10,12 @@ final class ClassicLibrary: DeviceLibrary {
     // nil when the iPod has no ArtworkDB we can extend; songs then sync without covers.
     private let artwork: ArtworkDatabase?
 
-    init(base: URL, fallbackArtworkFormats: [ArtworkFormat] = []) throws {
+    // HASH58 databases (Classic, Nano 3G/4G) are keyed from this; nil when the iPod doesn't say.
+    private let firewireGUID: Data?
+
+    init(base: URL, fallbackArtworkFormats: [ArtworkFormat] = [], usbSerial: String? = nil) throws {
         self.base = base
+        firewireGUID = ITunesDBSigning.firewireGUID(base: base) ?? usbSerial.flatMap(ITunesDBSigning.parseGUID)
         artwork = ArtworkDatabase(base: base, fallbackFormats: fallbackArtworkFormats)
         document = try ClassicBackend.loadDocument(base: base)
         // A database written by newer software than the iPod's firmware understands is read as
@@ -55,7 +59,12 @@ final class ClassicLibrary: DeviceLibrary {
             ? "\(song.url.pathExtension.uppercased()) files can't be played by this iPod" : nil
     }
 
-    func prepareForWrite() throws { try document.assertWritable() }
+    func prepareForWrite() throws {
+        try document.assertWritable()
+        if document.hashingScheme == 1, firewireGUID == nil {
+            throw ITunesDBError.unsupported("This iPod's database is signed and its FireWire GUID could not be read, so ClassicTunes cannot update it.")
+        }
+    }
 
     func add(_ song: Song, identity: String, placed: PlacedFile) async throws -> DeviceEntry {
         // Read from the placed file because it may be a converted copy with a different encoding.
@@ -135,7 +144,10 @@ final class ClassicLibrary: DeviceLibrary {
         // claims art the device cannot find.
         try artwork?.commit()
         try document.finalizeForWrite()
-        let data = document.serialized()
+        var data = document.serialized()
+        if document.hashingScheme == 1, let guid = firewireGUID {
+            try ITunesDBSigning.signHash58(&data, guid: guid)
+        }
         // Validated from the bytes themselves, not from the in-memory tree that produced them.
         try ITunesDBDocument(data: data).validate()
         try DeviceFiles.writeVerified(data, to: ClassicBackend.databaseURL(base: base))
