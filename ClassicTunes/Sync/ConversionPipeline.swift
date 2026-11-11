@@ -9,17 +9,26 @@ actor ConversionPipeline {
         case unusable(String)
     }
 
-    // FLAC is not decodable by any iPod, so it has to be converted whatever the bitrate limit says.
-    static let flacDefaultBitrateKbps = 256
+    // No iPod decodes FLAC or Ogg, so those are converted whatever the bitrate limit says.
+    static let defaultBitrateKbps = 256
 
-    static func mustConvert(_ url: URL) -> Bool { url.pathExtension.lowercased() == "flac" }
+    nonisolated static func mustConvert(_ url: URL) -> Bool {
+        url.pathExtension.lowercased() == "flac" || OggAudio.isOgg(url)
+    }
+
+    // Lossless sources get the limit (or the default); a lossy Ogg is not inflated past its own
+    // rate, since AAC at a higher rate than its source only costs space.
+    nonisolated static func targetKbps(for url: URL, limitKbps: Int?) -> Int {
+        let base = limitKbps.flatMap { $0 > 0 ? $0 : nil } ?? defaultBitrateKbps
+        guard OggAudio.isOgg(url), let rate = OggAudio.scan(url)?.bitrateKbps, rate > 0 else { return base }
+        return min(base, max(128, Int(rate.rounded(.up))))
+    }
 
     // What a song will occupy on the iPod, for the free-space check before anything is copied.
     @MainActor
     static func estimatedSize(url: URL, durationMS: UInt32, limitKbps: Int?) -> Int64 {
         guard mustConvert(url) else { return DeviceFiles.fileSize(url) }
-        let rate = limitKbps.flatMap { $0 > 0 ? $0 : nil } ?? flacDefaultBitrateKbps
-        return Int64(durationMS) * Int64(rate) / 8
+        return Int64(durationMS) * Int64(targetKbps(for: url, limitKbps: limitKbps)) / 8
     }
 
     struct Item {
@@ -68,7 +77,7 @@ actor ConversionPipeline {
         let forced = mustConvert(item.url)
         let target: Int
         if forced {
-            target = limitKbps.flatMap { $0 > 0 ? $0 : nil } ?? flacDefaultBitrateKbps
+            target = targetKbps(for: item.url, limitKbps: limitKbps)
         } else {
             guard let limit = limitKbps, limit > 0 else { return .original }
             let rate = Int(await ClassicBackend.audioProperties(for: item.url).bitrateKbps)
@@ -76,7 +85,7 @@ actor ConversionPipeline {
             target = limit
         }
         do {
-            let output = try await AudioTranscoder.convertToAAC(item.url, bitrateKbps: target)
+            let output = try await AudioTranscoder.convertToAAC(item.url, bitrateKbps: target, lyrics: await LyricsReader.lyrics(for: item.url))
             let before = DeviceFiles.fileSize(item.url), after = DeviceFiles.fileSize(output)
             if !forced && after >= before {
                 try? FileManager.default.removeItem(at: output)

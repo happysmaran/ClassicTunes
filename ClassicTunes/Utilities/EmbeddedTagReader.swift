@@ -21,6 +21,7 @@ nonisolated struct EmbeddedTags: Equatable {
     var bpm: Int?
     var compilation: Bool?
     var artworkData: Data?
+    var lyrics: String?
 }
 
 nonisolated enum EmbeddedTagReader {
@@ -29,11 +30,12 @@ nonisolated enum EmbeddedTagReader {
     // this only guards against a corrupt length field.
     private static let maxBlockSize = 64 * 1024 * 1024
 
-    // The tags in a FLAC or WAV file, or nil for other formats or files that can't be read.
+    // The tags in a FLAC, WAV or Ogg file, or nil for other formats or files that can't be read.
     static func read(from url: URL) -> EmbeddedTags? {
         switch url.pathExtension.lowercased() {
         case "flac": return readFLAC(at: url)
         case "wav": return readWAV(at: url)
+        case "ogg", "oga", "opus": return OggAudio.scan(url)?.tags
         default: return nil
         }
     }
@@ -105,7 +107,7 @@ nonisolated enum EmbeddedTagReader {
 
     // Fills `tags` from Vorbis comments. The first non-blank value of each field wins, so a file
     // with several ARTIST entries shows the first.
-    private static func applyVorbisComments(_ comments: [(name: String, value: String)], to tags: inout EmbeddedTags) {
+    static func applyVorbisComments(_ comments: [(name: String, value: String)], to tags: inout EmbeddedTags) {
         for (name, rawValue) in comments {
             let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty else { continue }
@@ -122,6 +124,7 @@ nonisolated enum EmbeddedTagReader {
             case "TRACKNUMBER", "TRACK": tags.trackNumber = tags.trackNumber ?? leadingInt(value)
             case "DISCNUMBER", "DISC": tags.discNumber = tags.discNumber ?? leadingInt(value)
             case "BPM", "TEMPO": tags.bpm = tags.bpm ?? leadingInt(value)
+            case "LYRICS", "UNSYNCEDLYRICS", "UNSYNCED LYRICS": tags.lyrics = tags.lyrics ?? value
             case "COMPILATION": tags.compilation = tags.compilation ?? (value == "1" || value.lowercased() == "true")
             default: break
             }
@@ -130,7 +133,7 @@ nonisolated enum EmbeddedTagReader {
 
     // A METADATA_BLOCK_PICTURE payload: picture type, MIME type, description, dimensions, then the
     // image bytes (all lengths big-endian).
-    private static func parseFLACPicture(_ payload: Data) -> (type: Int, data: Data)? {
+    static func parseFLACPicture(_ payload: Data) -> (type: Int, data: Data)? {
         var offset = 0
         func readBE() -> Int? {
             guard offset + 4 <= payload.count else { return nil }

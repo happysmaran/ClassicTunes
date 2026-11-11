@@ -239,6 +239,31 @@ extension Song {
     // - Returns: A fully-populated `Song` structural model. Embedded artwork is saved to `ArtworkStore`.
     // - Throws: An error if the asset cannot read structural metadata property states.
     static func load(from url: URL, dateAdded: Date? = nil) async throws -> Song {
+        // Ogg Vorbis and Opus are outside AVFoundation, so their tags and length come from the
+        // bundled decoder instead.
+        if OggAudio.isOgg(url) {
+            guard let info = OggAudio.scan(url) else { throw OggAudio.DecodeError("\(url.lastPathComponent) is not a readable Ogg Vorbis or Opus file.") }
+            let tags = info.tags
+            return Song(
+                url: url,
+                title: tags.title ?? url.deletingPathExtension().lastPathComponent,
+                artist: tags.artist ?? "Unknown Artist",
+                album: tags.album ?? "Unknown Album",
+                year: tags.year,
+                genre: tags.genre ?? "Unknown Genre",
+                trackNumber: tags.trackNumber,
+                discNumber: tags.discNumber,
+                composer: tags.composer,
+                comment: tags.comment,
+                albumArtist: tags.albumArtist,
+                grouping: tags.grouping,
+                compilation: tags.compilation ?? false,
+                bpm: tags.bpm,
+                duration: info.duration,
+                artworkData: tags.artworkData,
+                dateAdded: dateAdded
+            )
+        }
         let asset = AVURLAsset(url: url)
 
         // Load duration and both metadata collections in one async call each.

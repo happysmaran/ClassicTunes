@@ -1081,6 +1081,11 @@ struct ContentView: View {
         let asset = AVURLAsset(url: song.url)
 
         Task {
+            // FLAC keeps lyrics in Vorbis comments, which AVFoundation doesn't surface.
+            if let vorbis = EmbeddedTagReader.read(from: song.url)?.lyrics {
+                await MainActor.run { self.lyricsText = vorbis }
+                return
+            }
             do {
                 let formats = try await asset.load(.availableMetadataFormats)
                 var allItems: [AVMetadataItem] = []

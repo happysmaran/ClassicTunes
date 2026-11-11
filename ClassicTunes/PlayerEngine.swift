@@ -244,11 +244,32 @@ final class PlayerEngine: ObservableObject {
         updateUpcomingSongs()
     }
 
+    // The Ogg song being decoded for playback; cleared when another song is started.
+    private var pendingOggPath: String?
+
     private func setupNewPlayback(for song: Song, autoplay: Bool = true, startAt seconds: Double = 0, previewKey: String? = nil) {
         stopCurrentPlayback()
         self.previewKey = previewKey
+        pendingOggPath = nil
 
-        let item = AVPlayerItem(url: song.url)
+        // AVPlayer can't read Ogg, so the song is decoded first and played from the WAV.
+        var playableURL = song.url
+        if OggAudio.isOgg(song.url) {
+            if let cached = OggPlaybackCache.cachedURL(for: song.url) {
+                playableURL = cached
+            } else {
+                pendingOggPath = song.url.path
+                Task { @MainActor [weak self] in
+                    let decoded = try? await OggPlaybackCache.prepare(song.url)
+                    // A different song may have been chosen while this one was decoding.
+                    guard let self, self.pendingOggPath == song.url.path, decoded != nil else { return }
+                    self.setupNewPlayback(for: song, autoplay: autoplay, startAt: seconds, previewKey: previewKey)
+                }
+                return
+            }
+        }
+
+        let item = AVPlayerItem(url: playableURL)
         Equalizer.shared.attach(to: item)
         let newPlayer = AVPlayer(playerItem: item)
         let isCrossfading = fadingOutPlayer != nil

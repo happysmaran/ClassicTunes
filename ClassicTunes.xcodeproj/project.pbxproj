@@ -412,6 +412,18 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smaran.ClassicTunes;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ClassicTunes/Ogg",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_CONFIG_H,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -468,6 +480,18 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smaran.ClassicTunes;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ClassicTunes/Ogg",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_CONFIG_H,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

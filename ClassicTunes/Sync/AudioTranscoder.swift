@@ -6,12 +6,30 @@ nonisolated enum AudioTranscoder {
     // Writes a temporary .m4a the caller must delete. Title, artist, album and cover art are
     // carried over; the iPod's own database is built from the Mac library, so nothing else in the
     // file has to survive.
-    static func convertToAAC(_ source: URL, bitrateKbps: Int) async throws -> URL {
+    // `lyrics` are written into the file because the iPod shows only what is inside it.
+    static func convertToAAC(_ original: URL, bitrateKbps: Int, lyrics: String? = nil) async throws -> URL {
+        // Ogg has no AVFoundation reader, so its decoded PCM is what gets encoded.
+        var source = original
+        var decoded: URL?
+        if OggAudio.isOgg(original) {
+            let wav = FileManager.default.temporaryDirectory.appendingPathComponent("ClassicTunes-\(UUID().uuidString).wav")
+            try OggAudio.decodeToWAV(original, to: wav)
+            decoded = wav
+            source = wav
+        }
+        defer { if let decoded { try? FileManager.default.removeItem(at: decoded) } }
         let asset = AVURLAsset(url: source)
         guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
             throw TranscodeError("\(source.lastPathComponent) has no audio to convert")
         }
-        let metadata = (try? await asset.load(.commonMetadata)) ?? []
+        var metadata = (try? await asset.load(.commonMetadata)) ?? []
+        if let lyrics, !lyrics.isEmpty {
+            let item = AVMutableMetadataItem()
+            item.identifier = .iTunesMetadataLyrics
+            item.dataType = kCMMetadataBaseDataType_UTF8 as String
+            item.value = lyrics as NSString
+            metadata.append(item)
+        }
 
         let output = FileManager.default.temporaryDirectory
             .appendingPathComponent("ClassicTunes-\(UUID().uuidString).m4a")

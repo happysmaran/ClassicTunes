@@ -434,6 +434,12 @@ struct SongInfoView: View {
             return
         }
 
+        if let vorbis = EmbeddedTagReader.read(from: originalSong.url)?.lyrics {
+            lyricsText = vorbis
+            loadedLyrics = vorbis
+            return
+        }
+
         let asset = AVURLAsset(url: originalSong.url)
         if let embedded = try? await asset.load(.lyrics) {
             lyricsText = embedded

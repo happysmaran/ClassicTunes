@@ -60,7 +60,7 @@ nonisolated struct LibraryIndex: Codable {
 // Finds the audio files under a folder and turns them into `Song`s, reusing the saved index.
 nonisolated enum LibraryScanner {
 
-    static let allowedExtensions: Set<String> = ["mp3", "m4a", "aac", "wav", "flac"]
+    static let allowedExtensions: Set<String> = ["mp3", "m4a", "aac", "wav", "flac", "ogg", "oga", "opus"]
 
     // How many files are parsed at the same time. Each parse opens an AVURLAsset, so an unbounded
     // task group on a large library would try to open thousands of files at once.
