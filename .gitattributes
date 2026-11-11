@@ -1,0 +1,4 @@
+# Third-party code (see ClassicTunes/Ogg/README.md). Marked so GitHub collapses it in diffs and
+# leaves it out of the repository's language statistics.
+ClassicTunes/Ogg/opus/** linguist-generated linguist-vendored
+ClassicTunes/Ogg/stb_vorbis.c linguist-generated linguist-vendored
