@@ -38,6 +38,8 @@ struct TopToolbarView: View {
     @Binding var searchText: String
     var searchFieldFocus: FocusState<Bool>.Binding
 
+    var viewModeEnabled = true
+
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -167,18 +169,21 @@ struct TopToolbarView: View {
     // MARK: - View Mode & Utility Subviews
     private var viewToggleButtons: some View {
         HStack(spacing: 6) {
-            toggleButton(icon: "list.bullet", isActive: !isAlbumView && !isCoverFlowActive) {
+            toggleButton(icon: "list.bullet", isActive: viewModeEnabled && !isAlbumView && !isCoverFlowActive) {
                 isAlbumView = false
                 isCoverFlowActive = false
             }
-            toggleButton(icon: "square.grid.2x2", isActive: isAlbumView) {
+            .disabled(!viewModeEnabled)
+            toggleButton(icon: "square.grid.2x2", isActive: viewModeEnabled && isAlbumView) {
                 isAlbumView = true
                 isCoverFlowActive = false
             }
-            toggleButton(icon: "square.stack.3d.down.forward", isActive: isCoverFlowActive) {
+            .disabled(!viewModeEnabled)
+            toggleButton(icon: "square.stack.3d.down.forward", isActive: viewModeEnabled && isCoverFlowActive) {
                 isCoverFlowActive = true
                 isAlbumView = false
             }
+            .disabled(!viewModeEnabled)
             toggleButton(icon: "shuffle", isActive: isShuffleEnabled) { isShuffleEnabled.toggle() }
             RepeatButton(isRepeatAll: $isRepeatEnabled, isRepeatOne: $isRepeatOne)
         }

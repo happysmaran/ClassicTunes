@@ -40,6 +40,7 @@ struct SidebarView: View {
             
             Section("sidebar.library") {
                 Button(action: {
+                    isDeviceSelected = false
                     selectedPlaylistID = nil
                     libraryActive = true
                     showITunesStore = false
@@ -82,6 +83,7 @@ struct SidebarView: View {
             
             Section("sidebar.store") {
                 Button(action: {
+                    isDeviceSelected = false
                     selectedPlaylistID = nil
                     libraryActive = false
                     showITunesStore = true
@@ -95,6 +97,7 @@ struct SidebarView: View {
             Section("sidebar.playlists") {
                 ForEach(allPlaylists) { playlist in
                     Button(action: {
+                        isDeviceSelected = false
                         selectedPlaylistID = playlist.id
                         libraryActive = false
                         showITunesStore = false

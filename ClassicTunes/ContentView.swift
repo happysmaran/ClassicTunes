@@ -348,7 +348,8 @@ struct ContentView: View {
             isCoverFlowActive: $isCoverFlowActive,
             onMiniPlayerToggle: toggleMiniPlayer,
             searchText: $searchText,
-            searchFieldFocus: $isSearchFieldFocused
+            searchFieldFocus: $isSearchFieldFocused,
+            viewModeEnabled: !isDeviceSelected && !showITunesStore
         )
     }
 
