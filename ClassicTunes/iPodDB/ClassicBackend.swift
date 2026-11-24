@@ -36,7 +36,7 @@ enum ClassicBackend {
             for item in items where item.identifier == .id3MetadataUnsynchronizedLyric
                 || item.identifier == .iTunesMetadataLyrics {
                 if let text = try? await item.load(.stringValue), !text.isEmpty { return true }
-                if let value = try? await item.load(.value), value != nil { return true }
+                if (try? await item.load(.value)) != nil { return true }
             }
         }
         return false

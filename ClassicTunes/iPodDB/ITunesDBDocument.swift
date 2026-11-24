@@ -218,6 +218,12 @@ final class ITunesDBDocument {
         }
     }
 
+    func deviceName() -> String? {
+        guard let master = masterPlaylist() else { return nil }
+        let name = Self.title(of: master)
+        return name.isEmpty ? nil : name
+    }
+
     func masterPlaylist() -> DBChunk? {
         dataset(2)?.children.first { $0.magic == "mhyp" && Self.isMaster($0) }
     }

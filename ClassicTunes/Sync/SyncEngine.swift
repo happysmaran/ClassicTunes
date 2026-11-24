@@ -68,7 +68,7 @@ extension iPodSyncEngine {
     // because the copies on the device were made at the old setting.
     // `maxBitrateKbps`: songs encoded above it are converted to AAC at that rate before copying.
     func sync(songs: [Song], playlists: [Playlist] = [], to device: iPodDevice, mode: SyncMode? = nil, maxBitrateKbps: Int? = nil, replaceExisting: Bool = false) async {
-        guard let base = await resolveAccess(for: device) else {
+        guard let base = resolveAccess(for: device) else {
             await setPhase(.failed(NSLocalizedString("sync.access.denied", comment: "")))
             return
         }
@@ -262,7 +262,7 @@ extension iPodSyncEngine {
     // Removes every song from the iPod: its database entries, the music files and the cover art.
     // The Mac library is untouched. A backup of the database is saved first.
     func clearDevice(_ device: iPodDevice) async {
-        guard let base = await resolveAccess(for: device) else {
+        guard let base = resolveAccess(for: device) else {
             await setPhase(.failed(NSLocalizedString("sync.access.denied", comment: "")))
             return
         }

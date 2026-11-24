@@ -3,8 +3,7 @@ import CryptoKit
 
 // HASH58 signing for iTunesDB files (iPod Classic, Nano 3G and Nano 4G). The firmware ignores a
 // database whose mhbd header lacks the HMAC-SHA1 of the file keyed from the device's FireWire
-// GUID, so an unsigned library shows up empty.
-enum ITunesDBSigning {
+nonisolated enum ITunesDBSigning {
     static let databaseIDOffset = 0x18
     static let hashingSchemeOffset = 0x30
     static let unknown32Offset = 0x32

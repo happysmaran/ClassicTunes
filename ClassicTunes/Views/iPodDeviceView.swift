@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import AppKit
 import AVKit
 import CryptoKit
@@ -29,6 +30,7 @@ struct iPodDeviceView: View {
     // Tracks currently stored on the connected device, as read from its database.
     @State private var deviceTracks: [iTunesSD_BETrack] = []
     @State private var info = iPodDeviceInfo()
+    @State private var podName: String?
     // Measured after each load because the free space captured when the iPod was detected goes
     // stale as soon as a sync finishes.
     @State private var audioBytes: Int64 = 0
@@ -244,7 +246,7 @@ struct iPodDeviceView: View {
     private var infoGrid: some View {
         let model = [device.modelName ?? info.productType ?? device.generation.rawValue, info.modelNumber].compactMap { $0 }.joined(separator: " · ")
         let rows: [(String, String?)] = [
-            (loc("device.info.name", "Name:"), device.volumeName),
+            (loc("device.info.name", "Name:"), podName ?? device.volumeName),
             (loc("device.info.model", "Model:"), model),
             (loc("device.info.capacity", "Capacity:"), formatBytes(capacity)),
             (loc("device.info.songs", "Songs:"), isLoadingTracks ? nil : "\(deviceTracks.count)"),
@@ -677,10 +679,13 @@ struct iPodDeviceView: View {
         defer { if accessGranted { baseURL.stopAccessingSecurityScopedResource() } }
 
         var tracks: [iTunesSD_BETrack] = []
+        var storedName: String?
         do {
             if device.generation == .classic {
                 do {
-                    tracks = try ClassicBackend.loadDocument(base: baseURL).tracks().map { track in
+                    let document = try ClassicBackend.loadDocument(base: baseURL)
+                    storedName = document.deviceName()
+                    tracks = document.tracks().map { track in
                         var entry = iTunesSD_BETrack()
                         entry.filePath = track.devicePath
                         entry.displayName = track.displayName
@@ -712,6 +717,8 @@ struct iPodDeviceView: View {
             audioBytes = audioSize
             freeBytes = freeSpace
             info = deviceInfo
+            podName = storedName
+            iPodNames.shared.set(storedName, for: device)
             isLoadingTracks = false
             // Catches changes made while the iPod was unplugged; does nothing if none were.
             if autoSync { scheduleAutoSync() }
@@ -1060,15 +1067,33 @@ struct SongPickerSheet: View {
 
 // MARK: - Sidebar device entry
 
+// The sidebar row exists before the device page has read the database, and the name lives in
+// the database, so the last name seen is remembered across launches.
+final class iPodNames: ObservableObject {
+    static let shared = iPodNames()
+    private static let defaultsKey = "iPodNames"
+    @Published private var names: [String: String] =
+        UserDefaults.standard.dictionary(forKey: iPodNames.defaultsKey) as? [String: String] ?? [:]
+
+    func name(for device: iPodDevice) -> String? { names[device.volumeURL.path] }
+
+    func set(_ name: String?, for device: iPodDevice) {
+        guard names[device.volumeURL.path] != name else { return }
+        names[device.volumeURL.path] = name
+        UserDefaults.standard.set(names, forKey: Self.defaultsKey)
+    }
+}
+
 // Sidebar row for the connected iPod, used to navigate into the device page.
 struct SidebarDeviceEntry: View {
     let device: iPodDevice
     let isSelected: Bool
     let onSelect: () -> Void
+    @ObservedObject private var names = iPodNames.shared
 
     var body: some View {
         Button(action: onSelect) {
-            Label(device.volumeName, systemImage: "ipod")
+            Label(names.name(for: device) ?? device.volumeName, systemImage: "ipod")
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(ITunesSidebarButtonStyle(selected: isSelected))
