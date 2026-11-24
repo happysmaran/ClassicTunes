@@ -461,3 +461,17 @@
 "device.clear.message" = "Alle Titel und alle Cover werden vom iPod entfernt. Deine Mac-Mediathek bleibt unverändert. Die automatische Synchronisierung wird ausgeschaltet.";
 "device.clear.button" = "iPod leeren…";
 "device.clear.help" = "Entfernt alle Titel vom iPod.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "Duplikate anzeigen …";
+"duplicates.title" = "Doppelte Titel";
+"duplicates.found" = "%d Gruppen von Duplikaten";
+"duplicates.finding" = "Suche nach Duplikaten …";
+"duplicates.none" = "Keine Duplikate gefunden.";
+"duplicates.showInFinder" = "Im Finder zeigen";
+"duplicates.moveToTrash" = "In den Papierkorb legen";
+"duplicates.confirmTitle" = "„%@“ in den Papierkorb legen?";
+"duplicates.confirmMessage" = "Die Datei wird in den Papierkorb gelegt. Andere Kopien bleiben unverändert.";
+"duplicates.failed" = "Die Datei konnte nicht in den Papierkorb gelegt werden.";
+"duplicates.done" = "Fertig";
+"duplicates.cancel" = "Abbrechen";

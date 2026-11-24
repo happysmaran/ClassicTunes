@@ -461,3 +461,17 @@
 "device.clear.message" = "iPod से सभी गाने और सारे कवर आर्ट हटा दिए जाएँगे। आपकी Mac लाइब्रेरी नहीं बदलेगी। अपने आप सिंक होना बंद कर दिया जाएगा।";
 "device.clear.button" = "iPod साफ़ करें…";
 "device.clear.help" = "iPod से सभी गाने हटाता है।";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "डुप्लिकेट दिखाएँ…";
+"duplicates.title" = "डुप्लिकेट गाने";
+"duplicates.found" = "डुप्लिकेट के %d समूह";
+"duplicates.finding" = "डुप्लिकेट खोजे जा रहे हैं…";
+"duplicates.none" = "कोई डुप्लिकेट नहीं मिला।";
+"duplicates.showInFinder" = "Finder में दिखाएँ";
+"duplicates.moveToTrash" = "ट्रैश में ले जाएँ";
+"duplicates.confirmTitle" = "“%@” को ट्रैश में ले जाएँ?";
+"duplicates.confirmMessage" = "फ़ाइल ट्रैश में चली जाएगी। अन्य प्रतियों पर कोई असर नहीं पड़ेगा।";
+"duplicates.failed" = "फ़ाइल को ट्रैश में नहीं ले जाया जा सका।";
+"duplicates.done" = "पूर्ण";
+"duplicates.cancel" = "रद्द करें";

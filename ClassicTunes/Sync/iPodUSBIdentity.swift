@@ -1,15 +1,13 @@
 import Foundation
 import IOKit
 
-// Identifies an iPod by what its USB connection reports, the way iTunes does, because the files
-// on a blank or freshly restored Shuffle say nothing about which generation it is and a database
-// in the wrong layout is unreadable to it.
+// Identifies an iPod by what its USB connection reports
 enum iPodUSBIdentity {
     private static let appleVendorID = 0x05AC
 
-    // Product IDs by family. Shuffles must be told apart because their database formats are
-    // incompatible; every other model here stores an iTunesDB. Models missing from the table
-    // are identified from their files instead.
+    // Product IDs by family. Note, Shuffles must be told apart because their database format
+    // are incompatible; every other model here stores an iTunesDB. Models missing from the table
+    // are identified from their files instead. In practice, that is also unreliable.
     private static let generations: [Int: iPodGeneration] = [
         0x1300: .shuffle1,
         0x1301: .shuffle2,
@@ -37,6 +35,32 @@ enum iPodUSBIdentity {
             return [
                 ArtworkFormat(id: 1031, width: 42, height: 42, rowBytes: 84),
                 ArtworkFormat(id: 1027, width: 100, height: 100, rowBytes: 200),
+            ]
+        case 0x1204:   // Photo / 4th generation (colour display)
+            return [
+                ArtworkFormat(id: 1017, width: 56, height: 56, rowBytes: 112),
+                ArtworkFormat(id: 1016, width: 140, height: 140, rowBytes: 280),
+            ]
+        case 0x1209:   // Video (5th and 5.5th generation)
+            return [
+                ArtworkFormat(id: 1028, width: 100, height: 100, rowBytes: 200),
+                ArtworkFormat(id: 1029, width: 200, height: 200, rowBytes: 400),
+            ]
+        case 0x1261, 0x1262:   // Classic and Nano 3rd generation
+            return [
+                ArtworkFormat(id: 1061, width: 56, height: 56, rowBytes: 112),
+                ArtworkFormat(id: 1055, width: 128, height: 128, rowBytes: 256),
+                ArtworkFormat(id: 1068, width: 128, height: 128, rowBytes: 256),
+                ArtworkFormat(id: 1060, width: 320, height: 320, rowBytes: 640),
+            ]
+        case 0x1263:   // Nano 4th generation
+            return [
+                ArtworkFormat(id: 1055, width: 128, height: 128, rowBytes: 256),
+                ArtworkFormat(id: 1068, width: 128, height: 128, rowBytes: 256),
+                ArtworkFormat(id: 1071, width: 240, height: 240, rowBytes: 480),
+                ArtworkFormat(id: 1074, width: 50, height: 50, rowBytes: 100),
+                ArtworkFormat(id: 1078, width: 80, height: 80, rowBytes: 160),
+                ArtworkFormat(id: 1084, width: 240, height: 240, rowBytes: 480),
             ]
         default:
             return []

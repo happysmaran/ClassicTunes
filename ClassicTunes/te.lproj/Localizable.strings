@@ -461,3 +461,17 @@
 "device.clear.message" = "iPod నుండి ప్రతి పాట మరియు అన్ని కవర్ ఆర్ట్ తొలగించబడతాయి. మీ Mac లైబ్రరీ మారదు. ఆటోమేటిక్ సింక్ ఆఫ్ చేయబడుతుంది.";
 "device.clear.button" = "iPodని క్లియర్ చేయి…";
 "device.clear.help" = "iPod నుండి ప్రతి పాటను తొలగిస్తుంది.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "డూప్లికేట్‌లను చూపించు…";
+"duplicates.title" = "డూప్లికేట్ పాటలు";
+"duplicates.found" = "%d డూప్లికేట్ సమూహాలు";
+"duplicates.finding" = "డూప్లికేట్‌ల కోసం వెతుకుతోంది…";
+"duplicates.none" = "డూప్లికేట్‌లు ఏవీ దొరకలేదు.";
+"duplicates.showInFinder" = "Finderలో చూపించు";
+"duplicates.moveToTrash" = "ట్రాష్‌కి తరలించు";
+"duplicates.confirmTitle" = "“%@”ను ట్రాష్‌కి తరలించాలా?";
+"duplicates.confirmMessage" = "ఫైల్ ట్రాష్‌కి తరలించబడుతుంది. ఇతర కాపీలపై ప్రభావం ఉండదు.";
+"duplicates.failed" = "ఫైల్‌ను ట్రాష్‌కి తరలించడం సాధ్యం కాలేదు.";
+"duplicates.done" = "పూర్తయింది";
+"duplicates.cancel" = "రద్దు చేయి";

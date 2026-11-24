@@ -461,3 +461,17 @@
 "device.clear.message" = "С iPod будут удалены все песни и все обложки. Ваша медиатека на Mac не изменится. Автоматическая синхронизация будет отключена.";
 "device.clear.button" = "Очистить iPod…";
 "device.clear.help" = "Удаляет все песни с iPod.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "Показать дубликаты…";
+"duplicates.title" = "Повторяющиеся песни";
+"duplicates.found" = "Групп дубликатов: %d";
+"duplicates.finding" = "Поиск дубликатов…";
+"duplicates.none" = "Дубликаты не найдены.";
+"duplicates.showInFinder" = "Показать в Finder";
+"duplicates.moveToTrash" = "Переместить в Корзину";
+"duplicates.confirmTitle" = "Переместить «%@» в Корзину?";
+"duplicates.confirmMessage" = "Файл будет перемещён в Корзину. Остальные копии не затрагиваются.";
+"duplicates.failed" = "Не удалось переместить файл в Корзину.";
+"duplicates.done" = "Готово";
+"duplicates.cancel" = "Отменить";

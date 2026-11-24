@@ -461,3 +461,17 @@
 "device.clear.message" = "iPodからすべての曲とアートワークが削除されます。Macのライブラリは変更されません。自動同期はオフになります。";
 "device.clear.button" = "iPodを消去…";
 "device.clear.help" = "iPodからすべての曲を削除します。";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "重複項目を表示…";
+"duplicates.title" = "重複している曲";
+"duplicates.found" = "重複 %d 組";
+"duplicates.finding" = "重複を検索中…";
+"duplicates.none" = "重複は見つかりませんでした。";
+"duplicates.showInFinder" = "Finderで表示";
+"duplicates.moveToTrash" = "ゴミ箱に入れる";
+"duplicates.confirmTitle" = "「%@」をゴミ箱に入れますか？";
+"duplicates.confirmMessage" = "ファイルはゴミ箱に移動されます。ほかのコピーには影響しません。";
+"duplicates.failed" = "ファイルをゴミ箱に入れられませんでした。";
+"duplicates.done" = "完了";
+"duplicates.cancel" = "キャンセル";

@@ -461,3 +461,17 @@
 "device.clear.message" = "iPod 上的所有歌曲和所有封面都将被移除。你的 Mac 资料库不会改变。自动同步将被关闭。";
 "device.clear.button" = "清除 iPod…";
 "device.clear.help" = "移除 iPod 上的所有歌曲。";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "显示重复项…";
+"duplicates.title" = "重复的歌曲";
+"duplicates.found" = "%d 组重复项";
+"duplicates.finding" = "正在查找重复项…";
+"duplicates.none" = "未找到重复项。";
+"duplicates.showInFinder" = "在访达中显示";
+"duplicates.moveToTrash" = "移到废纸篓";
+"duplicates.confirmTitle" = "要将“%@”移到废纸篓吗？";
+"duplicates.confirmMessage" = "文件将移到废纸篓，其他副本不受影响。";
+"duplicates.failed" = "无法将文件移到废纸篓。";
+"duplicates.done" = "完成";
+"duplicates.cancel" = "取消";

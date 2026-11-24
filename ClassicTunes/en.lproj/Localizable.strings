@@ -459,3 +459,17 @@
 "device.clear.message" = "Every song and all cover art will be removed from the iPod. Your Mac library is not changed. Automatic syncing will be turned off.";
 "device.clear.button" = "Clear iPod…";
 "device.clear.help" = "Removes every song from the iPod.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "Show Duplicates…";
+"duplicates.title" = "Duplicate Songs";
+"duplicates.found" = "%d sets of duplicates";
+"duplicates.finding" = "Looking for duplicates…";
+"duplicates.none" = "No duplicates found.";
+"duplicates.showInFinder" = "Show in Finder";
+"duplicates.moveToTrash" = "Move to Trash";
+"duplicates.confirmTitle" = "Move “%@” to the Trash?";
+"duplicates.confirmMessage" = "The file is moved to the Trash. Other copies are not affected.";
+"duplicates.failed" = "The file could not be moved to the Trash.";
+"duplicates.done" = "Done";
+"duplicates.cancel" = "Cancel";

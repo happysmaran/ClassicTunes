@@ -461,3 +461,17 @@
 "device.clear.message" = "iPod에서 모든 노래와 앨범 아트가 삭제됩니다. Mac 보관함은 변경되지 않습니다. 자동 동기화는 꺼집니다.";
 "device.clear.button" = "iPod 지우기…";
 "device.clear.help" = "iPod에서 모든 노래를 삭제합니다.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "중복 항목 보기…";
+"duplicates.title" = "중복된 노래";
+"duplicates.found" = "중복 %d건";
+"duplicates.finding" = "중복 항목 검색 중…";
+"duplicates.none" = "중복 항목이 없습니다.";
+"duplicates.showInFinder" = "Finder에서 보기";
+"duplicates.moveToTrash" = "휴지통으로 이동";
+"duplicates.confirmTitle" = "“%@”을(를) 휴지통으로 이동하시겠습니까?";
+"duplicates.confirmMessage" = "파일이 휴지통으로 이동됩니다. 다른 사본에는 영향이 없습니다.";
+"duplicates.failed" = "파일을 휴지통으로 이동할 수 없습니다.";
+"duplicates.done" = "완료";
+"duplicates.cancel" = "취소";

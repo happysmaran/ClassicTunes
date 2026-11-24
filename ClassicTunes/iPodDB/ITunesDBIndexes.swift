@@ -6,7 +6,7 @@ import Foundation
 // leave all of them rebuilt. Sort rules are ported from captured iTunes output; an index type
 // we have no verified rule for makes the write fail closed instead of guessing.
 extension ITunesDBDocument {
-    static let rebuildableIndexTypes: Set<UInt32> = [0x03, 0x04, 0x05, 0x07, 0x12, 0x23, 0x24]
+    static let rebuildableIndexTypes: Set<UInt32> = [0x03, 0x04, 0x05, 0x07, 0x12, 0x1D, 0x1E, 0x1F, 0x23, 0x24]
 
     // MARK: Per-track facts the indexes depend on
 
@@ -144,6 +144,8 @@ extension ITunesDBDocument {
             case 0x07: return [.text(plainText(t.genre)), artist] + albumOrder(t)
             case 0x12: return [.text(plainText(t.sortComposer.isEmpty ? t.composer : t.sortComposer))] + albumOrder(t)
             case 0x23: return [.text(plainText(effectiveAlbumArtist(t)))] + albumOrder(t)
+            case 0x1D: return [.text(""), .number(0), .number(0), title]
+            case 0x1E, 0x1F: return [.number(0), .number(0), .text(""), title]
             default: throw ITunesDBError.unsupported("library index sort type 0x\(String(kind, radix: 16)) has no verified ordering rule")
             }
         }
@@ -272,6 +274,7 @@ extension ITunesDBDocument {
     // The scroll-by-letter strip: one entry per run of tracks whose sort text starts with the
     // same letter. Digits share one entry and symbols are skipped to the first letter or digit.
     private static func jumpLetter(_ part: Part?) -> UInt16 {
+        if case .number? = part { return UInt16(UInt8(ascii: "0")) }
         guard case let .text(value)? = part, !value.isEmpty else { return 0 }
         for character in value where character.isLetter || character.isNumber {
             if character.isNumber { return UInt16(UInt8(ascii: "0")) }

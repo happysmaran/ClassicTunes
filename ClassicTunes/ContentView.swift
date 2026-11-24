@@ -83,6 +83,7 @@ struct ContentView: View {
     @FocusState private var isSearchFieldFocused: Bool
     @State private var volumeBeforeMute: Double = 0.5
     @State private var showKeyboardShortcuts = false
+    @State private var showDuplicates = false
 
     @EnvironmentObject var deviceMonitor: iPodDeviceMonitor
     @EnvironmentObject var syncEngine: iPodSyncEngine
@@ -565,6 +566,12 @@ struct ContentView: View {
             .sheet(isPresented: $showKeyboardShortcuts) {
                 KeyboardShortcutsView()
             }
+            .sheet(isPresented: $showDuplicates) {
+                DuplicatesView(songs: songs) { trashed in
+                    let removed = Set(trashed.map(\.id))
+                    applyLoadedSongs(songs.filter { !removed.contains($0.id) })
+                }
+            }
             .onChange(of: appAppearance) { updateMiniPlayerAppearance() }
             .onChange(of: playlistManager.userPlaylists.map { $0.id }) { saveUserPlaylists() }
             .onChange(of: deviceMonitor.connectedDevice) { _, device in
@@ -611,6 +618,7 @@ struct ContentView: View {
             .focusedSceneValue(\.isRepeatAllValue, engine.isRepeatEnabled)
             .focusedSceneValue(\.isRepeatOneValue, engine.isRepeatOne)
             .focusedSceneValue(\.showKeyboardShortcutsAction, showKeyboardShortcutsAction)
+            .focusedSceneValue(\.showDuplicatesAction, { showDuplicates = true })
             .focusedSceneValue(\.showSongInfoAction, showSongInfoMenuAction())
     }
 

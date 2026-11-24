@@ -461,3 +461,17 @@
 "device.clear.message" = "Todas as músicas e todas as capas serão removidas do iPod. A sua biblioteca do Mac não é alterada. A sincronização automática será desativada.";
 "device.clear.button" = "Limpar iPod…";
 "device.clear.help" = "Remove todas as músicas do iPod.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "Mostrar duplicatas…";
+"duplicates.title" = "Músicas duplicadas";
+"duplicates.found" = "%d grupos de duplicatas";
+"duplicates.finding" = "Procurando duplicatas…";
+"duplicates.none" = "Nenhuma duplicata encontrada.";
+"duplicates.showInFinder" = "Mostrar no Finder";
+"duplicates.moveToTrash" = "Mover para o Lixo";
+"duplicates.confirmTitle" = "Mover “%@” para o Lixo?";
+"duplicates.confirmMessage" = "O arquivo é movido para o Lixo. As outras cópias não são afetadas.";
+"duplicates.failed" = "Não foi possível mover o arquivo para o Lixo.";
+"duplicates.done" = "Concluído";
+"duplicates.cancel" = "Cancelar";

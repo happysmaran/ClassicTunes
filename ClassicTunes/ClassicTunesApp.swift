@@ -93,6 +93,9 @@ private struct IsRepeatAllValueKey: FocusedValueKey {
 private struct IsRepeatOneValueKey: FocusedValueKey {
     typealias Value = Bool
 }
+private struct ShowDuplicatesActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
 private struct ShowKeyboardShortcutsActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
@@ -221,6 +224,10 @@ extension FocusedValues {
         get { self[IsRepeatOneValueKey.self] }
         set { self[IsRepeatOneValueKey.self] = newValue }
     }
+    var showDuplicatesAction: (() -> Void)? {
+        get { self[ShowDuplicatesActionKey.self] }
+        set { self[ShowDuplicatesActionKey.self] = newValue }
+    }
     var showKeyboardShortcutsAction: (() -> Void)? {
         get { self[ShowKeyboardShortcutsActionKey.self] }
         set { self[ShowKeyboardShortcutsActionKey.self] = newValue }
@@ -289,6 +296,7 @@ struct FileCommands: Commands {
     @FocusedValue(\.importPlaylistAction) private var importPlaylistAction: (() -> Void)?
     @FocusedValue(\.exportPlaylistAction) private var exportPlaylistAction: (() -> Void)?
     @FocusedValue(\.showSongInfoAction) private var showSongInfoAction: (() -> Void)?
+    @FocusedValue(\.showDuplicatesAction) private var showDuplicatesAction: (() -> Void)?
 
     @AppStorage("shortcut.newPlaylist") private var shortcutNewPlaylist: String = "⌘⇧N"
     @AppStorage("shortcut.newSmartPlaylist") private var shortcutNewSmartPlaylist: String = "⌘⌥N"
@@ -330,6 +338,11 @@ struct FileCommands: Commands {
             }
             .dynamicShortcut(shortcutExportPlaylist)
             .disabled(exportPlaylistAction == nil)
+
+            Button("menu.showDuplicates") {
+                showDuplicatesAction?()
+            }
+            .disabled(showDuplicatesAction == nil)
 
             Divider()
 

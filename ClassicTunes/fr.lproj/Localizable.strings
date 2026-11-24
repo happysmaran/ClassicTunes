@@ -461,3 +461,17 @@
 "device.clear.message" = "Tous les morceaux et toutes les pochettes seront supprimés de l’iPod. Votre bibliothèque Mac n’est pas modifiée. La synchronisation automatique sera désactivée.";
 "device.clear.button" = "Effacer l’iPod…";
 "device.clear.help" = "Supprime tous les morceaux de l’iPod.";
+
+/* Duplicate finder */
+"menu.showDuplicates" = "Afficher les doublons…";
+"duplicates.title" = "Morceaux en double";
+"duplicates.found" = "%d groupes de doublons";
+"duplicates.finding" = "Recherche de doublons…";
+"duplicates.none" = "Aucun doublon trouvé.";
+"duplicates.showInFinder" = "Afficher dans le Finder";
+"duplicates.moveToTrash" = "Placer dans la corbeille";
+"duplicates.confirmTitle" = "Placer « %@ » dans la corbeille ?";
+"duplicates.confirmMessage" = "Le fichier est placé dans la corbeille. Les autres copies ne sont pas affectées.";
+"duplicates.failed" = "Le fichier n’a pas pu être placé dans la corbeille.";
+"duplicates.done" = "OK";
+"duplicates.cancel" = "Annuler";
