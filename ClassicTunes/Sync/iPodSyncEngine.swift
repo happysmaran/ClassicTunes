@@ -12,6 +12,8 @@ struct iPodDevice: Identifiable, Equatable {
     let volumeName: String      // e.g. "IPOD"
     let bsdName: String         // e.g. "disk2s1"
     var generation: iPodGeneration = .unknown
+    var design: iPodDesign = .generic
+    var modelName: String?      // e.g. "iPod nano (3rd generation)"
     var capacity: Int64 = 0     // bytes
     var freeSpace: Int64 = 0    // bytes
 
@@ -237,6 +239,8 @@ final class iPodDeviceMonitor: ObservableObject {
             volumeName: volumeName,
             bsdName: bsdName,
             generation: generation,
+            design: iPodUSBIdentity.design(bsdName: bsdName),
+            modelName: iPodUSBIdentity.modelName(bsdName: bsdName),
             capacity: capacity,
             freeSpace: freeSpace
         )

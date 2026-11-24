@@ -74,6 +74,33 @@ enum iPodUSBIdentity {
         return generations[ids.product]
     }
 
+    private static let modelNames: [Int: String] = [
+        0x1201: "iPod (3rd generation)",
+        0x1203: "iPod (4th generation)",
+        0x1204: "iPod Photo",
+        0x1205: "iPod mini",
+        0x1209: "iPod Video (5th/5.5th generation)",
+        0x120A: "iPod nano (1st generation)",
+        0x1260: "iPod nano (2nd generation)",
+        0x1261: "iPod Classic",
+        0x1262: "iPod nano (3rd generation)",
+        0x1263: "iPod nano (4th generation)",
+        0x1265: "iPod nano (5th generation)",
+        0x1300: "iPod shuffle (1st generation)",
+        0x1301: "iPod shuffle (2nd generation)",
+        0x1302: "iPod shuffle (3rd generation)",
+    ]
+
+    static func design(bsdName: String) -> iPodDesign {
+        guard let ids = usbIDs(bsdName: bsdName), ids.vendor == appleVendorID else { return .generic }
+        return iPodDesign(usbProductID: ids.product)
+    }
+
+    static func modelName(bsdName: String) -> String? {
+        guard let ids = usbIDs(bsdName: bsdName), ids.vendor == appleVendorID else { return nil }
+        return modelNames[ids.product]
+    }
+
     // The USB serial of an iPod is its FireWire GUID, the fallback when no SysInfo file states it.
     static func serialNumber(bsdName: String) -> String? {
         guard !bsdName.isEmpty,

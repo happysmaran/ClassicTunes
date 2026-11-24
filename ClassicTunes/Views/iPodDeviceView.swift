@@ -216,13 +216,19 @@ struct iPodDeviceView: View {
         .background(Color(nsColor: .textBackgroundColor))
     }
 
-    // The icon macOS itself shows for this volume in Finder, which is the real photo of the model.
-    // The system supplies it, so nothing has to be bundled with the app.
+    @ViewBuilder
     private var deviceArtwork: some View {
-        Image(nsImage: NSWorkspace.shared.icon(forFile: device.volumeURL.path))
-            .resizable()
-            .scaledToFit()
-            .frame(width: 128, height: 128)
+        let customIcon = device.volumeURL.appendingPathComponent(".VolumeIcon.icns").path
+        if FileManager.default.fileExists(atPath: customIcon) {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: device.volumeURL.path))
+                .resizable()
+                .scaledToFit()
+                .frame(width: 128, height: 128)
+        } else {
+            iPodGlyph(design: device.design)
+                .foregroundStyle(.secondary)
+                .frame(width: 128, height: 128)
+        }
     }
 
     private var artworkSymbol: String {
@@ -236,7 +242,7 @@ struct iPodDeviceView: View {
 
     // iTunes' layout: bold labels right-aligned against their values.
     private var infoGrid: some View {
-        let model = [info.productType ?? device.generation.rawValue, info.modelNumber].compactMap { $0 }.joined(separator: " · ")
+        let model = [device.modelName ?? info.productType ?? device.generation.rawValue, info.modelNumber].compactMap { $0 }.joined(separator: " · ")
         let rows: [(String, String?)] = [
             (loc("device.info.name", "Name:"), device.volumeName),
             (loc("device.info.model", "Model:"), model),

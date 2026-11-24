@@ -398,7 +398,18 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_CONFIG_H,
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ClassicTunes/Ogg",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
+				);
 				INFOPLIST_FILE = ClassicTunes/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ClassicTunes;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -412,24 +423,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smaran.ClassicTunes;
-				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/ClassicTunes/Ogg",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					HAVE_CONFIG_H,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -466,7 +466,18 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					HAVE_CONFIG_H,
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ClassicTunes/Ogg",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
+					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
+				);
 				INFOPLIST_FILE = ClassicTunes/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ClassicTunes;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -480,24 +491,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smaran.ClassicTunes;
-				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/ClassicTunes/Ogg",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/include",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/celt",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/silk",
-					"$(SRCROOT)/ClassicTunes/Ogg/opus/src",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					HAVE_CONFIG_H,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ClassicTunes/ClassicTunes-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
